@@ -1,0 +1,27 @@
+Section: Authors
+
+Group: Source Contributors
+
+These people have contributed code to the D DBI project.
+
+Jeremy Cowgar:
+ * jeremy@cowgar.com - http://jeremy.cowgar.com
+ * D DBI
+ * SQLite3 DBI driver
+ * MySQL DBI driver
+ * PostgreSQL DBI driver and C API interface
+
+Christopher E. Miller:
+  * http://www.dprogramming.com/sqlite.php
+  * SQLite3 implementation (interface into the C SQLite3 API,
+    dbi/sqlite/imp.d)
+
+Charlie (qbert on IRC):
+  * http://www.thecodebase.com/elephant.html
+  * MySQL implementation (interface into the C MySQL API,
+    dbi/mysql/imp.d)
+
+Group: Thanks
+
+I want to take the time to thank these people for their hard work. Without
+them and their contributions to the project, this project would not be.

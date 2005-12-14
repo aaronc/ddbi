@@ -1,0 +1,26 @@
+body, table, td, th {
+  font-family: times new roman;
+}
+
+div.revision {
+  margin-bottom: 30px;
+  background: #eee;
+  border: 1px solid black;
+}
+
+table {
+  width: 100%;
+}
+
+th {
+  background: #abc;
+}
+
+td {
+  background: #ddd;
+  padding: 5px;
+}
+
+td.filelist {
+  font-family: courier;
+}
