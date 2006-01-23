@@ -75,7 +75,7 @@ class Statement {
       char[] result = sql;
       int qmIdx = 0, qmCount = 0;
 
-      while ((qmIdx = find(result, "?")) !== -1) {
+      while ((qmIdx = find(result, "?")) !is -1) {
         result = result[0 .. qmIdx] ~ "'" ~ binds[qmCount] ~ "'" ~
           result[qmIdx + 1 .. result.length];
         qmCount += 1;
@@ -93,8 +93,8 @@ class Statement {
       char[] result = sql;
       int begIdx = 0, endIdx = 0;
 
-      while ((begIdx = find(result, ":")) !== -1 &&
-             (endIdx = find(result[begIdx + 1 .. result.length], ":")) !== -1)
+      while ((begIdx = find(result, ":")) !is -1 &&
+             (endIdx = find(result[begIdx + 1 .. result.length], ":")) !is -1)
         {
           result = result[0 .. begIdx] ~ "'" ~
             getBoundValue(result[begIdx + 1.. begIdx + endIdx + 1])~ "'" ~
