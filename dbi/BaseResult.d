@@ -37,7 +37,7 @@ class BaseResult : Result {
     Row[] rows;
     Row row;
 
-    while ((row = fetchRow()) !== null) {
+    while ((row = fetchRow()) !is null) {
       rows ~= row;
     }
 
