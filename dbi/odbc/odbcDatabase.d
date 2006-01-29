@@ -2,8 +2,8 @@
 /*######################################################################
 ##                                                                    ##
 ## ODBC integration for DDBI (odbcDatabase)                           ##
-##	                                                                  ##
-## This is effectively a DDBI wrapper for ODBC functionality.         ##
+##                                                                    ##
+## This is effectively a DDBI integration of ODBC functionality.      ##
 ## Should work where there is a reasonable ODBC driver for a given    ##
 ## database.  Windows Only!  "odbcDatabase" is a misnomer but         ##
 ## follows the conventions of the DDBI project.                       ##
@@ -11,12 +11,12 @@
 ## A huge special thanks to "David L" for making this possible        ##
 ## with his previous work on D headers for ODBC32.dll.  odbcDatabase  ##
 ## is dependant on his ODBC files within std.c.windows                ##
-##                                  	                              ##
-##		                        --- Mark Delano                       ##
-##			                        (email@markdelano.com)    	      ##
+##                                                                    ##
+##		                        --- Mark Delano                   ##
+##			                        (email@markdelano.com)      ##
 ##                                                                    ##
 ## 2006: MPSD                                                         ##
-##                                  	                              ##
+##                                                                    ##
 ######################################################################*/
 
 module dbi.odbc.odbcDatabase;
