@@ -1,1 +1,0 @@
-../../mtlogcvt/default.tpl
