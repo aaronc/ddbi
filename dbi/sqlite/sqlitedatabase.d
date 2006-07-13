@@ -1,5 +1,7 @@
 /**
- * Copyright: LGPL
+ * Authors: The D DBI project
+ *
+ * Copyright: BSD license
  */
 module dbi.sqlite.SqliteDatabase;
 
@@ -16,6 +18,8 @@ private import dbi.sqlite.imp, dbi.sqlite.SqliteResult;
  *	BaseDatabase, Database
  */
 class SqliteDatabase : BaseDatabase {
+	public:
+
 	/**
 	 *
 	 */
@@ -39,7 +43,7 @@ class SqliteDatabase : BaseDatabase {
 	 *	user - Unused.
 	 *	passwd - Unused.
 	 */
-	void connect (char[] dbFile, char[] user = null, char[] passwd = null) {
+	override void connect (char[] dbFile, char[] user = null, char[] passwd = null) {
 		if ((errorCode = sqlite3_open(dbFile, &db)) != SQLITE_OK) {
 			throw new DBIException("Could not open or create: " ~ dbFile, errorCode);
 		}
@@ -48,14 +52,14 @@ class SqliteDatabase : BaseDatabase {
 	/**
 	 *
 	 */
-	void close () {
+	override void close () {
 		sqlite3_close(db);
 	}
 
 	/**
 	 *
 	 */
-	void execute (char[] sql) {
+	override void execute (char[] sql) {
 		char** errorMessage;
 		this.sql = sql;
 		if ((errorCode = sqlite3_exec(db, sql, null, null, errorMessage)) != SQLITE_OK) {
@@ -66,7 +70,7 @@ class SqliteDatabase : BaseDatabase {
 	/**
 	 *
 	 */
-	Result query (char[] sql) {
+	override Result query (char[] sql) {
 		char** errorMessage;
 		sqlite3_stmt* stmt;
 		this.sql = sql;
@@ -79,27 +83,27 @@ class SqliteDatabase : BaseDatabase {
 	/**
 	 *
 	 */
-	long getLastInsertRowId () {
-		return sqlite3_last_insert_rowid(db);
-	}
-
-	/**
-	 *
-	 */
-	deprecated int getErrorCode () {
+	deprecated override int getErrorCode () {
 		return sqlite3_errcode(db);
 	}
 
 	/**
 	 *
 	 */
-	deprecated char[] getErrorMessage () {
+	deprecated override char[] getErrorMessage () {
 		return std.string.toString(sqlite3_errmsg(db));
 	}
 
 	/*
 	 * Note: The following are not in the DBI API.
 	 */
+
+	/**
+	 *
+	 */
+	long getLastInsertRowId () {
+		return sqlite3_last_insert_rowid(db);
+	}
 
 	/**
 	 *

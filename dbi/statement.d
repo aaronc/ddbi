@@ -1,5 +1,7 @@
 /**
- * Copyright: LGPL
+ * Authors: The D DBI project
+ *
+ * Copyright: BSD license
  */
 module dbi.Statement;
 
@@ -12,7 +14,7 @@ private import dbi.Database, dbi.Result;
  * Todo:
  *	make execute/query("10", "20", 30); work (variable arguments for binding to ?, ?, ?, etc...)
  */
-class Statement {
+final class Statement {
 	/**
 	 *
 	 */
@@ -71,7 +73,7 @@ class Statement {
 	 */
 	char[] getSqlByQM () {
 		char[] result = sql;
-		int qmIdx = 0, qmCount = 0;
+		ptrdiff_t qmIdx = 0, qmCount = 0;
 		while ((qmIdx = find(result, "?")) != -1) {
 			result = result[0 .. qmIdx] ~ "'" ~ binds[qmCount] ~ "'" ~ result[qmIdx + 1 .. result.length];
 			qmCount += 1;
@@ -87,8 +89,8 @@ class Statement {
 	 */
 	char[] getSqlByFN () {
 		char[] result = sql;
-		int begIdx = 0, endIdx = 0;
-		while ((begIdx = find(result, ":")) != -1 && (endIdx = find(result[begIdx + 1 .. result.length], ":")) != -1) {
+		ptrdiff_t begIdx = 0, endIdx = 0;
+		while ((begIdx = std.string.find(result, ":")) != -1 && (endIdx = std.string.find(result[begIdx + 1 .. result.length], ":")) != -1) {
 			result = result[0 .. begIdx] ~ "'" ~ getBoundValue(result[begIdx + 1.. begIdx + endIdx + 1])~ "'" ~ result[begIdx + endIdx + 2 .. result.length];
 		}
 		return result;
@@ -110,7 +112,7 @@ class Statement {
 	 *
 	 */
 	char[] getBoundValue (char[] fn) {
-		for (int idx = 0; idx < bindsFNs.length; idx++) {
+		for (ptrdiff_t idx = 0; idx < bindsFNs.length; idx++) {
 			if (bindsFNs[idx] == fn) {
 				return binds[idx];
 			}
@@ -127,7 +129,7 @@ unittest {
 		printf("   ...%.*s\n", s);
 	}
 
-	s1("dbi.statement:");
+	s1("dbi.Statement:");
 	Statement stmt = new Statement(null, "SELECT * FROM people");
 	char[] resultingSql = "SELECT * FROM people WHERE id = '10' OR name LIKE 'John Mc''Donald'";
 

@@ -1,5 +1,7 @@
 /**
- * Copyright: LGPL
+ * Authors: The D DBI project
+ *
+ * Copyright: BSD license
  */
 module dbi.Result;
 

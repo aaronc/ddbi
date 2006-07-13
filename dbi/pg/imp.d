@@ -3,9 +3,11 @@
  * Part of the D DBI project.
  *
  * PostgreSQL version 8.1.4
- * Import library version 1.00
+ * Import library version 1.01
  *
- * Copyright: LGPL
+ * Authors: The D DBI project
+ *
+ * Copyright: BSD license
  */
 module dbi.pg.imp;
 

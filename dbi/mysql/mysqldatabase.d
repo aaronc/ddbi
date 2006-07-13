@@ -1,11 +1,13 @@
 /**
- * Copyright: LGPL
+ * Authors: The D DBI project
+ *
+ * Copyright: BSD license
  */
 module dbi.mysql.MysqlDatabase;
 
 private import std.conv, std.string;
 private import dbi.BaseDatabase, dbi.DBIException, dbi.Result, dbi.Row, dbi.Statement;
-private import dbi.mysql.all, dbi.mysql.imp, dbi.mysql.MysqlResult;
+private import dbi.mysql.imp, dbi.mysql.MysqlError, dbi.mysql.MysqlResult;
 
 /**
  * Manage a MySQL database connection. This class implements all of the
@@ -18,6 +20,7 @@ private import dbi.mysql.all, dbi.mysql.imp, dbi.mysql.MysqlResult;
  *	BaseDatabase, Database
  */
 class MysqlDatabase : BaseDatabase {
+	public:
 	this () {
 	}
 
@@ -36,13 +39,13 @@ class MysqlDatabase : BaseDatabase {
 	 *	db.connect("host=localhost;dbname=test", "username", "password");
 	 *	(end code)
 	 */
-	void connect (char[] conn, char[] user = null, char[] passwd = null) {
+	override void connect (char[] conn, char[] user = null, char[] passwd = null) {
 		char[] host = "localhost";
 		char[] dbname = "test";
 		char[] sock = "/tmp/mysql.sock";
 		uint port = 0;
 
-		if (conn.find("=")) {
+		if (std.string.find(conn, "=")) {
 			char[][char[]] keywords = getKeywords(conn);
 			if ("host" in keywords) {
 				host = keywords["host"];
@@ -54,43 +57,43 @@ class MysqlDatabase : BaseDatabase {
 				sock = keywords["sock"];
 			}
 			if ("port" in keywords) {
-				port = toInt(keywords["port"]);
+				port = std.conv.toInt(keywords["port"]);
 			}
 		} else {
 			dbname = conn;
 		}
 
 		m_mysql = mysql_init(null);
-		mysql_real_connect(m_mysql, toStringz(host), toStringz(user), toStringz(passwd), toStringz(dbname), port, toStringz(sock), 0);
+		mysql_real_connect(m_mysql, host, user, passwd, dbname, port, sock, 0);
 		if (uint error = mysql_errno(m_mysql)) {
-			throw new DBIException("Unable to connect to the MySQL database.", error, specificToGeneral(error));
+			throw new DBIException("Unable to connect to the MySQL database.", error, dbi.mysql.MysqlError.specificToGeneral(error));
 		}
 	}
 
 	/**
 	 *
 	 */
-	void close () {
+	override void close () {
 		mysql_close(m_mysql);
 		if (uint error = mysql_errno(m_mysql)) {
-			throw new DBIException("Unable to close the MySQL database.", error, specificToGeneral(error));
+			throw new DBIException("Unable to close the MySQL database.", error, dbi.mysql.MysqlError.specificToGeneral(error));
 		}
 	}
 
 	/**
 	 *
 	 */
-	void execute (char[] sql) {
-		if (int error = mysql_real_query(m_mysql, toStringz(sql), sql.length)) {
-			throw new DBIException("Unable to execute a command on the MySQL database.", sql, error, specificToGeneral(error));
+	override void execute (char[] sql) {
+		if (int error = mysql_real_query(m_mysql, sql, sql.length)) {
+			throw new DBIException("Unable to execute a command on the MySQL database.", sql, error, dbi.mysql.MysqlError.specificToGeneral(error));
 		}
 	}
 
 	/**
 	 *
 	 */
-	Result query (char[] sql) {
-		mysql_real_query(m_mysql, toStringz(sql), sql.length);
+	override Result query (char[] sql) {
+		mysql_real_query(m_mysql, sql, sql.length);
 		MysqlResult res = new MysqlResult(mysql_store_result(m_mysql));
 		return res;
 	}
@@ -98,14 +101,14 @@ class MysqlDatabase : BaseDatabase {
 	/**
 	 *
 	 */
-	deprecated int getErrorCode () {
+	deprecated override int getErrorCode () {
 		return cast(int)mysql_errno(m_mysql);
 	}
 
 	/**
 	 *
 	 */
-	deprecated char[] getErrorMessage () {
+	deprecated override char[] getErrorMessage () {
 		return std.string.toString(mysql_error(m_mysql));
 	}
 

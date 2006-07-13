@@ -1,5 +1,7 @@
 /**
- * Copyright: LGPL
+ * Authors: The D DBI project
+ *
+ * Copyright: BSD license
  */
 module dbi.BaseDatabase;
 
@@ -21,10 +23,21 @@ private import dbi.Database, dbi.DBIException, dbi.Result, dbi.Row, dbi.Statemen
  */
 class BaseDatabase : Database {
 	/**
+	 * A destructor that attempts to force the the release of of all
+	 * database connections and similar things.
+	 *
+	 * The current D garbage collector doesn't always call destructors,
+	 * so it is HIGHLY recommended that you close connections manually.
+	 */
+	~this () {
+		close();
+	}
+
+	/**
 	 * Throws:
 	 *	DBIException if the function isn't overridden.
 	 */
-	void connect (char[] conn, char[] user = null, char[] passwd = null) {
+	override void connect (char[] conn, char[] user = null, char[] passwd = null) {
 		throw new DBIException("Not implemented.");
 	}
 
@@ -32,7 +45,7 @@ class BaseDatabase : Database {
 	 * Throws:
 	 *	DBIException if the function isn't overridden.
 	 */
-	void close () {
+	override void close () {
 		throw new DBIException("Not implemented.");
 	}
 
@@ -40,14 +53,14 @@ class BaseDatabase : Database {
 	 * Throws:
 	 *	DBIException if the function isn't overridden.
 	 */
-	void execute (char[] sql) {
+	override void execute (char[] sql) {
 		throw new DBIException("Not implemented.");
 	}
 
 	/**
 	 *
 	 */
-	Statement prepare (char[] sql) {
+	override Statement prepare (char[] sql) {
 		return new Statement(cast(Database)this, sql);
 	}
 
@@ -55,14 +68,14 @@ class BaseDatabase : Database {
 	 * Throws:
 	 *	DBIException if the function isn't overridden.
 	 */
-	Result query (char[] sql) {
+	override Result query (char[] sql) {
 		throw new DBIException("Not implemented.");
 	}
 
 	/**
 	 * 
 	 */
-	Row queryFetchOne (char[] sql) {
+	final override Row queryFetchOne (char[] sql) {
 		Result res = query(sql);
 		if (res is null) {
 			return null;
@@ -75,7 +88,7 @@ class BaseDatabase : Database {
 	/**
 	 *
 	 */
-	Row[] queryFetchAll (char[] sql) {
+	final override Row[] queryFetchAll (char[] sql) {
 		Result res = query(sql);
 		if (res is null) {
 			return null;
@@ -89,7 +102,7 @@ class BaseDatabase : Database {
 	 * Throws:
 	 *	DBIException if the function isn't overridden.
 	 */
-	deprecated int getErrorCode () {
+	deprecated override int getErrorCode () {
 		throw new DBIException("Not implemented.");
 	}
 
@@ -97,21 +110,21 @@ class BaseDatabase : Database {
 	 * Throws:
 	 *	DBIException if the function isn't overridden.
 	 */
-	deprecated char[] getErrorMessage () {
+	deprecated override char[] getErrorMessage () {
 		throw new DBIException("Not implemented.");
 	}
 
 	/**
 	 * Takes a string and returns keywords and their values in a character array.
 	 */
-	char[][char[]] getKeywords (char[] s) {
+	final protected char[][char[]] getKeywords (char[] s) {
 		char[][char[]] keywords;
-		char[][] groups = s.split(";");
+		char[][] groups = std.string.split(s, ";");
 		foreach (char[] group; groups) {
 			if (group == "") {
 				continue;
 			}
-			char[][] vals = group.split("=");
+			char[][] vals = std.string.split(group, "=");
 			keywords[vals[0]] = vals[1];
 		}
 		return keywords;

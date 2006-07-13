@@ -1,5 +1,7 @@
 /**
- * Copyright: LGPL
+ * Authors: The D DBI project
+ *
+ * Copyright: BSD license
  */
 module dbi.sqlite.SqliteResult;
 
@@ -16,6 +18,7 @@ private import dbi.sqlite.imp;
  *	Result
  */
 class SqliteResult : BaseResult {
+	public:
 	/**
 	 * Params:
 	 *	stmt = SQLite3 statement structure.
@@ -34,7 +37,7 @@ class SqliteResult : BaseResult {
 	/**
 	 *
 	 */
-	Row fetchRow () {
+	override Row fetchRow () {
 		if (sqlite3_step(stmt) != SQLITE_ROW) {
 			return null;
 		}
@@ -48,7 +51,7 @@ class SqliteResult : BaseResult {
 	/**
 	 *
 	 */
-	void finish () {
+	override void finish () {
 		if (stmt !is null) {
 			sqlite3_finalize(stmt);
 			stmt = null;

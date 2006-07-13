@@ -1,5 +1,7 @@
 /**
- * Copyright: LGPL
+ * Authors: The D DBI project
+ *
+ * Copyright: BSD license
  */
 module dbi.DBIException;
 
@@ -24,6 +26,7 @@ class DBIException : Exception {
 	 * Create a new DBIException.
 	 *
 	 * Params:
+	 *	msg = The message to report to the users.
 	 *	
 	 * Throws:
 	 *	DBIException on invalid arguments.
@@ -33,13 +36,23 @@ class DBIException : Exception {
 		for (size_t i = 0; i < _arguments.length; i++) {
 			if (_arguments[i] == typeid(char[])) {
 				sql = va_arg!(char[])(_argptr);
+			} else if (_arguments[i] == typeid(byte)) {
+				specificCode = va_arg!(byte)(_argptr);
+			} else if (_arguments[i] == typeid(ubyte)) {
+				specificCode = va_arg!(ubyte)(_argptr);
+			} else if (_arguments[i] == typeid(short)) {
+				specificCode = va_arg!(short)(_argptr);
+			} else if (_arguments[i] == typeid(ushort)) {
+				specificCode = va_arg!(ushort)(_argptr);
 			} else if (_arguments[i] == typeid(int)) {
 				specificCode = va_arg!(int)(_argptr);
 			} else if (_arguments[i] == typeid(uint)) {
 				specificCode = va_arg!(uint)(_argptr);
 			} else if (_arguments[i] == typeid(long)) {
 				specificCode = va_arg!(long)(_argptr);
-			}else if (_arguments[i] == typeid(ErrorCode)) {
+			} else if (_arguments[i] == typeid(ulong)) {
+				specificCode = cast(long)va_arg!(ulong)(_argptr);
+			} else if (_arguments[i] == typeid(ErrorCode)) {
 				dbiCode = va_arg!(ErrorCode)(_argptr);
 			} else {
 				throw new DBIException("Invalid argument of type \"" ~ _arguments[i].toString() ~ "\" passed to the DBIException constructor.");

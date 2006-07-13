@@ -11,15 +11,11 @@
  * The list of all databases is loaded automatically upon execution.  Anything that isn't
  * on that list is passed to the compiler.
  *
- * The use of odbc on a non-Windows system isn't allowed.
- *
  * Build is currently required.  It can be found at http://www.dsource.org/projects/build.
  *
  * This file must be run in the directory below dbi.
  *
  * Throws:
- *	Exception if odbc is requested on a non-Windows system.
- *
  *	Exception if a non-existant file is used as an argument.
  *
  *	Exception if a file is removed from the list of files to build despite it not being
@@ -35,6 +31,8 @@
  *
  * Authors:
  *	Written by James Pelcis.  Based on the building process used in the Derelict project.
+ *
+ * Copyright: BSD license
  */
 module buildme;
 
@@ -74,26 +72,13 @@ void main (char[][] args) {
 		}
 	}
 	chdir(pardir);
-	version (Windows) {
-	} else {
-		allList.remove("odbc");
-	}
 
 	// Parse the command line arguments.
 	foreach (char[] arg; args[1 .. length]) {
 		if (arg == "all") {
 			toBuild = allList;
 		} else if (arg in allList) {
-			if (arg == "odbc") {
-				version (Windows) {
-					toBuild[arg] = true;
-					break;
-				} else {
-					throw new Exception("Invalid argument \"odbc.\"  odbc can only be used on Windows.");
-				}
-			} else {
-				toBuild[arg] = true;
-			}
+			toBuild[arg] = true;
 		} else if ((arg[0] == '-') && (arg[1 .. length] in allList)) {
 			if (arg[1 .. length] in toBuild) {
 				toBuild.remove(arg[1 .. length]);

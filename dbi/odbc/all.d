@@ -1,8 +1,10 @@
 /**
- * Copyright: LGPL
+ * Authors: The D DBI project
+ *
+ * Copyright: BSD license
  */
 module dbi.odbc.all;
 
-import	dbi.odbc.odbcDatabase,
-	dbi.odbc.odbcResult,
-	dbi.all;
+public import	dbi.odbc.odbcDatabase,
+		dbi.odbc.odbcResult,
+		dbi.all;

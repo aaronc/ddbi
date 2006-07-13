@@ -1,5 +1,7 @@
 /**
- * Copyright: LGPL
+ * Authors: The D DBI project
+ *
+ * Copyright: BSD license
  */
 module dbi.BaseResult;
 
@@ -14,12 +16,23 @@ private import dbi.Database, dbi.DBIException, dbi.Result, dbi.Row;
  * See_Also:
  *	Result
  */
-class BaseResult : Result {
+abstract class BaseResult : Result {
+	/**
+	 * A destructor that attempts to force the the release of of all
+	 * statements handles and similar things.
+	 *
+	 * The current D garbage collector doesn't always call destructors,
+	 * so it is HIGHLY recommended that you close connections manually.
+	 */
+	~this () {
+		finish();
+	}
+
 	/**
 	 * Throws:
 	 *	DBIException if the function isn't overridden.
 	 */
-	Row fetchRow () {
+	override Row fetchRow () {
 		throw new DBIException("Not implemented.");
 	}
 
@@ -29,7 +42,7 @@ class BaseResult : Result {
 	 * Returns:
 	 *	The retrieved rows.
 	 */
-	Row[] fetchAll () {
+	final override Row[] fetchAll () {
 		Row[] rows;
 		Row row;
 		while ((row = fetchRow()) !is null) {
@@ -43,7 +56,7 @@ class BaseResult : Result {
 	 * Throws:
 	 *	DBIException if the function isn't overridden.
 	 */
-	void finish () {
+	override void finish () {
 		throw new DBIException("Not implemented.");
 	}
 }

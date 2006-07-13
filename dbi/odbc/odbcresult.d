@@ -1,29 +1,64 @@
 /**
- * Copyright: LGPL
+ * Authors: The D DBI project
+ *
+ * Copyright: BSD license
  */
 module dbi.odbc.odbcResult;
 
-private import std.string;
-private import dbi.BaseResult, dbi.Row;
-private import dbi.odbc.imp;
+// Almost every cast involving chars and SQLCHARs shouldn't exist, but involve bugs in
+// WindowsAPI revision 144.  I'll see about fixing their ODBC and SQL files soon.
+// WindowsAPI should also include odbc32.lib itself.
 
-/**
- * These numbers were picked by me (MPSD) almost at random.
- * Currently this makes the buffer 800k, perhaps excessive.
+private import dbi.BaseResult, dbi.DBIException, dbi.Row;
+private import win32.odbcinst, win32.sql, win32.sqlext, win32.sqltypes, win32.sqlucode, win32.windef;
+
+pragma (lib, "odbc32.lib");
+
+/*
+ * This is in the sql headers, but wasn't ported in WindowsAPI revision 144.
  */
-const int ODBC_BUFFER_MAX = 8192;
-const int ODBC_COLUMN_MAX = 100;
-const int ODBC_NAME_MAX = 64;
+private bool SQL_SUCCEEDED (SQLRETURN ret) {
+	return (ret == SQL_SUCCESS || ret == SQL_SUCCESS_WITH_INFO) ? true : false;
+}
 
 /**
  *
  */
 class odbcResult : BaseResult {
+	public:
 	/**
 	 *
 	 */
-	this (HSTMT hstmt) {
-		this.hstmt = hstmt;    
+	this (SQLHSTMT stmt) {
+		this.stmt = stmt;
+
+		if (!SQL_SUCCEEDED(SQLNumResultCols(stmt, &numColumns))) {
+			throw new DBIException("Unable to get the number of columns.  ODBC returned " ~ getLastErrorMessage, getLastErrorCode);
+		}
+		columnTypesNum.length = numColumns;
+		columnTypesName.length = numColumns;
+		columnNames.length = numColumns;
+
+		SQLLEN typeNum;
+		SQLCHAR[512] typeName;
+		SQLSMALLINT typeNameLength;
+		SQLCHAR[512] columnName;
+		SQLSMALLINT columnNameLength;
+		for (SQLUSMALLINT i = 1; i <= numColumns; i++) {
+			if (!SQL_SUCCEEDED(SQLColAttribute(stmt, i, SQL_DESC_TYPE, null, 0, null, &typeNum))) {
+				throw new DBIException("Unable to get the SQL column types.  ODBC returned " ~ getLastErrorMessage, getLastErrorCode);
+			}
+			if (!SQL_SUCCEEDED(SQLColAttribute(stmt, i, SQL_DESC_TYPE_NAME, typeName, typeName.length, &typeNameLength, null))) {
+				throw new DBIException("Unable to get the SQL column type names.  ODBC returned " ~ getLastErrorMessage, getLastErrorCode);
+			}
+			if (!SQL_SUCCEEDED(SQLColAttribute(stmt, i, SQL_DESC_BASE_COLUMN_NAME, columnName, columnName.length, &columnNameLength, null))) {
+				throw new DBIException("Unable to get the SQL column names.  ODBC returned " ~ getLastErrorMessage, getLastErrorCode);
+			}
+
+			columnTypesNum[i - 1] = typeNum;
+			columnTypesName[i - 1] = cast(char[])typeName[0 .. typeNameLength].dup;
+			columnNames[i - 1] = cast(char[])columnName[0 .. columnNameLength].dup;
+		}
 	}
 
 	/**
@@ -36,55 +71,75 @@ class odbcResult : BaseResult {
 	/**
 	 *
 	 */
-	Row fetchRow () {
-		Row r = null; // Where the Data Hopefully Goes
-		short num_cols = 0; // Number of Fields in Query
-		SQLCHAR[ODBC_BUFFER_MAX][ODBC_COLUMN_MAX] buffer; // Massive Array of Doom
-		SQLCHAR[][ODBC_COLUMN_MAX] column_names; // Query Field Names
-		RETCODE rc; // ODBC Return Code
-		SQLCHAR[ODBC_COLUMN_MAX] odbc_str; // Temporary Field Name
+	override Row fetchRow () {
+		if (SQL_SUCCEEDED(SQLFetch(stmt))) {
+			Row row = new Row();
+			SQLLEN indicator;
+			SQLCHAR[512] buf;
 
-		// Unused, but necessary?
-		SDWORD len;
-		SQLSMALLINT column_name_length;
-		SQLINTEGER fDesc;
-
-		// Get field name from columns and count the columns while we're at it
-		for (int i = 0; i < buffer.length && rc == SQL_SUCCESS; i++) {	// No overflow, No Error
-			// Older-style SQLColAttributes (plural) was much more cooperative than SQLColAttribute
-			rc = odbcSQLColAttributes(hstmt, cast(ushort) (i+1), SQL_C_CHAR, odbc_str, ODBC_NAME_MAX, &column_name_length, &fDesc);		
-			column_names[i] = std.string.toString(odbc_str).dup; // dup!
-			if (rc == SQL_SUCCESS) { // Don't count icky columns
-				num_cols++;
+			for (SQLUSMALLINT i = 1; i <= numColumns; i++) {
+				if (SQL_SUCCEEDED(SQLGetData(stmt, i, SQL_C_CHAR, buf, buf.length, &indicator))) {
+					if (indicator == SQL_NULL_DATA) {
+						buf[0 .. 4] = cast(SQLCHAR[])"null";
+						buf[4 .. length] = 0;
+					}
+					row.addField(columnNames[i - 1], cast(char[])buf[0 .. indicator], columnTypesName[i - 1], columnTypesNum[i - 1]);
+				}
 			}
+			return row;
+		} else {
+			return null;
 		}
-
-		// Assign column numbers respective buffer positions in the buffer array
-		for (int i = 0; i < num_cols; i++) {
-			rc = odbcSQLBindCol(hstmt, cast(ushort) (i+1), SQL_C_CHAR, buffer[i], ODBC_BUFFER_MAX, &len);
-		}
-		rc = odbcSQLFetch(hstmt);
-
-		// If we have real data, toss it into DDBI's row
-		if (rc == SQL_SUCCESS) {
-			r = new Row();
-			for (int i = 0; i < num_cols; i++) {
-				r.addField(column_names[i].dup, std.string.toString(buffer[i]).dup, std.string.toString("").dup, 0); // No extra goodies :(
-			}
-		}    
-		return r;
 	}
 
 	/**
 	 *
 	 */
-	void finish () {
-		if (hstmt !is null) {
-			odbcSQLFreeHandle(SQL_HANDLE_STMT, hstmt);
-			hstmt = null;
+	override void finish () {
+		if (stmt !is null) {
+			if (!SQL_SUCCEEDED(SQLFreeHandle(SQL_HANDLE_STMT, stmt))) {
+				throw new DBIException("Unable to destroy an ODBC statement.  ODBC returned " ~ getLastErrorMessage, getLastErrorCode);
+			}
+			stmt = null;
+			this = null;
 		}
 	}
 
 	private:
-	HSTMT hstmt;  // Presumably the same as odbcDatabase's hstmt
+	SQLHSTMT stmt;
+	SQLSMALLINT numColumns;
+	int[] columnTypesNum;
+	char[][] columnTypesName;
+	char[][] columnNames;
+	char[512][] columnData;
+
+	/**
+	 * Get the last error message returned by the server.
+	 */
+	char[] getLastErrorMessage () {
+		SQLSMALLINT errorNumber;
+		SQLCHAR[5] state;
+		SQLINTEGER nativeCode;
+		SQLCHAR[512] text;
+		SQLSMALLINT textLength;
+
+		SQLGetDiagField(SQL_HANDLE_STMT, stmt, 0, SQL_DIAG_NUMBER, &errorNumber, 0, null);
+		SQLGetDiagRec(SQL_HANDLE_STMT, stmt, errorNumber, state, &nativeCode, text, text.length, &textLength);
+		return cast(char[])state ~ " = " ~ cast(char[])text;
+	}
+
+	/**
+	 * Get the last error code return by the server.  This is the native code.
+	 */
+	int getLastErrorCode () {
+		SQLSMALLINT errorNumber;
+		SQLCHAR[5] state;
+		SQLINTEGER nativeCode;
+		SQLCHAR[512] text;
+		SQLSMALLINT textLength;
+
+		SQLGetDiagField(SQL_HANDLE_STMT, stmt, 0, SQL_DIAG_NUMBER, &errorNumber, 0, null);
+		SQLGetDiagRec(SQL_HANDLE_STMT, stmt, errorNumber, state, &nativeCode, text, text.length, &textLength);
+		return nativeCode;
+	}
 }

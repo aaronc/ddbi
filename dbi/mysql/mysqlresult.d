@@ -1,5 +1,7 @@
 /**
- * Copyright: LGPL
+ * Authors: The D DBI project
+ *
+ * Copyright: BSD license
  */
 module dbi.mysql.MysqlResult;
 
@@ -16,6 +18,7 @@ private import dbi.mysql.imp;
  *	Result
  */
 class MysqlResult : BaseResult {
+	public:
 	/**
 	 *
 	 */
@@ -35,7 +38,7 @@ class MysqlResult : BaseResult {
 	/**
 	 *
 	 */
-	Row fetchRow () {
+	override Row fetchRow () {
 		MYSQL_ROW row = mysql_fetch_row(m_res);
 		if (row is null) {
 			return null;
@@ -53,7 +56,7 @@ class MysqlResult : BaseResult {
 	/**
 	 *
 	 */
-	void finish () {
+	override void finish () {
 		mysql_free_result(m_res);
 		m_res = null;
 	}

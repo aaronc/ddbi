@@ -1,5 +1,7 @@
 /**
- * Copyright: LGPL
+ * Authors: The D DBI project
+ *
+ * Copyright: BSD license
  */
 module dbi.pg.PgDatabase;
 
@@ -21,6 +23,7 @@ private import dbi.pg.imp, dbi.pg.PgResult;
  */
 
 class PgDatabase : BaseDatabase {
+	public:
 	/**
 	 * Connect to a database.
 	 *
@@ -35,7 +38,7 @@ class PgDatabase : BaseDatabase {
 	 * Connection String Keywords:
 	 *	<http://www.postgresql.org/docs/8.0/static/libpq.html>
 	 */
-	void connect (char[] conn, char[] user = null, char[] passwd = null) {
+	override void connect (char[] conn, char[] user = null, char[] passwd = null) {
 		if (conn == null) {
 			conn = "";
 		}
@@ -54,7 +57,7 @@ class PgDatabase : BaseDatabase {
 	/**
 	 *
 	 */
-	void close () {
+	override void close () {
 		PQfinish(m_pg);
 		if ((m_errorCode = cast(size_t)PQstatus(m_pg)) != ConnStatusType.CONNECTION_OK) {
 			throw new DBIException (std.string.toString(PQerrorMessage(m_pg)), m_errorCode);
@@ -64,7 +67,7 @@ class PgDatabase : BaseDatabase {
 	/**
 	 *
 	 */
-	void execute (char[] sql) {
+	override void execute (char[] sql) {
 		PGresult* res = PQexec(m_pg, toStringz(sql.dup));
 		scope(exit) PQclear(res);
 		if ((m_errorCode = cast(size_t)PQresultStatus(res)) != ExecStatusType.PGRES_COMMAND_OK) {
@@ -75,7 +78,7 @@ class PgDatabase : BaseDatabase {
 	/**
 	 *
 	 */
-	Result query (char[] sql) {
+	override Result query (char[] sql) {
 		PGresult* res = PQexec(m_pg, toStringz(sql.dup));
 		ExecStatusType status = PQresultStatus(res);
 		if ((m_errorCode = cast(size_t)PQresultStatus(res)) != ExecStatusType.PGRES_COMMAND_OK) {
@@ -87,14 +90,14 @@ class PgDatabase : BaseDatabase {
 	/**
 	 *
 	 */
-	deprecated int getErrorCode () {
+	deprecated override int getErrorCode () {
 		return m_errorCode;
 	}
 
 	/**
 	 *
 	 */
-	deprecated char[] getErrorMessage () {
+	deprecated override char[] getErrorMessage () {
 		return m_errorString;
 	}
 

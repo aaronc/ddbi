@@ -1,12 +1,18 @@
 /**
- * Copyright: LGPL
+ * Authors: The D DBI project
+ *
+ * Copyright: BSD license
  */
 module dbi.Row;
+
+private import dbi.DBIException;
+
+private import std.stdio, std.conv;
 
 /**
  * Provide access to a single row in a result set.
  */
-class Row {
+final class Row {
 	/**
 	 * Get a field's contents by index.
 	 *
@@ -81,12 +87,12 @@ class Row {
 	 *	The field's index.
 	 */
 	int getFieldIndex (char[] name) {
-		for (int idx=0; idx < fieldNames.length; idx++) {
+		for (int idx = 0; idx < fieldNames.length; idx++) {
 			if (fieldNames[idx] == name) {
 				return idx;
 			}
 		}
-		return -1; /// @todo throw an error
+		throw new DBIException("The name '" ~ name ~ "' is not a valid index.");
 	}
 
 	/**
@@ -139,7 +145,7 @@ class Row {
 	char[][] fieldNames;
 	char[][] fieldValues;
 	char[][] fieldDecls;
-	int[]    fieldTypes;
+	int[] fieldTypes;
 }
 
 unittest {

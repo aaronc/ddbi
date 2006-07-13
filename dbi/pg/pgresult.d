@@ -1,5 +1,7 @@
 /**
- * Copyright: LGPL
+ * Authors: The D DBI project
+ *
+ * Copyright: BSD license
  */
 module dbi.pg.PgResult;
 
@@ -18,6 +20,7 @@ private import dbi.pg.imp;
  */
 
 class PgResult : BaseResult {
+	public:
 	/**
 	 * Params:
 	 *	res = PostgreSQL result structure.
@@ -38,7 +41,7 @@ class PgResult : BaseResult {
 	 /**
 	  *
 	  */
-	Row fetchRow () {
+	override Row fetchRow () {
 		if (m_rowIdx > m_rows) {
 			return null;
 		}
@@ -53,7 +56,7 @@ class PgResult : BaseResult {
 	/**
 	 *
 	 */
-	void finish () {
+	override void finish () {
 		if (m_res != null) {
 			PQclear(m_res);
 			m_res = null;

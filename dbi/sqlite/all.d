@@ -1,8 +1,10 @@
 /**
- * Copyright: LGPL
+ * Authors: The D DBI project
+ *
+ * Copyright: BSD license
  */
 module dbi.sqlite.all;
 
-import	dbi.sqlite.SqliteDatabase,
-	dbi.sqlite.SqliteResult,
-	dbi.all;
+public import	dbi.sqlite.SqliteDatabase,
+		dbi.sqlite.SqliteResult,
+		dbi.all;

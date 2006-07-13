@@ -2,10 +2,12 @@
  * SQLite import library.
  * Part of the D DBI project.
  *
- * SQLite version 3.3.5
- * Import library version 0.01
+ * SQLite version 3.3.6
+ * Import library version 0.02
  *
- * Copyright: LGPL
+ * Authors: The D DBI project
+ *
+ * Copyright: BSD license
  */
 module dbi.sqlite.imp;
 
