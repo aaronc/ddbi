@@ -1,9 +1,12 @@
 /**
  * SQLite import library.
+ *
  * Part of the D DBI project.
  *
- * SQLite version 3.3.6
- * Import library version 0.02
+ * Version:
+ *	SQLite version 3.3.6
+ *
+ *	Import library version 0.02
  *
  * Authors: The D DBI project
  *

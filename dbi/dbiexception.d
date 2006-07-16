@@ -1,6 +1,8 @@
 /**
  * Authors: The D DBI project
  *
+ * Version: 0.2.2
+ *
  * Copyright: BSD license
  */
 module dbi.DBIException;
@@ -9,10 +11,10 @@ private import std.stdarg;
 private import dbi.ErrorCode;
 
 /**
- * This is the exception class used within all of D DBI.  At the moment, it assumes
- * that the database uses a numeric error code, which seems to be true for most of
- * them.  If that needs to be changed in the future to be more generic, that will
- * be done.
+ * This is the exception class used within all of D DBI.
+ *
+ * Some functions may also throw different types of exceptions when they access the
+ * standard library, so be sure to also catch Exception in your code.
  */
 class DBIException : Exception {
 	/**

@@ -1,52 +1,81 @@
 /**
  * Authors: The D DBI project
  *
+ * Version: 0.2.2
+ *
  * Copyright: BSD license
  */
 module dbi.mysql.MysqlDatabase;
 
 private import std.conv, std.string;
-private import dbi.BaseDatabase, dbi.DBIException, dbi.Result, dbi.Row, dbi.Statement;
+private import dbi.Database, dbi.DBIException, dbi.Result, dbi.Row, dbi.Statement;
 private import dbi.mysql.imp, dbi.mysql.MysqlError, dbi.mysql.MysqlResult;
 
 /**
- * Manage a MySQL database connection. This class implements all of the
- * current DBD interface as defined in Database.
+ * An implementation of Database for use with MySQL databases.
  *
- * Limitations:
- *	MysqlDatabase currently does not retrieve column types.
+ * Bugs:
+ *	Column types aren't retrieved.
  *
  * See_Also:
- *	BaseDatabase, Database
+ *	Database is the interface that this provides an implementation of.
  */
-class MysqlDatabase : BaseDatabase {
+class MysqlDatabase : Database {
 	public:
+	/**
+	 * Create a new instance of MysqlDatabase, but don't connect.
+	 */
 	this () {
+		m_mysql = mysql_init(null);
 	}
 
 	/**
-	 * Connect to a database on a MySQL server
+	 * Create a new instance of MysqlDatabase and connect to a server.
+	 *
+	 * See_Also:
+	 *	connect
+	 */
+	this (char[] params, char[] username = null, char[] password = null) {
+		this();
+		connect(params, username, password);
+	}
+
+	/**
+	 * Connect to a database on a MySQL server.
+	 *
+	 * Params:
+	 *	params = A string in the form "keyword1=value1;keyword2=value2;etc."
+	 *	username = The _username to _connect with.
+	 *	password = The _password to _connect with.
 	 *
 	 * Keywords:
-	 *	host = Host name.
-	 *	dbname = Database name.
-	 *	sock = Socket.
-	 *	port = Port number.
+	 *	dbname = The name of the database to use.
 	 *
-	 * Example:
-	 *	(start code)
+	 *	host = The host name of the database to _connect to.
+	 *
+	 *	port = The port number to _connect to.
+	 *
+	 *	sock = The socket to _connect to.
+	 *
+	 * Throws:
+	 *	DBIException if there was an error connecting.
+	 *
+	 *	ConvException if port is provided but is not an integer.
+	 *
+	 * Examples:
+	 *	---
 	 *	MysqlDatabase db = new MysqlDatabase();
 	 *	db.connect("host=localhost;dbname=test", "username", "password");
-	 *	(end code)
+	 *	---
 	 */
-	override void connect (char[] conn, char[] user = null, char[] passwd = null) {
+	override void connect (char[] params, char[] username = null, char[] password = null) {
 		char[] host = "localhost";
 		char[] dbname = "test";
 		char[] sock = "/tmp/mysql.sock";
 		uint port = 0;
 
-		if (std.string.find(conn, "=")) {
-			char[][char[]] keywords = getKeywords(conn);
+		if (std.string.find(params, "=")) {
+			char[][char[]] keywords = getKeywords(params);
 			if ("host" in keywords) {
 				host = keywords["host"];
 			}
@@ -60,18 +89,20 @@ class MysqlDatabase : BaseDatabase {
 				port = std.conv.toInt(keywords["port"]);
 			}
 		} else {
-			dbname = conn;
+			dbname = params;
 		}
 
-		m_mysql = mysql_init(null);
-		mysql_real_connect(m_mysql, host, user, passwd, dbname, port, sock, 0);
+		mysql_real_connect(m_mysql, host, username, password, dbname, port, sock, 0);
 		if (uint error = mysql_errno(m_mysql)) {
 			throw new DBIException("Unable to connect to the MySQL database.", error, dbi.mysql.MysqlError.specificToGeneral(error));
 		}
 	}
 
 	/**
+	 * Close the current connection to the database.
 	 *
+	 * Throws:
+	 *	DBIException if there was an error disconnecting.
 	 */
 	override void close () {
 		mysql_close(m_mysql);
@@ -81,7 +112,13 @@ class MysqlDatabase : BaseDatabase {
 	}
 
 	/**
+	 * Execute a SQL statement that returns no results.
 	 *
+	 * Params:
+	 *	sql = The SQL statement to _execute.
+	 *
+	 * Throws:
+	 *	DBIException if the SQL code couldn't be executed.
 	 */
 	override void execute (char[] sql) {
 		if (int error = mysql_real_query(m_mysql, sql, sql.length)) {
@@ -90,7 +127,16 @@ class MysqlDatabase : BaseDatabase {
 	}
 
 	/**
+	 * Query the database.
 	 *
+	 * Bugs:
+	 *	This does not currently check for errors.
+	 *
+	 * Params:
+	 *	sql = The SQL statement to execute.
+	 *
+	 * Returns:
+	 *	A Result object with the queried information.
 	 */
 	override Result query (char[] sql) {
 		mysql_real_query(m_mysql, sql, sql.length);
@@ -99,14 +145,28 @@ class MysqlDatabase : BaseDatabase {
 	}
 
 	/**
+	 * Get the error code.
 	 *
+	 * Deprecated:
+	 *	This functionality now exists in DBIException.  This will be
+	 *	removed in version 0.3.0.
+	 *
+	 * Returns:
+	 *	The database specific error code.
 	 */
 	deprecated override int getErrorCode () {
 		return cast(int)mysql_errno(m_mysql);
 	}
 
 	/**
+	 * Get the error message.
 	 *
+	 * Deprecated:
+	 *	This functionality now exists in DBIException.  This will be
+	 *	removed in version 0.3.0.
+	 *
+	 * Returns:
+	 *	The database specific error message.
 	 */
 	deprecated override char[] getErrorMessage () {
 		return std.string.toString(mysql_error(m_mysql));

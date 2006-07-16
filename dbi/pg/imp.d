@@ -1,9 +1,12 @@
 /**
  * PostgreSQL import library.
+ *
  * Part of the D DBI project.
  *
- * PostgreSQL version 8.1.4
- * Import library version 1.01
+ * Version:
+ *	PostgreSQL version 8.1.4
+ *
+ *	Import library version 1.02
  *
  * Authors: The D DBI project
  *
@@ -35,7 +38,7 @@ alias byte pqbool;
 /**
  * Object ID is a fundamental type in PostgreSQL.
  */
-alias uint Oid;
+typedef uint Oid;
 
 /**
  * InvalidOid indicates that something went wrong.  Try checking for errors.
@@ -167,6 +170,7 @@ enum PGVerbosity {
 
 /**
  * PGconn encapsulates a connection to the backend.
+ *
  * The contents of this struct are not supposed to be known to applications.
  */
 struct PGconn {
@@ -176,6 +180,7 @@ struct PGconn {
  * PGresult encapsulates the result of a query (or more precisely, of a single
  * SQL command --- a query string given to PQsendQuery can contain multiple
  * commands and thus return multiple PGresult objects).
+ *
  * The contents of this struct are not supposed to be known to applications.
  */
 struct PGresult {
@@ -184,6 +189,7 @@ struct PGresult {
 /**
  * PGcancel encapsulates the information needed to cancel a running
  * query on an existing connection.
+ *
  * The contents of this struct are not supposed to be known to applications.
  */
 struct PGcancel {
@@ -191,9 +197,12 @@ struct PGcancel {
 
 /**
  * PGnotify represents the occurrence of a NOTIFY message.
+ *
  * Ideally this would be an opaque typedef, but it's so simple that it's
  * unlikely to change.
- * NOTE: In Postgres 6.4 and later, the be_pid is the notifying backend's,
+ *
+ * Note:
+ *	In Postgres 6.4 and later, the be_pid is the notifying backend's,
  * whereas in earlier versions it was always your own backend's PID.
  */
 struct pgNotify {
@@ -411,7 +420,7 @@ PGcancel* PQgetCancel (PGconn* conn);
  * Free the memory used by a PGcancel structure.
  *
  * Params:
- *	The PGcancel structure to erase.
+ *	cancel = The PGcancel structure to erase.
  */
 void PQfreeCancel (PGcancel* cancel);
 

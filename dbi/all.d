@@ -1,13 +1,17 @@
 /**
  * Authors: The D DBI project
  *
+ * Version: 0.2.2
+ *
  * Copyright: BSD license
  */
 module dbi.all;
 
-public import	dbi.BaseDatabase,
-		dbi.BaseResult,
-		dbi.Database,
+version (build) {
+	pragma (ignore);
+}
+
+public import	dbi.Database,
 		dbi.DBIException,
 		dbi.ErrorCode,
 		dbi.Result,

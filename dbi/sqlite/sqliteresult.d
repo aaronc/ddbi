@@ -1,41 +1,36 @@
 /**
  * Authors: The D DBI project
  *
+ * Version: 0.2.2
+ *
  * Copyright: BSD license
  */
 module dbi.sqlite.SqliteResult;
 
 private import std.string;
-private import dbi.BaseResult, dbi.Row;
+private import dbi.Result, dbi.Row;
 private import dbi.sqlite.imp;
 
 /**
- * Manage the results of a sqlite result set. This class implements all
- * of the current DBD Result interface. The interface is not
- * described here again, instead please view Result directly.
+ * Manage a result set from a SQLite database query.
+ *
+ * No functions return this.  It should not be used directly.  Use the interface
+ * provided by Result instead.
  *
  * See_Also:
- *	Result
+ *	Result is the interface that this provides an implementation of.
  */
-class SqliteResult : BaseResult {
+class SqliteResult : Result {
 	public:
-	/**
-	 * Params:
-	 *	stmt = SQLite3 statement structure.
-	 */
 	this (sqlite3_stmt* stmt) {
 		this.stmt = stmt;
 	}
 
 	/**
+	 * Get the next row from a result set.
 	 *
-	 */
-	~this () {
-		finish();
-	}
-
-	/**
-	 *
+	 * Returns:
+	 *	A Row object with the queried information or null for an empty set.
 	 */
 	override Row fetchRow () {
 		if (sqlite3_step(stmt) != SQLITE_ROW) {
@@ -49,7 +44,7 @@ class SqliteResult : BaseResult {
 	}
 
 	/**
-	 *
+	 * Free all database resources used by a result set.
 	 */
 	override void finish () {
 		if (stmt !is null) {

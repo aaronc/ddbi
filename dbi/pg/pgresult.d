@@ -1,30 +1,27 @@
 /**
  * Authors: The D DBI project
  *
+ * Version: 0.2.2
+ *
  * Copyright: BSD license
  */
 module dbi.pg.PgResult;
 
 private import std.string;
-private import dbi.BaseResult, dbi.Row;
+private import dbi.Result, dbi.Row;
 private import dbi.pg.imp;
 
 /**
- * Manage the results of a PostgreSQL result set. This class
- * implements all of the current DBD Result interface. The
- * interface is not described here again, instead please view
- * Result directly.
+ * Manage a result set from a PostgreSQL database query.
+ *
+ * No functions return this.  It should not be used directly.  Use the interface
+ * provided by Result instead.
  *
  * See_Also:
- *	Result
+ *	Result is the interface that this provides an implementation of.
  */
-
-class PgResult : BaseResult {
+class PgResult : Result {
 	public:
-	/**
-	 * Params:
-	 *	res = PostgreSQL result structure.
-	 */
 	this (PGresult* res) {
 		m_res = res;
 		m_rows = PQntuples(res);
@@ -32,21 +29,17 @@ class PgResult : BaseResult {
 	}
 
 	/**
+	 * Get the next row from a result set.
 	 *
+	 * Returns:
+	 *	A Row object with the queried information or null for an empty set.
 	 */
-	~this () {
-		finish();
-	}
-
-	 /**
-	  *
-	  */
 	override Row fetchRow () {
 		if (m_rowIdx > m_rows) {
 			return null;
 		}
 		Row r = new Row();
-		for (int a=0; a < m_fields; a++) {
+		for (int a = 0; a < m_fields; a++) {
 			r.addField(std.string.toString(PQfname(m_res, a)).strip().dup, std.string.toString(PQgetvalue(m_res, m_rowIdx, a)).strip().dup, "", 0);
 		}
 		m_rowIdx += 1;
@@ -54,7 +47,7 @@ class PgResult : BaseResult {
 	}
 
 	/**
-	 *
+	 * Free all database resources used by a result set.
 	 */
 	override void finish () {
 		if (m_res != null) {

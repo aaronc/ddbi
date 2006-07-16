@@ -1,94 +1,133 @@
 /**
  * Authors: The D DBI project
  *
+ * Version: 0.2.2
+ *
  * Copyright: BSD license
  */
 module dbi.sqlite.SqliteDatabase;
 
 private import std.string;
-private import dbi.BaseDatabase, dbi.DBIException, dbi.Result, dbi.Row, dbi.Statement;
-private import dbi.sqlite.imp, dbi.sqlite.SqliteResult;
+private import dbi.Database, dbi.DBIException, dbi.Result, dbi.Row, dbi.Statement;
+private import dbi.sqlite.imp, dbi.sqlite.SqliteError, dbi.sqlite.SqliteResult;
 
 /**
- * Manage a SQLite database. This class implements all of the current
- * DBD interface as defined in Database. In addition, a few "extra"
- * functions are included.
+ * An implementation of Database for use with SQLite databases.
  *
  * See_Also:
- *	BaseDatabase, Database
+ *	Database is the interface that this provides an implementation of.
  */
-class SqliteDatabase : BaseDatabase {
+class SqliteDatabase : Database {
 	public:
 
 	/**
-	 *
+	 * Create a new instance of SqliteDatabase, but don't open a database.
 	 */
 	this () {	
 	}
 
 	/**
+	 * Create a new instance of SqliteDatabase and open a database.
 	 *
+	 * See_Also:
+	 *	connect
 	 */
 	this (char[] dbFile) {
-		if ((errorCode = sqlite3_open(dbFile, &db)) != SQLITE_OK) {
-			throw new DBIException("Could not open or create: " ~ dbFile, errorCode);
-		}
+		connect(dbFile);
 	}
 
 	/**
-	 * Connect to a database or create one if necessary.
+	 * Open a SQLite database for use.
 	 *
 	 * Params:
-	 *	dbFile - Database filename to open or create.
-	 *	user - Unused.
-	 *	passwd - Unused.
+	 *	params = The name of the SQLite database to open.
+	 *	username = Unused.
+	 *	password = Unused.
+	 *
+	 * Throws:
+	 *	DBIException if there was an error accessing the database.
+	 *
+	 * Examples:
+	 *	---
+	 *	SqliteDatabase db = new SqliteDatabase();
+	 *	db.connect("_test.db", null, null);
+	 *	---
 	 */
-	override void connect (char[] dbFile, char[] user = null, char[] passwd = null) {
-		if ((errorCode = sqlite3_open(dbFile, &db)) != SQLITE_OK) {
-			throw new DBIException("Could not open or create: " ~ dbFile, errorCode);
+	override void connect (char[] params, char[] username = null, char[] password = null) {
+		if ((errorCode = sqlite3_open(params, &db)) != SQLITE_OK) {
+			throw new DBIException("Could not open or create " ~ params, errorCode, specificToGeneral(errorCode));
 		}
 	}
 
 	/**
-	 *
+	 * Close the current connection to the database.
 	 */
 	override void close () {
 		sqlite3_close(db);
 	}
 
 	/**
+	 * Execute a SQL statement that returns no results.
 	 *
+	 * Params:
+	 *	sql = The SQL statement to _execute.
+	 *
+	 * Throws:
+	 *	DBIException if the SQL code couldn't be executed.
 	 */
 	override void execute (char[] sql) {
 		char** errorMessage;
 		this.sql = sql;
 		if ((errorCode = sqlite3_exec(db, sql, null, null, errorMessage)) != SQLITE_OK) {
-			throw new DBIException(std.string.toString(sqlite3_errmsg(db)), sql, errorCode);
+			throw new DBIException(std.string.toString(sqlite3_errmsg(db)), sql, errorCode, specificToGeneral(errorCode));
 		}
 	}
 
 	/**
+	 * Query the database.
 	 *
+	 * Params:
+	 *	sql = The SQL statement to execute.
+	 *
+	 * Returns:
+	 *	A Result object with the queried information.
+	 *
+	 * Throws:
+	 *	DBIException if the SQL code couldn't be executed.
 	 */
 	override Result query (char[] sql) {
 		char** errorMessage;
 		sqlite3_stmt* stmt;
 		this.sql = sql;
 		if ((errorCode = sqlite3_prepare(db, sql, sql.length, &stmt, errorMessage)) != SQLITE_OK) {
-			throw new DBIException(std.string.toString(sqlite3_errmsg(db)), sql, errorCode);
+			throw new DBIException(std.string.toString(sqlite3_errmsg(db)), sql, errorCode, specificToGeneral(errorCode));
 		}
 		return new SqliteResult(stmt);
 	}
 
 	/**
+	 * Get the error code.
 	 *
+	 * Deprecated:
+	 *	This functionality now exists in DBIException.  This will be
+	 *	removed in version 0.3.0.
+	 *
+	 * Returns:
+	 *	The database specific error code.
 	 */
 	deprecated override int getErrorCode () {
 		return sqlite3_errcode(db);
 	}
 
 	/**
+	 * Get the error message.
 	 *
+	 * Deprecated:
+	 *	This functionality now exists in DBIException.  This will be
+	 *	removed in version 0.3.0.
+	 *
+	 * Returns:
+	 *	The database specific error message.
 	 */
 	deprecated override char[] getErrorMessage () {
 		return std.string.toString(sqlite3_errmsg(db));
@@ -99,83 +138,89 @@ class SqliteDatabase : BaseDatabase {
 	 */
 
 	/**
+	 * Get the rowid of the last insert.
 	 *
+	 * Returns:
+	 *	The row of the last insert or 0 if no inserts have been done.
 	 */
 	long getLastInsertRowId () {
 		return sqlite3_last_insert_rowid(db);
 	}
 
 	/**
+	 * Get the number of rows affected by the last SQL statement.
 	 *
+	 * Returns:
+	 *	The number of rows affected by the last SQL statement.
 	 */
 	int getChanges () {
 		return sqlite3_changes(db);
 	}
 
 	/**
-	 * Get a list of all table names.
+	 * Get a list of all the table names.
 	 *
 	 * Returns: 
-	 *	Array of all table names.
+	 *	An array of all the table names.
 	 */
 	char[][] getTableNames () {
 		return getItemNames("table");
 	}
 
 	/**
-	 * Get a list of all view names.
+	 * Get a list of all the view names.
 	 *
 	 * Returns:
-	 *	Array of all view names.
+	 *	An array of all the view names.
 	 */
 	char[][] getViewNames () {
 		return getItemNames("view");
 	}
 
 	/**
-	 * Get a list of all index names.
+	 * Get a list of all the index names.
 	 *
 	 * Returns:
-	 *	Array of all index names.
+	 *	An array of all the index names.
 	 */
 	char[][] getIndexNames () {
 		return getItemNames("index");
 	}
 
 	/**
-	 * Does this database have the given table?
+	 * Check if a table exists.
 	 *
 	 * Param:
 	 *	name = Name of the table to check for the existance of.
 	 *
 	 * Returns:
-	 *	false if it doesn't have it and true otherwise.
+	 *	true if it exists or false otherwise.
 	 */
 	bool hasTable (char[] name) {
 		return hasItem("table", name);
 	}
 
 	/**
-	 * Does this database have the given view?
+	 * Check if a view exists.
 	 *
 	 * Params:
 	 *	name = Name of the view to check for the existance of.
 	 *
 	 * Returns:
-	 *	false if it doesn't have it and true otherwise.
+	 *	true if it exists or false otherwise.
 	 */
 	bool hasView (char[] name) {
 		return hasItem("view", name);
 	}
 
 	/**
-	 * Does this database have the given index?
+	 * Check if an index exists.
 	 *
 	 * Params:
 	 *	name = Name of the index to check for the existance of.
 	 *
 	 * Returns:
-	 *	false if it doesn't have it and true otherwise.
+	 *	true if it exists or false otherwise.
 	 */
 	bool hasIndex (char[] name) {
 		return hasItem("index", name);
@@ -192,7 +237,7 @@ class SqliteDatabase : BaseDatabase {
 	char[][] getItemNames(char[] type) {
 		char[][] items;
 		Row[] rows = queryFetchAll("SELECT name FROM sqlite_master WHERE type='" ~ type ~ "'");
-		for (int idx=0; idx < rows.length; idx++) {
+		for (int idx = 0; idx < rows.length; idx++) {
 			items ~= rows[idx].get(0);
 		}
 		return items;

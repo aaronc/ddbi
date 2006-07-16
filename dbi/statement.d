@@ -1,6 +1,8 @@
 /**
  * Authors: The D DBI project
  *
+ * Version: 0.2.2
+ *
  * Copyright: BSD license
  */
 module dbi.Statement;
@@ -9,29 +11,48 @@ private import std.string;
 private import dbi.Database, dbi.Result;
 
 /**
- * SQL statement
+ * A prepared SQL statement.
+ *
+ * Bugs:
+ *	The statement is stored but not prepared.
+ *
+ *	The index version of bind ignores its first parameter.
+ *
+ *	The two forms of bind cannot be used at the same time.
  *
  * Todo:
  *	make execute/query("10", "20", 30); work (variable arguments for binding to ?, ?, ?, etc...)
  */
 final class Statement {
 	/**
+	 * Make a new instance of Statement.
 	 *
+	 * Params:
+	 *	database = The database connection to use.
+	 *	sql = The SQL code to prepare.
 	 */
-	this (Database db, char[] sql) {
-		this.db = db;
+	this (Database database, char[] sql) {
+		this.database = database;
 		this.sql = sql;
 	}
 
 	/**
+	 * Bind a _value to the next "?".
 	 *
+	 * Params:
+	 *	index = Currently ignored.  This is a bug.
+	 *	value = The _value to _bind.
 	 */
-	void bind (uint idx, char[] value) {
+	void bind (size_t index, char[] value) {
 		binds ~= escape(value);
 	}
 
 	/**
+	 * Bind a _value to a ":name:".
 	 *
+	 * Params:
+	 *	fn = The name to _bind value to.
+	 *	value = The _value to _bind.
 	 */
 	void bind (char[] fn, char[] value) {
 		bindsFNs ~= fn;
@@ -39,34 +60,45 @@ final class Statement {
 	}
 
 	/**
-	 *
-	 */
-	char[] escape (char[] str) {
-		return replace(str, "'", "''");
-	}
-
-	/**
-	 *
+	 * Execute a SQL statement that returns no results.
 	 */
 	void execute () {
-		db.execute(getSql());
+		database.execute(getSql());
 	}
 
 	/**
+	 * Query the database.
 	 *
+	 * Returns:
+	 *	A Result object with the queried information.
 	 */
 	Result query () {
-		return db.query(getSql());
+		return database.query(getSql());
 	}
 
 	private:
-	Database db;
+	Database database;
 	char[] sql;
 	char[][] binds;
 	char[][] bindsFNs;
 
 	/**
-	 * Build SQL by replacing ?'s in sequential order
+	 * Escape a SQL statement.
+	 *
+	 * Params:
+	 *	string = An unescaped SQL statement.
+	 *
+	 * Returns:
+	 *	The escaped form of string.
+	 */
+	char[] escape (char[] string) {
+		return std.string.replace(string, "'", "''");
+	}
+	/**
+	 * Replace every "?" in the current SQL statement with its bound value.
+	 *
+	 * Returns:
+	 *	The current SQL statement with all occurances of "?" replaced.
 	 *
 	 * Todo:
 	 *	Raise an exception if binds.length != count(sql, "?")
@@ -74,7 +106,7 @@ final class Statement {
 	char[] getSqlByQM () {
 		char[] result = sql;
 		ptrdiff_t qmIdx = 0, qmCount = 0;
-		while ((qmIdx = find(result, "?")) != -1) {
+		while ((qmIdx = std.string.find(result, "?")) != -1) {
 			result = result[0 .. qmIdx] ~ "'" ~ binds[qmCount] ~ "'" ~ result[qmIdx + 1 .. result.length];
 			qmCount += 1;
 		}
@@ -82,7 +114,10 @@ final class Statement {
 	}
 
 	/**
-	 * Build SQL by replacing :fieldname: with values in binds
+	 * Replace every ":name:" in the current SQL statement with its bound value.
+	 *
+	 * Returns:
+	 *	The current SQL statement with all occurances of ":name:" replaced.
 	 *
 	 * Todo:
 	 *	Raise an exception if binds.length != (count(sql, ":") * 2)
@@ -97,19 +132,29 @@ final class Statement {
 	}
 
 	/**
+	 * Replace all variables with their bound values.
 	 *
+	 * Returns:
+	 *	The current SQL statement with all occurances of variables replaced.
 	 */
 	char[] getSql () {
 		if (count(sql, "?") > 0) {
 			return getSqlByQM();
 		} else if (count(sql, ":") > 0) {
 			return getSqlByFN();
+		} else {
+			return sql;
 		}
-		return sql;
 	}
 
 	/**
+	 * Get the value bound to a ":name:".
 	 *
+	 * Params:
+	 *	fn = The ":name:" to return the bound value of.
+	 *
+	 * Returns:
+	 *	The bound value of fn.
 	 */
 	char[] getBoundValue (char[] fn) {
 		for (ptrdiff_t idx = 0; idx < bindsFNs.length; idx++) {

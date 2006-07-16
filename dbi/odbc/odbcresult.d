@@ -1,15 +1,17 @@
 /**
  * Authors: The D DBI project
  *
+ * Version: 0.2.2
+ *
  * Copyright: BSD license
  */
-module dbi.odbc.odbcResult;
+module dbi.odbc.OdbcResult;
 
 // Almost every cast involving chars and SQLCHARs shouldn't exist, but involve bugs in
 // WindowsAPI revision 144.  I'll see about fixing their ODBC and SQL files soon.
 // WindowsAPI should also include odbc32.lib itself.
 
-private import dbi.BaseResult, dbi.DBIException, dbi.Row;
+private import dbi.DBIException, dbi.Result, dbi.Row;
 private import win32.odbcinst, win32.sql, win32.sqlext, win32.sqltypes, win32.sqlucode, win32.windef;
 
 pragma (lib, "odbc32.lib");
@@ -22,13 +24,16 @@ private bool SQL_SUCCEEDED (SQLRETURN ret) {
 }
 
 /**
+ * Manage a result set from an ODBC interface query.
  *
+ * No functions return this.  It should not be used directly.  Use the interface
+ * provided by Result instead.
+ *
+ * See_Also:
+ *	Result is the interface that this provides an implementation of.
  */
-class odbcResult : BaseResult {
+class OdbcResult : Result {
 	public:
-	/**
-	 *
-	 */
 	this (SQLHSTMT stmt) {
 		this.stmt = stmt;
 
@@ -62,14 +67,10 @@ class odbcResult : BaseResult {
 	}
 
 	/**
+	 * Get the next row from a result set.
 	 *
-	 */
-  	~this () {
-		finish();
-	}
-
-	/**
-	 *
+	 * Returns:
+	 *	A Row object with the queried information or null for an empty set.
 	 */
 	override Row fetchRow () {
 		if (SQL_SUCCEEDED(SQLFetch(stmt))) {
@@ -93,7 +94,10 @@ class odbcResult : BaseResult {
 	}
 
 	/**
+	 * Free all database resources used by a result set.
 	 *
+	 * Throws:
+	 *	DBIException if an ODBC statement couldn't be destroyed.
 	 */
 	override void finish () {
 		if (stmt !is null) {
@@ -101,7 +105,6 @@ class odbcResult : BaseResult {
 				throw new DBIException("Unable to destroy an ODBC statement.  ODBC returned " ~ getLastErrorMessage, getLastErrorCode);
 			}
 			stmt = null;
-			this = null;
 		}
 	}
 

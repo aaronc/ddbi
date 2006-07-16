@@ -1,17 +1,19 @@
 /**
  * Authors: The D DBI project
  *
+ * Version: 0.2.2
+ *
  * Copyright: BSD license
  */
-module dbi.odbc.odbcDatabase;
+module dbi.odbc.OdbcDatabase;
 
 // Almost every cast involving chars and SQLCHARs shouldn't exist, but involve bugs in
 // WindowsAPI revision 144.  I'll see about fixing their ODBC and SQL files soon.
 // WindowsAPI should also include odbc32.lib itself.
 
 private import std.string;
-private import dbi.BaseDatabase, dbi.DBIException, dbi.Result;
-private import dbi.odbc.odbcResult;
+private import dbi.Database, dbi.DBIException, dbi.Result;
+private import dbi.odbc.OdbcResult;
 private import win32.odbcinst, win32.sql, win32.sqlext, win32.sqltypes, win32.sqlucode, win32.windef;
 
 pragma (lib, "odbc32.lib");
@@ -43,12 +45,18 @@ static ~this () {
 }
 
 /**
+ * An implementation of Database for use with the ODBC interface.
  *
+ * Bugs:
+ *	Database-specific error codes are not converted to ErrorCode.
+ *
+ * See_Also:
+ *	Database is the interface that this provides an implementation of.
  */
-class odbcDatabase : BaseDatabase {
+class OdbcDatabase : Database {
 	public:
 	/**
-	 *
+	 * Create a new instance of OdbcDatabase, but don't connect.
 	 */
 	this () {
 		if (!SQL_SUCCEEDED(SQLAllocHandle(SQL_HANDLE_DBC, environment, &connection))) {
@@ -57,16 +65,51 @@ class odbcDatabase : BaseDatabase {
 	}
 
 	/**
+	 * Create a new instance of OdbcDatabase and connect to a server.
 	 *
+	 * See_Also:
+	 *	connect
 	 */
-	override void connect (char[] conn, char[] user = null, char[] passwd = null) {
-		if (std.string.find(conn, "=") > 0) {
+	this (char[] params, char[] username = null, char[] password = null) {
+		this();
+		connect(params, username, password);
+	}
+
+	/**
+	 * Connect to a database using ODBC.
+	 *
+	 * This function will connect DSN-lessly if params has a "=" and with DSN
+	 * otherwise.  For information on how to use connect DSN-lessly, see the
+	 * ODBC documentation.
+	 *
+	 * Bugs:
+	 *	Connecting DSN-lessly ignores username and password.
+	 *
+	 * Params:
+	 *	params = The DSN to use or the connection parameters.
+	 *	username = The _username to _connect with.
+	 *	password = The _password to _connect with.
+	 *
+	 * Throws:
+	 *	DBIException if there was an error connecting.
+	 *
+	 * Examples:
+	 *	---
+	 *	OdbcDatabase db = new OdbcDatabase();
+	 *	db.connect("Data Source Name", "_username", "_password");
+	 *	---
+	 *
+	 * See_Also:
+	 *	The ODBC documentation included with the MDAC 2.8 SDK.
+	 */
+	override void connect (char[] params, char[] username = null, char[] password = null) {
+		if (std.string.find(params, "=") > 0) {
 			SQLCHAR[1024] buffer;
-			if (!SQL_SUCCEEDED(SQLDriverConnect(connection, null, cast(SQLCHAR*)conn, cast(SQLSMALLINT)conn.length, buffer, buffer.length, null, SQL_DRIVER_COMPLETE))) {
+			if (!SQL_SUCCEEDED(SQLDriverConnect(connection, null, cast(SQLCHAR*)params, cast(SQLSMALLINT)params.length, buffer, buffer.length, null, SQL_DRIVER_COMPLETE))) {
 				throw new DBIException("Unable to connect to the database.  ODBC returned " ~ getLastErrorMessage, getLastErrorCode);
 			}
 		} else {
-			if (!SQL_SUCCEEDED(SQLConnect(connection, cast(SQLCHAR*)conn, cast(SQLSMALLINT)conn.length, cast(SQLCHAR*)user, cast(SQLSMALLINT)user.length, cast(SQLCHAR*)passwd, cast(SQLSMALLINT)passwd.length))) {
+			if (!SQL_SUCCEEDED(SQLConnect(connection, cast(SQLCHAR*)params, cast(SQLSMALLINT)params.length, cast(SQLCHAR*)username, cast(SQLSMALLINT)username.length, cast(SQLCHAR*)password, cast(SQLSMALLINT)password.length))) {
 				throw new DBIException("Unable to connect to the database.  ODBC returned " ~ getLastErrorMessage, getLastErrorCode);
 			}
 		}
@@ -74,7 +117,12 @@ class odbcDatabase : BaseDatabase {
 	}
 
 	/**
+	 * Close the current connection to the database.
 	 *
+	 * Throws:
+	 *	DBIException if there was an error disconnecting.
+	 *
+	 *	DBIException if the ODBC connection handle couldn't be closed.
 	 */
 	override void close () {
 		if (!SQL_SUCCEEDED(SQLDisconnect(connection))) {
@@ -86,12 +134,23 @@ class odbcDatabase : BaseDatabase {
 	}
 
 	/**
+	 * Execute a SQL statement that returns no results.
 	 *
+	 * Params:
+	 *	sql = The SQL statement to _execute.
+	 *
+	 * Throws:
+	 *	DBIException if an ODBC statement couldn't be created.
+	 *
+	 *	DBIException if the SQL code couldn't be executed.
+	 *
+	 *	DBIException if there is an error while committing the changes.
+	 *
+	 *	DBIException if there is an error while rolling back the changes.
+	 *
+	 *	DBIException if an ODBC statement couldn't be destroyed.
 	 */
 	override void execute (char[] sql) {
-		if (!SQL_SUCCEEDED(SQLAllocHandle(SQL_HANDLE_STMT, connection, &stmt))) {
-			throw new DBIException("Unable to create an ODBC statement.  ODBC returned " ~ getLastErrorMessage, getLastErrorCode);
-		}
 		scope (exit)
 			stmt = null;
 		scope (exit)
@@ -106,6 +165,9 @@ class odbcDatabase : BaseDatabase {
 			if (!SQL_SUCCEEDED(SQLEndTran(SQL_HANDLE_DBC, connection, SQL_COMMIT))) {
 				throw new DBIException("Unable to commit data after a successful query.  ODBC returned " ~ getLastErrorMessage, sql, getLastErrorCode);
 			}
+		if (!SQL_SUCCEEDED(SQLAllocHandle(SQL_HANDLE_STMT, connection, &stmt))) {
+			throw new DBIException("Unable to create an ODBC statement.  ODBC returned " ~ getLastErrorMessage, getLastErrorCode);
+		}
 		if (!SQL_SUCCEEDED(SQLExecDirect(stmt, cast(SQLCHAR*)sql, sql.length))) {
 			throw new DBIException("Unable to execute SQL code.  ODBC returned " ~ getLastErrorMessage, sql, getLastErrorCode);
 		}
@@ -113,7 +175,24 @@ class odbcDatabase : BaseDatabase {
 	}
 
 	/**
+	 * Query the database.
 	 *
+	 * Params:
+	 *	sql = The SQL statement to execute.
+	 *
+	 * Returns:
+	 *	A Result object with the queried information.
+	 *
+	 * Throws:
+	 *	DBIException if an ODBC statement couldn't be created.
+	 *
+	 *	DBIException if the SQL code couldn't be executed.
+	 *
+	 *	DBIException if there is an error while committing the changes.
+	 *
+	 *	DBIException if there is an error while rolling back the changes.
+	 *
+	 *	DBIException if an ODBC statement couldn't be destroyed.
 	 */
 	override Result query (char[] sql) {
 		scope (failure)
@@ -132,21 +211,35 @@ class odbcDatabase : BaseDatabase {
 			throw new DBIException("Unable to create an ODBC statement.  ODBC returned " ~ getLastErrorMessage, getLastErrorCode);
 		}
 		if (SQL_SUCCEEDED(SQLExecDirect(stmt, cast(SQLCHAR*)sql, sql.length))) {
-			return new odbcResult(stmt);
+			return new OdbcResult(stmt);
 		} else {
 			throw new DBIException("Unable to query the database.  ODBC returned " ~ getLastErrorMessage, sql, getLastErrorCode);
 		}
 	}
 
 	/**
+	 * Get the error code.
 	 *
+	 * Deprecated:
+	 *	This functionality now exists in DBIException.  This will be
+	 *	removed in version 0.3.0.
+	 *
+	 * Returns:
+	 *	The database specific error code.
 	 */
 	deprecated override int getErrorCode () {
 		return getLastErrorCode;
 	}
 
 	/**
+	 * Get the error message.
 	 *
+	 * Deprecated:
+	 *	This functionality now exists in DBIException.  This will be
+	 *	removed in version 0.3.0.
+	 *
+	 * Returns:
+	 *	The database specific error message.
 	 */
 	deprecated override char[] getErrorMessage () {
 		return getLastErrorMessage();
@@ -157,7 +250,7 @@ class odbcDatabase : BaseDatabase {
 	 */
 
 	/**
-	 * Get a list of ODBC drivers.
+	 * Get a list of currently installed ODBC drivers.
 	 *
 	 * Returns:
 	 *	A list of all the installed ODBC drivers.
@@ -181,6 +274,12 @@ class odbcDatabase : BaseDatabase {
 		return cast(char[][])driverList;
 	}
 
+	/**
+	 * Get a list of currently available ODBC data sources.
+	 *
+	 * Returns:
+	 *	A list of all the installed ODBC data sources.
+	 */
 	char[][] getDataSources () {
 		SQLCHAR[][] dataSourceList;
 		SQLCHAR[512] dsn;
@@ -206,6 +305,9 @@ class odbcDatabase : BaseDatabase {
 
 	/**
 	 * Get the last error message returned by the server.
+	 *
+	 * Returns:
+	 *	The last error message returned by the server.
 	 */
 	char[] getLastErrorMessage () {
 		SQLSMALLINT errorNumber;
@@ -221,6 +323,9 @@ class odbcDatabase : BaseDatabase {
 
 	/**
 	 * Get the last error code return by the server.  This is the native code.
+	 *
+	 * Returns:
+	 *	The last error message returned by the server.
 	 */
 	int getLastErrorCode () {
 		SQLSMALLINT errorNumber;

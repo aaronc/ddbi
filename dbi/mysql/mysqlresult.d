@@ -1,42 +1,36 @@
 /**
  * Authors: The D DBI project
  *
+ * Version: 0.2.2
+ *
  * Copyright: BSD license
  */
 module dbi.mysql.MysqlResult;
 
 private import std.string;
-private import dbi.BaseResult, dbi.Row;
+private import dbi.Result, dbi.Row;
 private import dbi.mysql.imp;
 
 /**
- * Manage the results of a mysql result set. This class implements
- * all of the current DBD Result interface. The interface is not
- * described here again, instead please view Result directly.
+ * Manage a result set from a MySQL database query.
+ *
+ * No functions return this.  It should not be used directly.  Use the interface
+ * provided by Result instead.
  *
  * See_Also:
- *	Result
+ *	Result is the interface that this provides an implementation of.
  */
-class MysqlResult : BaseResult {
+class MysqlResult : Result {
 	public:
-	/**
-	 *
-	 */
 	this (MYSQL_RES* res) {
 		this.m_res = res;
 	}
 
 	/**
+	 * Get the next row from a result set.
 	 *
-	 */
-	~this () {
-		if (m_res != null) {
-			finish();
-		}
-	}
-
-	/**
-	 *
+	 * Returns:
+	 *	A Row object with the queried information or null for an empty set.
 	 */
 	override Row fetchRow () {
 		MYSQL_ROW row = mysql_fetch_row(m_res);
@@ -54,11 +48,13 @@ class MysqlResult : BaseResult {
 	}
 
 	/**
-	 *
+	 * Free all database resources used by a result set.
 	 */
 	override void finish () {
-		mysql_free_result(m_res);
-		m_res = null;
+		if (m_res !is null) {
+			mysql_free_result(m_res);
+			m_res = null;
+		}
 	}
 
 	private:

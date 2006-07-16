@@ -1,16 +1,28 @@
 /**
  * Authors: The D DBI project
  *
+ * Version: 0.2.2
+ *
  * Copyright: BSD license
  */
 module dbi.Row;
 
+private import std.conv, std.stdio;
 private import dbi.DBIException;
 
-private import std.stdio, std.conv;
-
 /**
- * Provide access to a single row in a result set.
+ * Access to a single row in a result set.
+ *
+ * Almost everything in this file is going to be deprecated and replaced soon.  To
+ * give your opinions on what should be done with it, go to the D DBI forums at
+ * www.dsource.org/forums/viewtopic.php?t=1640.  Whatever is decided will
+ * take effect in version 0.3.0.  Anything deprecated will be removed in version
+ * 0.4.0.
+ *
+ * As a result, this file is no longer being updated with the exception of bug
+ * fixes.  It is highly recommended that even if you do not want to contribute
+ * to the discussion on what to do to this file, you should follow the link to see
+ * what the new version is likely to look like.
  */
 final class Row {
 	/**
@@ -20,10 +32,10 @@ final class Row {
 	 *	idx = Field index.
 	 *
 	 * Examples:
-	 *	(begin code)
+	 *	---
 	 *	Row row = res.fetchRow();
-	 *	printf("first=%.*s, last=%.*s\n", row[0], row[1]);
-	 *	(end code)
+	 *	writefln("first=%s, last=%s\n", row[0], row[1]);
+	 *	---
 	 *
 	 * Returns:
 	 *	The field's contents.
@@ -38,11 +50,11 @@ final class Row {
 	 * Params:
 	 *	name = Field _name.
 	 *
-	 * Example:
-	 *	(begin code)
+	 * Examples:
+	 *	---
 	 *	Row row = res.fetchRow();
-	 *	printf("first=%.*s, last=%.*s\n", row["first"], row["last"]);
-	 *	(end code)
+	 *	wriefln("first=%s, last=%s\n", row["first"], row["last"]);
+	 *	---
 	 *
 	 * Returns: 
 	 *	The field's contents.
@@ -82,6 +94,9 @@ final class Row {
 	 *
 	 * Params:
 	 *	name = Field _name.
+	 *
+	 * Throws:
+	 *	DBIException if name is not a valid index.
 	 *
 	 * Returns:
 	 *	The field's index.

@@ -1,6 +1,8 @@
 /**
  * Authors: The D DBI project
  *
+ * Version: 0.2.2
+ *
  * Copyright: BSD license
  */
 module dbi.ErrorCode;
@@ -8,36 +10,47 @@ module dbi.ErrorCode;
 private import dbi.DBIException;
 
 /**
+ * The standardized D DBI error code list.
  *
+ * Note that the only things guaranteed not to change are NoError and Unknown.
  */
 enum ErrorCode {
-	NoError = 0,
-	// Either DB-specific or not currently mapped to a standard error code.
-	Unknown,
+	NoError = 0,		// There is no error right now.
+	Unknown,		// Either DB-specific or not mapped to a standard error code.
+
 	// Errors in establishing a connection.
-	SocketError,
-	VersionError,
-	ConnectionError,
-	// Errors while logging in.
-	UsernameError,
-	PasswordError,
+
+	SocketError,		/// There was a local error initializing the connection.
+	ProtocolError,		/// Different versions of the connection protocol are in use.
+	ConnectionError,	/// Invalid username, password, or security settings.
+
 	// Errors in making a query (general).
-	OutOfSync,
-	NoData,
-	InvalidData,
-	InvalidQuery,
+
+	OutOfSync,		/// The statement was valid, but couldn't be executed.
+	InvalidData,		/// Invalid data was passed to or received from the server.
+	InvalidQuery,		/// A query could not be successfully parsed.
+	PermissionsError,	/// You do not have appropriate permission to do that.
+
 	// Errors in making a query (prepared statements).
-	NotPrepared,
-	ParamsNotBound,
-	InvalidParams,
+
+	NotPrepared,		/// A statement wasn't prepared.
+	ParamsNotBound,		/// A prepared statement had unbound parameters.
+	InvalidParams,		/// A prepared statement was given invalid parameters.
+
 	// Miscellaneous
-	LicenseError,
-	NotImplemented,
-	ServerError
+
+	NotImplemented,		/// A feature or function couldn't be used.
+	ServerError		/// An error occurred on the server.
 }
 
 /**
- * 
+ * Convert an ErrorCode to its string form.
+ *
+ * Params:
+ *	error = The ErrorCode in enum format.
+ *
+ * Returns:
+ *	The string form of error.
  */
 char[] toString (ErrorCode error) {
 	switch (error) {
@@ -47,35 +60,31 @@ char[] toString (ErrorCode error) {
 			return "Unknown";
 		case (ErrorCode.SocketError):
 			return "Socket Error";
+		case (ErrorCode.ProtocolError):
+			return "Protocol Mismatch Error";
 		case (ErrorCode.ConnectionError):
 			return "Connection Error";
-		case (ErrorCode.VersionError):
-			return "Version Mismatch Error";
-		case (ErrorCode.UsernameError):
-			return "Username Error";
-		case (ErrorCode.PasswordError):
-			return "Password Error";
 		case (ErrorCode.OutOfSync):
 			return "Out Of Sync";
-		case (ErrorCode.NoData):
-			return "No Data";
 		case (ErrorCode.InvalidData):
 			return "Invalid Data";
 		case (ErrorCode.InvalidQuery):
 			return "Invalid Query";
+		case (ErrorCode.PermissionsError):
+			return "Permissions Error";
 		case (ErrorCode.NotPrepared):
 			return "Not Prepared";
 		case (ErrorCode.ParamsNotBound):
 			return "Params Not Bound";
 		case (ErrorCode.InvalidParams):
 			return "Invalid Params";
-		case (ErrorCode.LicenseError):
-			return "License Error";
 		case (ErrorCode.NotImplemented):
 			return "Not Implemented";
 		case (ErrorCode.ServerError):
 			return "Server Error";
 		default:
+		throw new DBIException("Unknown error code.");
 	}
+	// Bugfix for DMD 0.162
 	throw new DBIException("Unknown error code.");
 }
