@@ -7,8 +7,6 @@
  */
 module dbi.ErrorCode;
 
-private import dbi.DBIException;
-
 /**
  * The standardized D DBI error code list.
  *
