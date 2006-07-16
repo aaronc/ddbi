@@ -83,8 +83,8 @@ char[] toString (ErrorCode error) {
 		case (ErrorCode.ServerError):
 			return "Server Error";
 		default:
-		throw new DBIException("Unknown error code.");
+			return "Not a valid ErrorCode";
 	}
 	// Bugfix for DMD 0.162
-	throw new DBIException("Unknown error code.");
+	return "Not a valid ErrorCode";
 }
