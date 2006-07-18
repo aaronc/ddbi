@@ -1,13 +1,13 @@
 /**
  * Authors: The D DBI project
  *
- * Version: 0.2.2
+ * Version: 0.2.3
  *
  * Copyright: BSD license
  */
 module dbi.Statement;
 
-private import std.string;
+private static import std.string;
 private import dbi.Database, dbi.Result;
 
 /**
@@ -138,9 +138,9 @@ final class Statement {
 	 *	The current SQL statement with all occurances of variables replaced.
 	 */
 	char[] getSql () {
-		if (count(sql, "?") > 0) {
+		if (std.string.count(sql, "?") > 0) {
 			return getSqlByQM();
-		} else if (count(sql, ":") > 0) {
+		} else if (std.string.count(sql, ":") > 0) {
 			return getSqlByFN();
 		} else {
 			return sql;

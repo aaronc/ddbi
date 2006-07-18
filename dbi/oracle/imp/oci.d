@@ -6,7 +6,7 @@
  * Version:
  *	Oracle 10g revision 2
  *
- *	Import library version 0.01
+ *	Import library version 0.02
  *
  * Authors: The D DBI project
  *
@@ -14,26 +14,26 @@
  */
 module dbi.oracle.imp.oci;
 
-import	dbi.oracle.imp.nzerror,
-	dbi.oracle.imp.nzt,
-	dbi.oracle.imp.oci1,
-	dbi.oracle.imp.oci8dp,
-	dbi.oracle.imp.ociap,
-	dbi.oracle.imp.ociapr,
-	dbi.oracle.imp.ocidef,
-	dbi.oracle.imp.ocidem,
-	dbi.oracle.imp.ocidfn,
-	dbi.oracle.imp.ociextp,
-	dbi.oracle.imp.ocikpr,
-	dbi.oracle.imp.ocixmldb,
-	dbi.oracle.imp.odci,
-	dbi.oracle.imp.oratypes,
-	dbi.oracle.imp.ori,
-	dbi.oracle.imp.orid,
-	dbi.oracle.imp.orl,
-	dbi.oracle.imp.oro,
-	dbi.oracle.imp.ort,
-	dbi.oracle.imp.xa;
+public import	dbi.oracle.imp.nzerror,
+		dbi.oracle.imp.nzt,
+		dbi.oracle.imp.oci1,
+		dbi.oracle.imp.oci8dp,
+		dbi.oracle.imp.ociap,
+		dbi.oracle.imp.ociapr,
+		dbi.oracle.imp.ocidef,
+		dbi.oracle.imp.ocidem,
+		dbi.oracle.imp.ocidfn,
+		dbi.oracle.imp.ociextp,
+		dbi.oracle.imp.ocikpr,
+		dbi.oracle.imp.ocixmldb,
+		dbi.oracle.imp.odci,
+		dbi.oracle.imp.oratypes,
+		dbi.oracle.imp.ori,
+		dbi.oracle.imp.orid,
+		dbi.oracle.imp.orl,
+		dbi.oracle.imp.oro,
+		dbi.oracle.imp.ort,
+		dbi.oracle.imp.xa;
 
 const uint OCI_HTYPE_FIRST		= 1;		/// Start value of handle type.
 const uint OCI_HTYPE_ENV		= 1;		/// Environment handle.

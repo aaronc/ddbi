@@ -6,7 +6,7 @@
  * Version:
  *	PostgreSQL version 8.1.4
  *
- *	Import library version 1.02
+ *	Import library version 1.03
  *
  * Authors: The D DBI project
  *
@@ -14,7 +14,7 @@
  */
 module dbi.pg.imp;
 
-private import std.cstream;
+private import std.c.stdio;
 
 version (Windows) {
 	pragma (lib, "libpq.lib");

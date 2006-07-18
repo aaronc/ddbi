@@ -1,13 +1,13 @@
 /**
  * Authors: The D DBI project
  *
- * Version: 0.2.2
+ * Version: 0.2.3
  *
  * Copyright: BSD license
  */
 module dbi.pg.PgDatabase;
 
-private import std.string;
+private static import std.string;
 private import dbi.Database, dbi.DBIException, dbi.Result, dbi.Row, dbi.Statement;
 private import dbi.pg.imp, dbi.pg.PgError, dbi.pg.PgResult;
 
@@ -125,7 +125,7 @@ class PgDatabase : Database {
 	 *	DBIException if the SQL code couldn't be executed.
 	 */
 	override void execute (char[] sql) {
-		PGresult* res = PQexec(m_pg, toStringz(sql.dup));
+		PGresult* res = PQexec(m_pg, sql.dup);
 		scope(exit) PQclear(res);
 		if ((m_errorCode = cast(size_t)PQresultStatus(res)) != ExecStatusType.PGRES_COMMAND_OK) {
 			throw new DBIException(std.string.toString(PQerrorMessage(m_pg)), m_errorCode, specificToGeneral(PQresultErrorField(res, PG_DIAG_SQLSTATE)));
@@ -145,7 +145,7 @@ class PgDatabase : Database {
 	 *	DBIException if the SQL code couldn't be executed.
 	 */
 	override Result query (char[] sql) {
-		PGresult* res = PQexec(m_pg, toStringz(sql.dup));
+		PGresult* res = PQexec(m_pg, sql.dup);
 		ExecStatusType status = PQresultStatus(res);
 		if ((m_errorCode = cast(size_t)PQresultStatus(res)) != ExecStatusType.PGRES_COMMAND_OK) {
 			throw new DBIException(std.string.toString(PQerrorMessage(m_pg)), m_errorCode, specificToGeneral(PQresultErrorField(res, PG_DIAG_SQLSTATE)));

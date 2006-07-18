@@ -6,7 +6,7 @@
  * Version:
  *	Oracle 10g revision 2
  *
- *	Import library version 0.01
+ *	Import library version 0.02
  *
  * Authors: The D DBI project
  *
@@ -1116,7 +1116,7 @@ extern (C) ub4 OCIRawSize (OCIEnv* env, OCIRaw* raw);
  *
  * Params:
  *	env = OCI environment handle initialized in object mode.
- *	raw = A pointer to the OCI variable-length _raw to convert.
+ *	raw = A pointer to the OCI variable-length _raw to return.
  *
  * Returns:
  *	raw as an array of bytes.
@@ -1297,81 +1297,23 @@ extern (C) sb4 OCICollMax (OCIEnv* env, OCIColl* coll);
  */
 extern (C) sword OCICollGetElem (OCIEnv* env, OCIError* err, OCIColl* coll, sb4 index, boolean* exists, dvoid** elem, dvoid** elemind);
 
-
-extern (C) sword OCICollGetElemArray (OCIEnv* env, OCIError* err, OCIColl* coll, sb4 index, boolean* exists, dvoid** elem, dvoid** elemind, uword* nelems);
-/*
-   NAME: OCICollGetElemArray - OCIColl GET pointers to elements from given index
-   PARAMETERS:
-        env (IN/OUT) - OCI environment handle initialized in object mode.
-        err (IN/OUT) - error handle. If there is an error, it is
-                recorded in 'err' and this function returns OCI_ERROR.
-                The error recorded in 'err' can be retrieved by calling
-                OCIErrorGet().
-        coll (IN) - pointers to the elements in this collection is returned
-        index (IN) - starting index of the element
-        exists (OUT) - set to FALSE if element at the specified index does 
-                not exist else TRUE
-        elem (OUT) - address of the desired elements is returned
-        elemind (OUT) [optional] - address of the null indicators information 
-                is returned; if (elemind == NULL) then the null indicator
-                information will NOT be returned
-        nelems(IN/OUT) - Upper bound of elem and/or elemind array
-   DESCRIPTION:
-        Get the address of the elements from the given position. Optionally
-        this function also returns the address of the element's null indicator
-        information.
- 
-        The following table describes for each collection element type
-        what the corresponding element pointer type is. The element pointer
-        is returned via the 'elem' parameter of OCICollGetElem().
- 
-           Element Type                       *elem is set to
-        -----------------------               ---------------
-         Oracle Number (OCINumber)              OCINumber*
-         Date (OCIDate)                         OCIDate*
-         Variable-length string (OCIString*)    OCIString**
-         Variable-length raw (OCIRaw*)          OCIRaw**
-         object reference (OCIRef*)             OCIRef**
-         lob locator (OCILobLocator*)           OCILobLocator**
-         object type (e.g. person)              person*
- 
-        The element pointer returned by OCICollGetElem() is in a form
-        such that it can not only be used to access the
-        element data but also is in a form that can be used as the target
-        (i.e left-hand-side) of an assignment statement.
- 
-        For example, assume the user is iterating over the elements of
-        a collection whose element type is object reference (OCIRef*). A call
-        to OCICollGetElem() returns pointer to a reference handle
-        (i.e. OCIRef**). After getting, the pointer to the collection
-        element, the user may wish to modify it by assigning a new reference.
-        This can be accomplished via the ref assignment function shown below:
- 
-        sword OCIRefAssign( OCIEnv *env, OCIError *err, CONST OCIRef *source,
-                            OCIRef **target );
- 
-        Note that the 'target' parameter of OCIRefAssign() is of type
-        'OCIRef**'. Hence OCICollGetElem() returns 'OCIRef**'.
-        If '*target == NULL' a new ref will be allocated by OCIRefAssign()
-        and returned via the 'target' parameter.
- 
-        Similarly, if the collection element was of type string (OCIString*),
-        OCICollGetElem() returns pointer to string handle
-        (i.e. OCIString**). If a new string is assigned, via
-        OCIStringAssign() or OCIStringAssignText() the type of the target
-        must be 'OCIString **'.
- 
-        If the collection element is of type Oracle number, OCICollGetElem()
-        returns OCINumber*. The prototype of OCINumberAssign() is shown below:
- 
-        sword OCINumberAssign(OCIError *err, CONST OCINumber *from,
-                              OCINumber *to);
-   RETURNS:
-        OCI_SUCCESS if the function completes successfully.
-        OCI_INVALID_HANDLE if 'env' or 'err' is NULL.
-        OCI_ERROR if
-          any of the input parameters is null
+/**
+ * Get the pointer to an array of elements of a collection by _index.
+ *
+ * Params:
+ *	env = OCI environment handle initialized in object mode.
+ *	err = OCI error handle.
+ *	coll = A pointer to the OCI collection to retrieve the pointer from.
+ *	index = The _index of the first element to return the pointer of.
+ *	exists = FALSE if there is nothing at index or TRUE if there is.
+ *	elem = The pointer to the element at index.  The type is a pointer to the desired type.
+ *	elemind = The address of elem's null indicator unless null is passed.
+ *	nelems = The number of elements to retrieve.
+ *
+ * Returns:
+ *	OCI_SUCCESS on success, OCI_INVALID_HANDLE on invalid parameters, or OCI_ERROR on error.
  */
+extern (C) sword OCICollGetElemArray (OCIEnv* env, OCIError* err, OCIColl* coll, sb4 index, boolean* exists, dvoid** elem, dvoid** elemind, uword* nelems);
 
 extern (C) sword OCICollAssignElem (OCIEnv* env, OCIError* err, sb4 index, dvoid* elem, dvoid* elemind, OCIColl* coll);
 /*

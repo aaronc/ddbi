@@ -6,7 +6,7 @@
  * Version:
  *	Oracle 10g revision 2
  *
- *	Import library version 0.01
+ *	Import library version 0.02
  *
  * Authors: The D DBI project
  *

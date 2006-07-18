@@ -1,13 +1,13 @@
 /**
  * Authors: The D DBI project
  *
- * Version: 0.2.2
+ * Version: 0.2.3
  *
  * Copyright: BSD license
  */
 module dbi.pg.PgResult;
 
-private import std.string;
+private static import std.string;
 private import dbi.Result, dbi.Row;
 private import dbi.pg.imp;
 
@@ -40,7 +40,7 @@ class PgResult : Result {
 		}
 		Row r = new Row();
 		for (int a = 0; a < m_fields; a++) {
-			r.addField(std.string.toString(PQfname(m_res, a)).strip().dup, std.string.toString(PQgetvalue(m_res, m_rowIdx, a)).strip().dup, "", 0);
+			r.addField(std.string.strip(std.string.toString(PQfname(m_res, a))).dup, std.string.strip(std.string.toString(PQgetvalue(m_res, m_rowIdx, a))).dup, "", 0);
 		}
 		m_rowIdx += 1;
 		return r;

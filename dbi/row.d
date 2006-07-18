@@ -1,13 +1,13 @@
 /**
  * Authors: The D DBI project
  *
- * Version: 0.2.2
+ * Version: 0.2.3
  *
  * Copyright: BSD license
  */
 module dbi.Row;
 
-private import std.conv, std.stdio;
+private static import std.conv, std.stdio;
 private import dbi.DBIException;
 
 /**

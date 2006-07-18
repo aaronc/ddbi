@@ -1,7 +1,7 @@
 /**
  * Authors: The D DBI project
  *
- * Version: 0.2.2
+ * Version: 0.2.3
  *
  * Copyright: BSD license
  */
@@ -11,7 +11,7 @@ module dbi.odbc.OdbcDatabase;
 // WindowsAPI revision 144.  I'll see about fixing their ODBC and SQL files soon.
 // WindowsAPI should also include odbc32.lib itself.
 
-private import std.string;
+private static import std.string;
 private import dbi.Database, dbi.DBIException, dbi.Result;
 private import dbi.odbc.OdbcResult;
 private import win32.odbcinst, win32.sql, win32.sqlext, win32.sqltypes, win32.sqlucode, win32.windef;

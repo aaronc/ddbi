@@ -1,13 +1,13 @@
 /**
  * Authors: The D DBI project
  *
- * Version: 0.2.2
+ * Version: 0.2.3
  *
  * Copyright: BSD license
  */
 module dbi.Database;
 
-private import std.string;
+private static import std.string;
 private import dbi.DBIException, dbi.Result, dbi.Row, dbi.Statement;
 
 /**
