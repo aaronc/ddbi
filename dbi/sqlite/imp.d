@@ -4,14 +4,19 @@
  * Part of the D DBI project.
  *
  * Version:
- *	SQLite version 3.3.6
+ *	SQLite version 3.3.7
  *
- *	Import library version 0.02
+ *	Import library version 0.03
  *
  * Authors: The D DBI project
  *
  * Copyright: BSD license
  */
+
+
+//1619
+
+
 module dbi.sqlite.imp;
 
 version (Windows) {
@@ -41,6 +46,63 @@ struct sqlite3_context {
 /**
  *
  */
+struct sqlite3_index_info {
+	int nConstraint;			/// Number of entries in aConstraint.
+	struct sqlite3_index_constraint {
+		int iColumn;			/// Column on left-hand side of constraint.
+		ubyte op;			/// Constraint operator.
+		ubyte usable;			/// true if this constraint is usable.
+		int iTermOffset;		/// Used internally - xBestIndex should ignore.
+	}
+	sqlite3_index_constraint* aConstraint;	/// Table of WHERE clause constraints.
+
+	int nOrderBy;				/// Number of terms in the ORDER BY clause.
+	struct sqlite3_index_orderby {
+		int iColumn;			/// Column number.
+		ubyte desc;			/// true for DESC and false for ASC.
+	}
+	sqlite3_index_orderby* aOrderBy;	/// The ORDER BY clause.
+
+	struct sqlite3_index_constraint_usage {
+		int argvIndex;			/// if >0, constraint is part of argv to xFilter.
+		ubyte omit;			/// Do not code a test for this constraint.
+	}
+	sqlite3_index_constraint_usage* aConstraintUsage; ///
+	int idxNum;				/// Number used to identify the index.
+	char* idxStr;				/// String, possibly obtained from sqlite3_malloc.
+	int needToFreeIdxStr;			/// Free idxStr using sqlite3_free() if true.
+	int orderByConsumed;			/// true if output is already ordered.
+	double estimatedCost;			/// Estimated cost of using this index.
+}
+
+/**
+ *
+ */
+struct sqlite3_module {
+	int iVersion;
+	extern (C) int function(sqlite3* db, void* pAux, int argc, char** argv, sqlite3_vtab** ppVTab) xCreate;
+	extern (C) int function(sqlite3* db, void* pAux, int argc, char** argv, sqlite3_vtab** ppVTab) xConnect;
+	extern (C) int function(sqlite3_vtab* pVTab, sqlite3_index_info* pInfo) xBestIndex;
+	extern (C) int function(sqlite3_vtab* pVTab) xDisconnect;
+	extern (C) int function(sqlite3_vtab* pVTab) xDestroy;
+	extern (C) int function(sqlite3_vtab* pVTab, sqlite3_vtab_cursor** ppCursor) xOpen;
+	extern (C) int function(sqlite3_vtab_cursor* pVTabCursor) xClose;
+	extern (C) int function(sqlite3_vtab_cursor* pVTabCursor, int idxNum, char* idxStr, int argc, sqlite3_value** argv) xFilter;
+	extern (C) int function(sqlite3_vtab_cursor* pVTabCursor) xNext;
+	extern (C) int function(sqlite3_vtab_cursor* pVTabCursor) xEof;
+	extern (C) int function(sqlite3_vtab_cursor* pVTabCursor, sqlite3_context*, int) xColumn;
+	extern (C) int function(sqlite3_vtab_cursor* pVTabCursor, long* pRowid) xRowid;
+	extern (C) int function(sqlite3_vtab* pVTab, int, sqlite3_value**, long*) xUpdate;
+	extern (C) int function(sqlite3_vtab* pVTab) xBegin;
+	extern (C) int function(sqlite3_vtab* pVTab) xSync;
+	extern (C) int function(sqlite3_vtab* pVTab) xCommit;
+	extern (C) int function(sqlite3_vtab* pVTab) xRollback;
+	extern (C) int function(sqlite3_vtab* pVtab, int nArg, char* zName, void function(sqlite3_context*, int, sqlite3_value**)pxFunc, void** ppArg) xFindFunction;
+}
+
+/**
+ *
+ */
 struct sqlite3_stmt {
 }
 
@@ -48,6 +110,21 @@ struct sqlite3_stmt {
  *
  */
 struct sqlite3_value {
+}
+
+/**
+ *
+ */
+struct sqlite3_vtab {
+	sqlite3_module* pModule;	/// The module for this virtual table.
+	int nRef;			/// Used internally.
+}
+
+/**
+ *
+ */
+struct sqlite3_vtab_cursor {
+	sqlite3_vtab* pVtab;		/// Virtual table of this cursor.
 }
 
 /**
@@ -127,6 +204,15 @@ const uint SQLITE_DETACH		= 25;	/// Database Name	NULL
 const uint SQLITE_ALTER_TABLE		= 26;	/// Database Name	Table Name
 const uint SQLITE_REINDEX		= 27;	/// Index Name		NULL
 const uint SQLITE_ANALYZE		= 28;	/// Table Name		NULL
+const uint SQLITE_CREATE_VTABLE		= 29;	/// Table Name		Module Name
+const uint SQLITE_DROP_VTABLE		= 30;	/// Table Name		Module Name
+
+const uint SQLITE_INDEX_CONSTRAINT_EQ	= 2;	///
+const uint SQLITE_INDEX_CONSTRAINT_GT	= 4;	///
+const uint SQLITE_INDEX_CONSTRAINT_LE	= 8;	///
+const uint SQLITE_INDEX_CONSTRAINT_LT	= 16;	///
+const uint SQLITE_INDEX_CONSTRAINT_GE	= 32;	///
+const uint SQLITE_INDEX_CONSTRAINT_MATCH = 64;	///
 
 extern (C):
 
@@ -328,6 +414,11 @@ void* sqlite3_column_table_name16 (sqlite3_stmt* stmt, int n);
 /**
  *
  */
+sqlite3_value* sqlite3_column_value (sqlite3_stmt* stmt, int iCol);
+
+/**
+ *
+ */
 void* sqlite3_commit_hook (sqlite3* database, int function(void* args) xCallback, void* args);
 
 /**
@@ -363,12 +454,27 @@ int sqlite3_create_function (sqlite3* database, void* zFunctionName, int nArg, i
 /**
  *
  */
+int sqlite3_create_module (sqlite3* db,	char* zName, sqlite3_module* methods, void* data);
+
+/**
+ *
+ */
 int sqlite3_data_count (sqlite3_stmt* stmt);
 
 /**
  *
  */
 sqlite3* sqlite3_db_handle (sqlite3_stmt* stmt);
+
+/**
+ *
+ */
+int sqlite3_declare_vtab (sqlite3* db, char* zCreateTable);
+
+/**
+ *
+ */
+int sqlite3_enable_load_extension (sqlite3* db, int onoff);
 
 /**
  *
@@ -408,7 +514,7 @@ int sqlite3_finalize (sqlite3_stmt* stmt);
 /**
  *
  */
-void sqlite3_free (char* z);
+void sqlite3_free (char* ptr);
 
 /**
  *
@@ -448,6 +554,16 @@ char* sqlite3_libversion ();
 /**
  *
  */
+int sqlite3_load_extension (sqlite3* db, char* zFile, char* zProc, char** ppErrMsg);
+
+/**
+ *
+ */
+void* sqlite3_malloc (int size);
+
+/**
+ *
+ */
 char* sqlite3_mprintf (char* string, ...);
 
 /**
@@ -479,6 +595,11 @@ int sqlite3_prepare16 (sqlite3* database, void* zSql, int nBytes, sqlite3_stmt**
  *
  */
 void sqlite3_progress_handler (sqlite3* database, int n, int function(void*) callback, void* arg);
+
+/**
+ *
+ */
+void* sqlite3_realloc (void* ptr, int size);
 
 /**
  *

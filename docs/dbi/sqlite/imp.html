@@ -50,10 +50,10 @@
 <p>Part of the D DBI project.
 
 </p>
-<p><strong>Version:</strong><br />SQLite version 3.3.6
+<p><strong>Version:</strong><br />SQLite version 3.3.7
 <br /><br />
 
-	Import library version 0.02
+	Import library version 0.03
 
 </p>
 <p><strong>Authors:</strong><br />The D DBI project
@@ -70,6 +70,74 @@
 <dd><br /><br />
 <dl></dl>
 </dd>
+<dt><span class="big">struct <span class="underline">sqlite3_index_info</span>;
+</span></dt>
+<dd><br /><br />
+<dl><dt><span class="big">int <span class="underline">nConstraint</span>;
+</span></dt>
+<dd><p>Number of entries in aConstraint.
+</p>
+
+</dd>
+<dt><span class="big">sqlite3_index_constraint * <span class="underline">aConstraint</span>;
+</span></dt>
+<dd><p>Table of WHERE clause constraints.
+</p>
+
+</dd>
+<dt><span class="big">int <span class="underline">nOrderBy</span>;
+</span></dt>
+<dd><p>Number of terms in the ORDER BY clause.
+</p>
+
+</dd>
+<dt><span class="big">sqlite3_index_orderby * <span class="underline">aOrderBy</span>;
+</span></dt>
+<dd><p>The ORDER BY clause.
+</p>
+
+</dd>
+<dt><span class="big">sqlite3_index_constraint_usage * <span class="underline">aConstraintUsage</span>;
+</span></dt>
+<dd><br /><br />
+</dd>
+<dt><span class="big">int <span class="underline">idxNum</span>;
+</span></dt>
+<dd><p>Number used to identify the index.
+</p>
+
+</dd>
+<dt><span class="big">char* <span class="underline">idxStr</span>;
+</span></dt>
+<dd><p>String, possibly obtained from sqlite3_malloc.
+</p>
+
+</dd>
+<dt><span class="big">int <span class="underline">needToFreeIdxStr</span>;
+</span></dt>
+<dd><p>Free idxStr using sqlite3_free() if <strong>true</strong>.
+</p>
+
+</dd>
+<dt><span class="big">int <span class="underline">orderByConsumed</span>;
+</span></dt>
+<dd><p><strong>true</strong> if output is already ordered.
+</p>
+
+</dd>
+<dt><span class="big">double <span class="underline">estimatedCost</span>;
+</span></dt>
+<dd><p>Estimated cost of using this index.
+</p>
+
+</dd>
+</dl>
+</dd>
+<dt><span class="big">struct <span class="underline">sqlite3_module</span>;
+</span></dt>
+<dd><br /><br />
+<dl></dl>
+</dd>
 <dt><span class="big">struct <span class="underline">sqlite3_stmt</span>;
 </span></dt>
 <dd><br /><br />
@@ -79,6 +147,34 @@
 </span></dt>
 <dd><br /><br />
 <dl></dl>
+</dd>
+<dt><span class="big">struct <span class="underline">sqlite3_vtab</span>;
+</span></dt>
+<dd><br /><br />
+<dl><dt><span class="big">sqlite3_module * <span class="underline">pModule</span>;
+</span></dt>
+<dd><p>The module for this virtual table.
+</p>
+
+</dd>
+<dt><span class="big">int <span class="underline">nRef</span>;
+</span></dt>
+<dd><p>Used internally.
+</p>
+
+</dd>
+</dl>
+</dd>
+<dt><span class="big">struct <span class="underline">sqlite3_vtab_cursor</span>;
+</span></dt>
+<dd><br /><br />
+<dl><dt><span class="big">sqlite3_vtab * <span class="underline">pVtab</span>;
+</span></dt>
+<dd><p>Virtual table of this cursor.
+</p>
+
+</dd>
+</dl>
 </dd>
 <dt><span class="big">alias <span class="underline">sqlite_callback</span>;
 </span></dt>
@@ -492,6 +588,42 @@
 </p>
 
 </dd>
+<dt><span class="big">const uint <span class="underline">SQLITE_CREATE_VTABLE</span>;
+</span></dt>
+<dd><p>Table Name		Module Name
+</p>
+
+</dd>
+<dt><span class="big">const uint <span class="underline">SQLITE_DROP_VTABLE</span>;
+</span></dt>
+<dd><p>Table Name		Module Name
+</p>
+
+</dd>
+<dt><span class="big">const uint <span class="underline">SQLITE_INDEX_CONSTRAINT_EQ</span>;
+</span></dt>
+<dd><br /><br />
+</dd>
+<dt><span class="big">const uint <span class="underline">SQLITE_INDEX_CONSTRAINT_GT</span>;
+</span></dt>
+<dd><br /><br />
+</dd>
+<dt><span class="big">const uint <span class="underline">SQLITE_INDEX_CONSTRAINT_LE</span>;
+</span></dt>
+<dd><br /><br />
+</dd>
+<dt><span class="big">const uint <span class="underline">SQLITE_INDEX_CONSTRAINT_LT</span>;
+</span></dt>
+<dd><br /><br />
+</dd>
+<dt><span class="big">const uint <span class="underline">SQLITE_INDEX_CONSTRAINT_GE</span>;
+</span></dt>
+<dd><br /><br />
+</dd>
+<dt><span class="big">const uint <span class="underline">SQLITE_INDEX_CONSTRAINT_MATCH</span>;
+</span></dt>
+<dd><br /><br />
+</dd>
 <dt><span class="big">void* <span class="underline">sqlite3_aggregate_context</span>(sqlite3_context * <em>ctx</em>, int <em>nBytes</em>);
 </span></dt>
 <dd><br /><br />
@@ -648,6 +780,10 @@
 </span></dt>
 <dd><br /><br />
 </dd>
+<dt><span class="big">sqlite3_value * <span class="underline">sqlite3_column_value</span>(sqlite3_stmt * <em>stmt</em>, int <em>iCol</em>);
+</span></dt>
+<dd><br /><br />
+</dd>
 <dt><span class="big">void* <span class="underline">sqlite3_commit_hook</span>(sqlite3 * <em>database</em>, int(* <em>xCallback</em>)(void* <em>args</em>), void* <em>args</em>);
 </span></dt>
 <dd><br /><br />
@@ -676,11 +812,23 @@
 </span></dt>
 <dd><br /><br />
 </dd>
+<dt><span class="big">int <span class="underline">sqlite3_create_module</span>(sqlite3 * <em>db</em>, char* <em>zName</em>, sqlite3_module * <em>methods</em>, void* <em>data</em>);
+</span></dt>
+<dd><br /><br />
+</dd>
 <dt><span class="big">int <span class="underline">sqlite3_data_count</span>(sqlite3_stmt * <em>stmt</em>);
 </span></dt>
 <dd><br /><br />
 </dd>
 <dt><span class="big">sqlite3 * <span class="underline">sqlite3_db_handle</span>(sqlite3_stmt * <em>stmt</em>);
+</span></dt>
+<dd><br /><br />
+</dd>
+<dt><span class="big">int <span class="underline">sqlite3_declare_vtab</span>(sqlite3 * <em>db</em>, char* <em>zCreateTable</em>);
+</span></dt>
+<dd><br /><br />
+</dd>
+<dt><span class="big">int <span class="underline">sqlite3_enable_load_extension</span>(sqlite3 * <em>db</em>, int <em>onoff</em>);
 </span></dt>
 <dd><br /><br />
 </dd>
@@ -712,7 +860,7 @@
 </span></dt>
 <dd><br /><br />
 </dd>
-<dt><span class="big">void <span class="underline">sqlite3_free</span>(char* <em>z</em>);
+<dt><span class="big">void <span class="underline">sqlite3_free</span>(char* <em>ptr</em>);
 </span></dt>
 <dd><br /><br />
 </dd>
@@ -744,6 +892,14 @@
 </span></dt>
 <dd><br /><br />
 </dd>
+<dt><span class="big">int <span class="underline">sqlite3_load_extension</span>(sqlite3 * <em>db</em>, char* <em>zFile</em>, char* <em>zProc</em>, char** <em>ppErrMsg</em>);
+</span></dt>
+<dd><br /><br />
+</dd>
+<dt><span class="big">void* <span class="underline">sqlite3_malloc</span>(int <em>size</em>);
+</span></dt>
+<dd><br /><br />
+</dd>
 <dt><span class="big">char* <span class="underline">sqlite3_mprintf</span>(char* <em>string</em>,...);
 </span></dt>
 <dd><br /><br />
@@ -769,6 +925,10 @@
 <dd><br /><br />
 </dd>
 <dt><span class="big">void <span class="underline">sqlite3_progress_handler</span>(sqlite3 * <em>database</em>, int <em>n</em>, int(* <em>callback</em>)(void* args), void* <em>arg</em>);
+</span></dt>
+<dd><br /><br />
+</dd>
+<dt><span class="big">void* <span class="underline">sqlite3_realloc</span>(void* <em>ptr</em>, int <em>size</em>);
 </span></dt>
 <dd><br /><br />
 </dd>

@@ -1,8 +1,5 @@
 module dbi.mysql.imp;
 
-import std.stdio;
-import std.string;
-
 version (Windows) {
 	pragma (lib, "libmysql.lib");
 } else version (linux) {
@@ -14,9 +11,6 @@ version (Windows) {
 }
 
 extern (C):
-
-alias uint size_t;
-
 
 alias ubyte __u_char;
 alias ushort __u_short;
@@ -1324,112 +1318,3 @@ my_bool mysql_more_results(MYSQL *mysql);
 int mysql_next_result(MYSQL *mysql);
 void mysql_close(MYSQL *sock);
 uint net_safe_read(MYSQL* mysql);
-
-char[][] mysql_fetch_array(MYSQL_RES *result) {
-	char[][] werte;
-	MYSQL_ROW row;
-	uint y,count;
-
-	row = mysql_fetch_row(result);
-	if (row != null) {
-		count = mysql_num_fields(result);
-		for ( y = 0; count > y; y++)  {
-			werte ~= toString(row[y]).dup;
-		}
-	} else {
-		werte = null;
-	}
-	return werte;
-}	
-
-ubyte[][] db_fetch_array(in MYSQL_RES* result)
-{
-	ubyte** row = cast(ubyte**) mysql_fetch_row(result);
-	if (row == null)
-		return null;
-
-	ubyte[][] array;
-	uint* lengths = mysql_fetch_lengths(result);
-
-	array.length = mysql_num_fields(result);
-	for (uint y = 0; y < array.length; y++)
-	{
-		if (row[y] == null)
-			array[y] = null;
-		else if (lengths[y] == 0)
-			array[y] = new ubyte[0];
-		else
-			array[y] = row[y][0 .. lengths[y]].dup;
-		}
-	return array;
-}
-
-
-ubyte[][char[]] db_fetch_assoc(in MYSQL_RES* result)
-{
-	ubyte** row = cast(ubyte**) mysql_fetch_row(result);
-	
-	if (row == null)
-		return null;
-
-	ubyte[][char[]] hash;
-	MYSQL_FIELD* field;
-	uint y = 0;
-	uint* lengths = mysql_fetch_lengths(result);
-
-	mysql_field_seek(result, 0);
-	while ((field = mysql_fetch_field(result)) != null)
-	{
-		char[] name = field.name[0 .. field.name_length].dup;
-		
-		if (row[y] == null)
-			hash[name] = null;
-		else if (lengths[y] == 0)
-			hash[name] = new ubyte[0];
-		else {
-			printf("lengths = %d\n",lengths[y]);
-			hash[name] = row[y][0 .. lengths[y]].dup;
-			//writefln("hash[name] = %s",hash[name]);
-			//printf("hash[name] = %.*s\n",toString(hash[name]));
-		}	
-		y++;
-	}
-	return hash;
-}
-
-char[][char[]] mysql_fetch_assoc(MYSQL_RES *result) {
-	char[][char[]] hash;
-	MYSQL_ROW row;
-	uint y=0;
-	MYSQL_FIELD *fields;
-	//MYSQL_FIELD_OFFSET offset;
-
-	row = mysql_fetch_row(result);
-	if (row != null) {
-		//offset = mysql_field_seek(result,0);
-		mysql_field_seek(result,0);
-		while ( (fields = mysql_fetch_field(result)) != null) {
-			hash[toString(fields.name)] = toString(row[y]).dup;
-			y++;
-		}
-	} else {
-		hash = null;
-	}
-	return hash;
-}	
-
-char [] mysql_escape(char[] str) {
-	char[] str_escape;
-	foreach (char c; str) {
-		if (c =='\'') {
-			str_escape ~= "\\'";
-		} else {
-			if (c == '\\') {
-				str_escape~= "\\\\";
-			} else {
-				str_escape ~= c;
-			}
-		}
-	}		
-	return str_escape;
-}

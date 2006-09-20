@@ -48,7 +48,7 @@
 <p><strong>Authors:</strong><br />The D DBI project
 
 </p>
-<p><strong>Version:</strong><br />0.2.3
+<p><strong>Version:</strong><br />0.2.4
 
 </p>
 
@@ -106,7 +106,7 @@ dbname = The name of the database to use.
 <p><strong>Throws:</strong><br />DBIException if there was an error connecting.
 <br /><br />
 
-	ConvException if port is provided but is not an integer.
+	DBIException if port is provided but is not an integer.
 
 </p>
 <p><strong>Examples:</strong><br /><ins><pre class="d_code">	MysqlDatabase db = <span class="blue">new</span> MysqlDatabase();
@@ -137,7 +137,7 @@ dbname = The name of the database to use.
 </p>
 
 </dd>
-<dt><span class="big">Result <span class="underline">query</span>(char[] <em>sql</em>);
+<dt><span class="big">MysqlResult <span class="underline">query</span>(char[] <em>sql</em>);
 </span></dt>
 <dd><p>Query the database.
 </p>

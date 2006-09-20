@@ -53,7 +53,7 @@
 <p><strong>Version:</strong><br />Oracle 10g revision 2
 <br /><br />
 
-	Import library version 0.02
+	Import library version 0.03
 
 </p>
 <p><strong>Authors:</strong><br />The D DBI project
@@ -1555,7 +1555,7 @@
 <strong>Params:</strong><br /><table><tr><td>OCIEnv * <em>env</em></td>
 <td>OCI environment handle initialized in object mode.</td></tr>
 <tr><td>OCIRaw * <em>raw</em></td>
-<td>A pointer to the OCI variable-length raw to convert.</td></tr>
+<td>A pointer to the OCI variable-length raw to return.</td></tr>
 </table>
 <p><strong>Returns:</strong><br /><em>raw</em> as an array of bytes.
  
@@ -1780,9 +1780,138 @@
 <tr><td>void** <em>elem</em></td>
 <td>The pointer to the element at <em>index</em>.  The type is a pointer to the desired type.</td></tr>
 <tr><td>void** <em>elemind</em></td>
-<td>The address of <em>elem</em>'s <strong>null</strong> indicator unless <strong>null</strong> is passed.</td></tr>
+<td>The address of the <strong>null</strong> indicator for <em>elem</em> unless <strong>null</strong> is passed.</td></tr>
 </table>
 <p><strong>Returns:</strong><br />OCI_SUCCESS on success, OCI_INVALID_HANDLE on invalid parameters, or OCI_ERROR on error.
+ 
+</p>
+
+</dd>
+<dt><span class="big">int <span class="underline">OCICollGetElemArray</span>(OCIEnv * <em>env</em>, OCIError * <em>err</em>, OCIColl * <em>coll</em>, int <em>index</em>, int* <em>exists</em>, void** <em>elem</em>, void** <em>elemind</em>, uint* <em>nelems</em>);
+</span></dt>
+<dd><p>Get the pointer to an array of elements of a collection by index.
+</p>
+<strong>Params:</strong><br /><table><tr><td>OCIEnv * <em>env</em></td>
+<td>OCI environment handle initialized in object mode.</td></tr>
+<tr><td>OCIError * <em>err</em></td>
+<td>OCI error handle.</td></tr>
+<tr><td>OCIColl * <em>coll</em></td>
+<td>A pointer to the OCI collection to retrieve the pointer from.</td></tr>
+<tr><td>int <em>index</em></td>
+<td>The index of the first element to return the pointer of.</td></tr>
+<tr><td>int* <em>exists</em></td>
+<td>FALSE if there is nothing at <em>index</em> or TRUE if there is.</td></tr>
+<tr><td>void** <em>elem</em></td>
+<td>The pointer to the element at <em>index</em>.  The type is a pointer to the desired type.</td></tr>
+<tr><td>void** <em>elemind</em></td>
+<td>The address of the <strong>null</strong> indicator for <em>elem</em> unless <strong>null</strong> is passed.</td></tr>
+<tr><td>uint* <em>nelems</em></td>
+<td>The number of elements to retrieve.</td></tr>
+</table>
+<p><strong>Returns:</strong><br />OCI_SUCCESS on success, OCI_INVALID_HANDLE on invalid parameters, or OCI_ERROR on error.
+ 
+</p>
+
+</dd>
+<dt><span class="big">int <span class="underline">OCICollAssignElem</span>(OCIEnv * <em>env</em>, OCIError * <em>err</em>, int <em>index</em>, void* <em>elem</em>, void* <em>elemind</em>, OCIColl * <em>coll</em>);
+</span></dt>
+<dd><p>Assign an element to a collection.
+</p>
+<p><em>elem</em> is assigned to <em>coll</em>[<em>index</em>] with a <strong>null</strong> indictator of <em>elemind</em>.
+
+</p>
+<strong>Params:</strong><br /><table><tr><td>OCIEnv * <em>env</em></td>
+<td>OCI environment handle initialized in object mode.</td></tr>
+<tr><td>OCIError * <em>err</em></td>
+<td>OCI error handle.</td></tr>
+<tr><td>int <em>index</em></td>
+<td>The index of the element to to change.</td></tr>
+<tr><td>void* <em>elem</em></td>
+<td>A pointer to the source OCI element.</td></tr>
+<tr><td>void* <em>elemind</em></td>
+<td>The <strong>null</strong> indicator for <em>elem</em> unless <strong>null</strong> is passed.</td></tr>
+<tr><td>OCIColl * <em>coll</em></td>
+<td>A pointer to the target OCI collection.</td></tr>
+</table>
+<p><strong>Returns:</strong><br />OCI_SUCCESS on success, OCI_INVALID_HANDLE on invalid parameters, or OCI_ERROR on error.
+ 
+</p>
+
+</dd>
+<dt><span class="big">int <span class="underline">OCICollAssign</span>(OCIEnv * <em>env</em>, OCIError * <em>err</em>, OCIColl * <em>rhs</em>, OCIColl * <em>lhs</em>);
+</span></dt>
+<dd><p>Copy a collection.
+</p>
+<p><em>lhs</em> and <em>rhs</em> must be the same type of collection.  <em>rhs</em> must have at least as many
+ elements as <em>rhs</em>.
+
+</p>
+<strong>Params:</strong><br /><table><tr><td>OCIEnv * <em>env</em></td>
+<td>OCI environment handle initialized in object mode.</td></tr>
+<tr><td>OCIError * <em>err</em></td>
+<td>OCI error handle.</td></tr>
+<tr><td>OCIColl * <em>rhs</em></td>
+<td>A pointer to the source OCI collection.</td></tr>
+<tr><td>OCIColl * <em>lhs</em></td>
+<td>A pointer to the target OCI collection.</td></tr>
+</table>
+<p><strong>Returns:</strong><br />OCI_SUCCESS on success, OCI_INVALID_HANDLE on invalid parameters, or OCI_ERROR on error.
+ 
+</p>
+
+</dd>
+<dt><span class="big">int <span class="underline">OCICollAppend</span>(OCIEnv * <em>env</em>, OCIError * <em>err</em>, void* <em>elem</em>, void* <em>elemind</em>, OCIColl * <em>coll</em>);
+</span></dt>
+<dd><p>Append an element to a collection.
+</p>
+<strong>Params:</strong><br /><table><tr><td>OCIEnv * <em>env</em></td>
+<td>OCI environment handle initialized in object mode.</td></tr>
+<tr><td>OCIError * <em>err</em></td>
+<td>OCI error handle.</td></tr>
+<tr><td>void* <em>elem</em></td>
+<td>A pointer to the source OCI element.</td></tr>
+<tr><td>void* <em>elemind</em></td>
+<td>The <strong>null</strong> indicator for <em>elem</em> unless <strong>null</strong> is passed.</td></tr>
+<tr><td>OCIColl * <em>coll</em></td>
+<td>A pointer to the target OCI collection.</td></tr>
+</table>
+<p><strong>Returns:</strong><br />OCI_SUCCESS on success, OCI_INVALID_HANDLE on invalid parameters, or OCI_ERROR on error.
+ 
+</p>
+
+</dd>
+<dt><span class="big">int <span class="underline">OCICollTrim</span>(OCIEnv * <em>env</em>, OCIError * <em>err</em>, int <em>trim_num</em>, OCIColl * <em>coll</em>);
+</span></dt>
+<dd><p>Remove elements from the end of a collection.
+</p>
+<strong>Params:</strong><br /><table><tr><td>OCIEnv * <em>env</em></td>
+<td>OCI environment handle initialized in object mode.</td></tr>
+<tr><td>OCIError * <em>err</em></td>
+<td>OCI error handle.</td></tr>
+<tr><td>int <em>trim_num</em></td>
+<td>The number of OCI elemenets to remove.</td></tr>
+<tr><td>OCIColl * <em>coll</em></td>
+<td>A pointer to the target OCI collection.</td></tr>
+</table>
+<p><strong>Returns:</strong><br />OCI_SUCCESS on success, OCI_INVALID_HANDLE on invalid parameters, or OCI_ERROR on error.
+ 
+</p>
+
+</dd>
+<dt><span class="big">int <span class="underline">OCICollIsLocator</span>(OCIEnv * <em>env</em>, OCIError * <em>err</em>, OCIColl * <em>coll</em>, int* <em>result</em>);
+</span></dt>
+<dd><p>Test if a collection is a locator.
+</p>
+<strong>Params:</strong><br /><table><tr><td>OCIEnv * <em>env</em></td>
+<td>OCI environment handle initialized in object mode.</td></tr>
+<tr><td>OCIError * <em>err</em></td>
+<td>OCI error handle.</td></tr>
+<tr><td>OCIColl * <em>coll</em></td>
+<td>A pointer to the target OCI collection.</td></tr>
+<tr><td>int* <em>result</em></td>
+<td>TRUE is <em>coll</em> is a locator and FALSE if it isn't.</td></tr>
+</table>
+<p><strong>Returns:</strong><br />OCI_SUCCESS on success or OCI_INVALID_HANDLE on invalid parameters.
  
 </p>
 

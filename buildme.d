@@ -28,13 +28,23 @@
  *
  * Authors: The D DBI project
  *
- * Version: 0.2.3
+ * Version: 0.2.4
  *
  * Copyright: BSD license
  */
 module buildme;
 
-private import std.file, std.path, std.process, std.string;
+version (Ares) {
+	private import std.io.FileConst : FileConst;
+	private import std.io.FilePath : FilePath;
+	private import std.c.stdlib : system;
+
+	alias FileConst.PathSeparatorString sep;
+} else {
+	private import std.file : chdir, getcwd, isdir, listdir;
+	private import std.path : pardir, sep;
+	private import std.process : system;
+}
 
 /// The list of all the files that can be compiled.
 bool[char[]] allList;
@@ -58,6 +68,9 @@ void main (char[][] args) {
 			switchesCompiler["-O"] = true;
 		}
 		switchesCompiler["-ofdbi"] = true;
+		version (Ares) {
+			switchesCompiler["-version=Ares"] = true;
+		}
 	} else version (GNU) {
 		debug {
 			switchesCompiler["-fdebug"] = true;
@@ -68,6 +81,10 @@ void main (char[][] args) {
 			switchesCompiler["-finline-functions"] = true;
 			switchesCompiler["-O3"] = true;
 		}
+		switchesCompiler["-o dbi.lib"];
+		version (Ares) {
+			switchesCompiler["-fversion=Ares"] = true;
+		}
 	} else {
 		pragma (msg, "The switches for your compiler are unknown.  You will need to enter them manually.");
 	}
@@ -77,13 +94,24 @@ void main (char[][] args) {
 	switchesCompiler["-lib"] = true;
 
 	// Make the "all" list.
-	chdir("dbi");
-	foreach (char[] dir; listdir(getcwd())) {
-		if (isdir(dir)) {
-			allList[dir] = true;
+	version (Ares) {
+		// Ares doesn't seem to have a listdir() equivalent.
+		allList["ib"] = true;
+		allList["msql"] = true;
+		allList["mysql"] = true;
+		allList["odbc"] = true;
+		allList["oracle"] = true;
+		allList["pg"] = true;
+		allList["sqlite"] = true;
+	} else {
+		chdir("dbi");
+		foreach (char[] dir; listdir(getcwd())) {
+			if (isdir(dir)) {
+				allList[dir] = true;
+			}
 		}
+		chdir(pardir);
 	}
-	chdir(pardir);
 
 	// Parse the command line arguments.
 	foreach (char[] arg; args[1 .. length]) {
@@ -103,12 +131,18 @@ void main (char[][] args) {
 	}
 
 	// Build the files.
-	char[][] buildCommand = switchesCompiler.keys;
-	buildCommand ~= "dbi" ~ sep ~ "all.d";
+	char[][] buildCommandArray = switchesCompiler.keys;
+	buildCommandArray ~= "dbi" ~ sep ~ "all.d";
 	foreach (char[] file; toBuild.keys) {
-		buildCommand ~= ("dbi" ~ sep ~ file ~ sep ~ "all.d");
+		buildCommandArray ~= ("dbi" ~ sep ~ file ~ sep ~ "all.d");
 	}
-	if (system("build " ~ std.string.join(buildCommand, " "))) {
+	char[] buildCommand;
+	buildCommand.length = buildCommandArray.length * 10;
+	foreach (char[] command; buildCommandArray) {
+		buildCommand ~= command ~ " ";
+	}
+	buildCommand.length = buildCommand.length - 1;
+	if (system("build " ~ buildCommand)) {
 		system("pause");
 	}
 }

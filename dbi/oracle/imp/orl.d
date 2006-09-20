@@ -6,7 +6,7 @@
  * Version:
  *	Oracle 10g revision 2
  *
- *	Import library version 0.02
+ *	Import library version 0.03
  *
  * Authors: The D DBI project
  *
@@ -1290,7 +1290,7 @@ extern (C) sb4 OCICollMax (OCIEnv* env, OCIColl* coll);
  *	index = The _index of the element to return the pointer of.
  *	exists = FALSE if there is nothing at index or TRUE if there is.
  *	elem = The pointer to the element at index.  The type is a pointer to the desired type.
- *	elemind = The address of elem's null indicator unless null is passed.
+ *	elemind = The address of the null indicator for elem unless null is passed.
  *
  * Returns:
  *	OCI_SUCCESS on success, OCI_INVALID_HANDLE on invalid parameters, or OCI_ERROR on error.
@@ -1307,7 +1307,7 @@ extern (C) sword OCICollGetElem (OCIEnv* env, OCIError* err, OCIColl* coll, sb4 
  *	index = The _index of the first element to return the pointer of.
  *	exists = FALSE if there is nothing at index or TRUE if there is.
  *	elem = The pointer to the element at index.  The type is a pointer to the desired type.
- *	elemind = The address of elem's null indicator unless null is passed.
+ *	elemind = The address of the null indicator for elem unless null is passed.
  *	nelems = The number of elements to retrieve.
  *
  * Returns:
@@ -1315,155 +1315,84 @@ extern (C) sword OCICollGetElem (OCIEnv* env, OCIError* err, OCIColl* coll, sb4 
  */
 extern (C) sword OCICollGetElemArray (OCIEnv* env, OCIError* err, OCIColl* coll, sb4 index, boolean* exists, dvoid** elem, dvoid** elemind, uword* nelems);
 
+/**
+ * Assign an element to a collection.
+ *
+ * elem is assigned to coll[index] with a null indictator of elemind.
+ *
+ * Params:
+ *	env = OCI environment handle initialized in object mode.
+ *	err = OCI error handle.
+ *	index = The _index of the element to to change.
+ *	elem = A pointer to the source OCI element.
+ *	elemind = The null indicator for elem unless null is passed.
+ *	coll = A pointer to the target OCI collection.
+ *
+ * Returns:
+ *	OCI_SUCCESS on success, OCI_INVALID_HANDLE on invalid parameters, or OCI_ERROR on error.
+ */
 extern (C) sword OCICollAssignElem (OCIEnv* env, OCIError* err, sb4 index, dvoid* elem, dvoid* elemind, OCIColl* coll);
-/*
-   NAME: OCICollAssignElem - OCIColl ASsign Element
-   PARAMETERS:
-        env (IN/OUT) - OCI environment handle initialized in object mode.
-        err (IN/OUT) - error handle. If there is an error, it is
-                recorded in 'err' and this function returns OCI_ERROR.
-                The error recorded in 'err' can be retrieved by calling
-                OCIErrorGet().
-        index (IN) - index of the element whose is assigned to
-        elem (IN) - element which is assigned from (source element)
-        elemind (IN) [optional] - pointer to the element's null indicator 
-                information; if (elemind == NULL) then the null indicator
-                information of the assigned element will be set to non-null.
-        coll (IN/OUT) - collection to be updated
-   DESCRIPTION:
-        Assign the given element value 'elem' to the element at coll[index].
-        If the collection is of type nested table, the element at the given 
-        index may not exist (i.e. may have been deleted). In this case, the 
-        given element is inserted at index 'index'.
-        Otherwise, the element at index 'index' is updated with the value
-        of 'elem'.
-  
-        Note that the given element is deep-copied and 
-        'elem' is strictly an input parameter.
-   RETURNS:
-        OCI_SUCCESS if the function completes successfully.
-        OCI_INVALID_HANDLE if 'env' or 'err' is NULL.
-        OCI_ERROR if
-          any of the input parameters is null
-          out of memory error
-          given index is out of bounds of the given collection
- */
 
+/**
+ * Copy a collection.
+ *
+ * lhs and rhs must be the same type of collection.  rhs must have at least as many
+ * elements as rhs.
+ *
+ * Params:
+ *	env = OCI environment handle initialized in object mode.
+ *	err = OCI error handle.
+ *	rhs = A pointer to the source OCI collection.
+ *	lhs = A pointer to the target OCI collection.
+ *
+ * Returns:
+ *	OCI_SUCCESS on success, OCI_INVALID_HANDLE on invalid parameters, or OCI_ERROR on error.
+ */
 extern (C) sword OCICollAssign (OCIEnv* env, OCIError* err, OCIColl* rhs, OCIColl* lhs);
-/*
-   NAME: OCICollAssign - OCIColl ASsiGn collection
-   PARAMETERS:
-        env (IN/OUT) - OCI environment handle initialized in object mode.
-        err (IN/OUT) - error handle. If there is an error, it is
-                recorded in 'err' and this function returns OCI_ERROR.
-                The error recorded in 'err' can be retrieved by calling
-                OCIErrorGet().
-        rhs (IN) - collection to be assigned from
-        lhs (OUT) - collection to be assigned to
-   DESCRIPTION:
-        Assign 'rhs' to 'lhs'. The 'lhs' collection may be decreased or 
-        increased depending upon the size of 'rhs'. If the 'lhs' contains 
-        any elements then the elements will be deleted prior to the 
-        assignment. This function performs a deep-copy. The memory for the 
-        elements comes from the object cache.
- 
-        An error is returned if the element types of the lhs and rhs 
-        collections do not match. Also, an error is returned if the 
-        upper-bound of the lhs collection is less than the current number of 
-        elements in the rhs collection.
-   RETURNS:
-        OCI_SUCCESS if the function completes successfully.
-        OCI_INVALID_HANDLE if 'env' or 'err' is NULL.
-        OCI_ERROR if
-          any of the input parameters is null
-          out of memory error
-          type mis-match of lhs and rhs collections
-          upper-bound of lhs collection is less than the current number of 
-          elements in the rhs collection
- */
 
+/**
+ * Append an element to a collection.
+ *
+ * Params:
+ *	env = OCI environment handle initialized in object mode.
+ *	err = OCI error handle.
+ *	elem = A pointer to the source OCI element.
+ *	elemind = The null indicator for elem unless null is passed.
+ *	coll = A pointer to the target OCI collection.
+ *
+ * Returns:
+ *	OCI_SUCCESS on success, OCI_INVALID_HANDLE on invalid parameters, or OCI_ERROR on error.
+ */
 extern (C) sword OCICollAppend (OCIEnv* env, OCIError* err, dvoid* elem, dvoid* elemind, OCIColl* coll);
-/*
-   NAME: OCICollAppend - OCIColl APPend collection
-   PARAMETERS:
-        env (IN/OUT) - OCI environment handle initialized in object mode.
-        err (IN/OUT) - error handle. If there is an error, it is
-                recorded in 'err' and this function returns OCI_ERROR.
-                The error recorded in 'err' can be retrieved by calling
-                OCIErrorGet().
-        elem (IN) - pointer to the element which is appended to the end
-                of the given collection
-        elemind (IN) [optional] - pointer to the element's null indicator 
-                information; if (elemind == NULL) then the null indicator
-                information of the appended element will be set to non-null.
-        coll (IN/OUT) - updated collection
-   DESCRIPTION:
-        Append the given element to the end of the given collection. 
-        Appending an element is equivalent to:
-          - increasing the size of the collection by 1 element
-          - updating (deep-copying) the last element's data with the given 
-            element's data
-  
-        Note that the pointer to the given element 'elem' will not be saved 
-        by this function. So 'elem' is strictly an input parameter.
-        An error is returned if the current size of the collection
-        is equal to the max size (upper-bound) of the collection prior to 
-        appending the element.
-   RETURNS:
-        OCI_SUCCESS if the function completes successfully.
-        OCI_INVALID_HANDLE if 'env' or 'err' is NULL.
-        OCI_ERROR if
-          any of the input parameters is null
-          out of memory error
-          current size of collection == max size of the collection
- */
 
+/**
+ * Remove elements from the end of a collection.
+ *
+ * Params:
+ *	env = OCI environment handle initialized in object mode.
+ *	err = OCI error handle.
+ *	trim_num = The number of OCI elemenets to remove.
+ *	coll = A pointer to the target OCI collection.
+ *
+ * Returns:
+ *	OCI_SUCCESS on success, OCI_INVALID_HANDLE on invalid parameters, or OCI_ERROR on error.
+ */
 extern (C) sword OCICollTrim (OCIEnv* env, OCIError* err, sb4 trim_num, OCIColl* coll);
-/*
-   NAME: OCICollTrim - OCIColl Trim elements from the end of the collection
-   PARAMETERS:
-        env (IN/OUT) - OCI environment handle initialized in object mode.
-        err (IN/OUT) - error handle. If there is an error, it is
-                recorded in 'err' and this function returns OCI_ERROR.
-                The error recorded in 'err' can be retrieved by calling
-                OCIErrorGet().
-        trim_num (IN) - number of elements to trim
-        coll (IN/OUT) - 'trim_num' of elements are removed (freed) from the
-                end of the collection
-   DESCRIPTION:
-        Trim the collection by the given number of elements. The elements are 
-        removed from the end of the collection.
-  
-        An error is returned if the 'trim_num' is greater than the current 
-        size of the collection.
-   RETURNS:
-        OCI_SUCCESS if the function completes successfully.
-        OCI_INVALID_HANDLE if 'env' or 'err' is NULL.
-        OCI_ERROR if
-          any of the input parameters is null
-          'trim_num' is greater than the current size of the collection.
- */
 
+/**
+ * Test if a collection is a locator.
+ *
+ * Params:
+ *	env = OCI environment handle initialized in object mode.
+ *	err = OCI error handle.
+ *	coll = A pointer to the target OCI collection.
+ *	result = TRUE is coll is a locator and FALSE if it isn't.
+ *
+ * Returns:
+ *	OCI_SUCCESS on success or OCI_INVALID_HANDLE on invalid parameters.
+ */
 extern (C) sword OCICollIsLocator (OCIEnv* env, OCIError* err, OCIColl* coll, boolean* result);
-/*
-Name: OCICollIsLocator - OCIColl indicates whether a collection is locator
-                         based or not.
-Parameters:
-        env(IN) - pointer to OCI environment handle
-        err (IN/OUT) - error handle. If there is an error, it is
-                recorded in 'err' and this function returns OCI_ERROR.
-                The error recorded in 'err' can be retrieved by calling
-                OCIErrorGet().
-        coll (IN) - collection item.
-        result (OUT) - TRUE if the collection item is a locator, FALSE
-                       otherwise
-Description:
-        Returns TRUE in the result OUT parameter if the collection item is a
-        locator, otherwise returns FALSE.
-Returns:
-        OCI_SUCCESS if the function completes successfully.
-        OCI_INVALID_HANDLE if 'env' or 'err' is NULL.
-*/
+
 
 extern (C) sword OCIIterCreate (OCIEnv* env, OCIError* err, OCIColl* coll, OCIIter** itr);
 /*
