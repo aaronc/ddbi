@@ -4,18 +4,14 @@
  * Part of the D DBI project.
  *
  * Version:
- *	SQLite version 3.3.7
+ *	SQLite version 3.3.8
  *
- *	Import library version 0.03
+ *	Import library version 0.04
  *
  * Authors: The D DBI project
  *
  * Copyright: BSD license
  */
-
-
-//1619
-
 
 module dbi.sqlite.imp;
 
@@ -80,8 +76,8 @@ struct sqlite3_index_info {
  */
 struct sqlite3_module {
 	int iVersion;
-	extern (C) int function(sqlite3* db, void* pAux, int argc, char** argv, sqlite3_vtab** ppVTab) xCreate;
-	extern (C) int function(sqlite3* db, void* pAux, int argc, char** argv, sqlite3_vtab** ppVTab) xConnect;
+	extern (C) int function(sqlite3* db, void* pAux, int argc, char** argv, sqlite3_vtab** ppVTab, char**) xCreate;
+	extern (C) int function(sqlite3* db, void* pAux, int argc, char** argv, sqlite3_vtab** ppVTab, char**) xConnect;
 	extern (C) int function(sqlite3_vtab* pVTab, sqlite3_index_info* pInfo) xBestIndex;
 	extern (C) int function(sqlite3_vtab* pVTab) xDisconnect;
 	extern (C) int function(sqlite3_vtab* pVTab) xDestroy;
@@ -118,6 +114,7 @@ struct sqlite3_value {
 struct sqlite3_vtab {
 	sqlite3_module* pModule;	/// The module for this virtual table.
 	int nRef;			/// Used internally.
+	char* zErrMsg;			/// Error message from sqlite3_mprintf().
 }
 
 /**
@@ -132,87 +129,98 @@ struct sqlite3_vtab_cursor {
  */
 alias int function(void*, int, char**, char**) sqlite_callback;
 
-const uint SQLITE_OK		= 0;	/// Successful result.
-const uint SQLITE_ERROR		= 1;	/// SQL error or missing database.
-const uint SQLITE_INTERNAL	= 2;	/// An internal logic error in SQLite.
-const uint SQLITE_PERM		= 3;	/// Access permission denied.
-const uint SQLITE_ABORT		= 4;	/// Callback routine requested an abort.
-const uint SQLITE_BUSY		= 5;	/// The database file is locked.
-const uint SQLITE_LOCKED	= 6;	/// A table in the database is locked.
-const uint SQLITE_NOMEM		= 7;	/// A malloc() failed.
-const uint SQLITE_READONLY	= 8;	/// Attempt to write a readonly database.
-const uint SQLITE_INTERRUPT	= 9;	/// Operation terminated by sqlite_interrupt().
-const uint SQLITE_IOERR		= 10;	/// Some kind of disk I/O error occurred.
-const uint SQLITE_CORRUPT	= 11;	/// The database disk image is malformed.
-const uint SQLITE_NOTFOUND	= 12;	/// (Internal Only) Table or record not found.
-const uint SQLITE_FULL		= 13;	/// Insertion failed because database is full.
-const uint SQLITE_CANTOPEN	= 14;	/// Unable to open the database file.
-const uint SQLITE_PROTOCOL	= 15;	/// Database lock protocol error.
-const uint SQLITE_EMPTY		= 16;	/// (Internal Only) Database table is empty.
-const uint SQLITE_SCHEMA	= 17;	/// The database schema changed.
-const uint SQLITE_TOOBIG	= 18;	/// Too much data for one row of a table.
-const uint SQLITE_CONSTRAINT	= 19;	/// Abort due to constraint violation.
-const uint SQLITE_MISMATCH	= 20;	/// Data type mismatch.
-const uint SQLITE_MISUSE	= 21;	/// Library used incorrectly.
-const uint SQLITE_NOLFS		= 22;	/// Uses OS features not supported on host.
-const uint SQLITE_AUTH		= 23;	/// Authorization denied.
-const uint SQLITE_ROW		= 100;	/// sqlite_step() has another row ready.
-const uint SQLITE_DONE		= 101;	/// sqlite_step() has finished executing.
-const uint SQLITE_UTF8		= 1;	/// The text is in UTF8 format.
-const uint SQLITE_UTF16BE	= 2;	/// The text is in UTF16 big endian format.
-const uint SQLITE_UTF16LE	= 3;	/// The text is in UTF16 little endian format.
-const uint SQLITE_UTF16		= 4;	/// The text is in UTF16 format.
-const uint SQLITE_ANY		= 5;	/// The text is in some format or another.
+const int SQLITE_OK			= 0;	/// Successful result.
+const int SQLITE_ERROR			= 1;	/// SQL error or missing database.
+const int SQLITE_INTERNAL		= 2;	/// An internal logic error in SQLite.
+const int SQLITE_PERM			= 3;	/// Access permission denied.
+const int SQLITE_ABORT			= 4;	/// Callback routine requested an abort.
+const int SQLITE_BUSY			= 5;	/// The database file is locked.
+const int SQLITE_LOCKED			= 6;	/// A table in the database is locked.
+const int SQLITE_NOMEM			= 7;	/// A malloc() failed.
+const int SQLITE_READONLY		= 8;	/// Attempt to write a readonly database.
+const int SQLITE_INTERRUPT		= 9;	/// Operation terminated by sqlite_interrupt().
+const int SQLITE_IOERR			= 10;	/// Some kind of disk I/O error occurred.
+const int SQLITE_CORRUPT		= 11;	/// The database disk image is malformed.
+const int SQLITE_NOTFOUND		= 12;	/// (Internal Only) Table or record not found.
+const int SQLITE_FULL			= 13;	/// Insertion failed because database is full.
+const int SQLITE_CANTOPEN		= 14;	/// Unable to open the database file.
+const int SQLITE_PROTOCOL		= 15;	/// Database lock protocol error.
+const int SQLITE_EMPTY			= 16;	/// (Internal Only) Database table is empty.
+const int SQLITE_SCHEMA			= 17;	/// The database schema changed.
+const int SQLITE_TOOBIG			= 18;	/// Too much data for one row of a table.
+const int SQLITE_CONSTRAINT		= 19;	/// Abort due to constraint violation.
+const int SQLITE_MISMATCH		= 20;	/// Data type mismatch.
+const int SQLITE_MISUSE			= 21;	/// Library used incorrectly.
+const int SQLITE_NOLFS			= 22;	/// Uses OS features not supported on host.
+const int SQLITE_AUTH			= 23;	/// Authorization denied.
+const int SQLITE_ROW			= 100;	/// sqlite_step() has another row ready.
+const int SQLITE_DONE			= 101;	/// sqlite_step() has finished executing.
+const int SQLITE_UTF8			= 1;	/// The text is in UTF8 format.
+const int SQLITE_UTF16BE		= 2;	/// The text is in UTF16 big endian format.
+const int SQLITE_UTF16LE		= 3;	/// The text is in UTF16 little endian format.
+const int SQLITE_UTF16			= 4;	/// The text is in UTF16 format.
+const int SQLITE_ANY			= 5;	/// The text is in some format or another.
 
-const uint SQLITE_INTEGER	= 1;	/// The data value is an integer.
-const uint SQLITE_FLOAT		= 2;	/// The data value is a float.
-const uint SQLITE_TEXT		= 3;	/// The data value is text.
-const uint SQLITE_BLOB		= 4;	/// The data value is a blob.
-const uint SQLITE_NULL		= 5;	/// The data value is _null.
+const int SQLITE_INTEGER		= 1;	/// The data value is an integer.
+const int SQLITE_FLOAT			= 2;	/// The data value is a float.
+const int SQLITE_TEXT			= 3;	/// The data value is text.
+const int SQLITE_BLOB			= 4;	/// The data value is a blob.
+const int SQLITE_NULL			= 5;	/// The data value is _null.
 
-const uint SQLITE_DENY		= 1;	/// Abort the SQL statement with an error.
-const uint SQLITE_IGNORE	= 2;	/// Don't allow access, but don't generate an error.
+const int SQLITE_DENY			= 1;	/// Abort the SQL statement with an error.
+const int SQLITE_IGNORE			= 2;	/// Don't allow access, but don't generate an error.
 
 const void function(void*) SQLITE_STATIC = cast(void function(void*))0; /// The data doesn't need to be freed by SQLite.  
 const void function(void*) SQLITE_TRANSIENT = cast(void function(void*))-1; /// SQLite should make a private copy of the data.
 
-const uint SQLITE_CREATE_INDEX		= 1;	/// Index Name		Table Name
-const uint SQLITE_CREATE_TABLE		= 2;	/// Table Name		NULL
-const uint SQLITE_CREATE_TEMP_INDEX	= 3;	/// Index Name		Table Name
-const uint SQLITE_CREATE_TEMP_TABLE	= 4;	/// Table Name		NULL
-const uint SQLITE_CREATE_TEMP_TRIGGER	= 5;	/// Trigger Name	Table Name
-const uint SQLITE_CREATE_TEMP_VIEW	= 6;	/// View Name		NULL
-const uint SQLITE_CREATE_TRIGGER	= 7;	/// Trigger Name	Table Name
-const uint SQLITE_CREATE_VIEW		= 8;	/// View Name		NULL
-const uint SQLITE_DELETE		= 9;	/// Table Name		NULL
-const uint SQLITE_DROP_INDEX		= 10;	/// Index Name		Table Name
-const uint SQLITE_DROP_TABLE		= 11;	/// Table Name		NULL
-const uint SQLITE_DROP_TEMP_INDEX	= 12;	/// Index Name		Table Name
-const uint SQLITE_DROP_TEMP_TABLE	= 13;	/// Table Name		NULL
-const uint SQLITE_DROP_TEMP_TRIGGER	= 14;	/// Trigger Name	Table Name
-const uint SQLITE_DROP_TEMP_VIEW	= 15;	/// View Name		NULL
-const uint SQLITE_DROP_TRIGGER		= 16;	/// Trigger Name	Table Name
-const uint SQLITE_DROP_VIEW		= 17;	/// View Name		NULL
-const uint SQLITE_INSERT		= 18;	/// Table Name		NULL
-const uint SQLITE_PRAGMA		= 19;	/// Pragma Name		1st arg or NULL
-const uint SQLITE_READ			= 20;	/// Table Name		Column Name
-const uint SQLITE_SELECT		= 21;	/// NULL		NULL
-const uint SQLITE_TRANSACTION		= 22;	/// NULL		NULL
-const uint SQLITE_UPDATE		= 23;	/// Table Name		Column Name
-const uint SQLITE_ATTACH		= 24;	/// Filename		NULL
-const uint SQLITE_DETACH		= 25;	/// Database Name	NULL
-const uint SQLITE_ALTER_TABLE		= 26;	/// Database Name	Table Name
-const uint SQLITE_REINDEX		= 27;	/// Index Name		NULL
-const uint SQLITE_ANALYZE		= 28;	/// Table Name		NULL
-const uint SQLITE_CREATE_VTABLE		= 29;	/// Table Name		Module Name
-const uint SQLITE_DROP_VTABLE		= 30;	/// Table Name		Module Name
+const int SQLITE_CREATE_INDEX		= 1;	/// Index Name		Table Name
+const int SQLITE_CREATE_TABLE		= 2;	/// Table Name		NULL
+const int SQLITE_CREATE_TEMP_INDEX	= 3;	/// Index Name		Table Name
+const int SQLITE_CREATE_TEMP_TABLE	= 4;	/// Table Name		NULL
+const int SQLITE_CREATE_TEMP_TRIGGER	= 5;	/// Trigger Name	Table Name
+const int SQLITE_CREATE_TEMP_VIEW	= 6;	/// View Name		NULL
+const int SQLITE_CREATE_TRIGGER		= 7;	/// Trigger Name	Table Name
+const int SQLITE_CREATE_VIEW		= 8;	/// View Name		NULL
+const int SQLITE_DELETE			= 9;	/// Table Name		NULL
+const int SQLITE_DROP_INDEX		= 10;	/// Index Name		Table Name
+const int SQLITE_DROP_TABLE		= 11;	/// Table Name		NULL
+const int SQLITE_DROP_TEMP_INDEX	= 12;	/// Index Name		Table Name
+const int SQLITE_DROP_TEMP_TABLE	= 13;	/// Table Name		NULL
+const int SQLITE_DROP_TEMP_TRIGGER	= 14;	/// Trigger Name	Table Name
+const int SQLITE_DROP_TEMP_VIEW		= 15;	/// View Name		NULL
+const int SQLITE_DROP_TRIGGER		= 16;	/// Trigger Name	Table Name
+const int SQLITE_DROP_VIEW		= 17;	/// View Name		NULL
+const int SQLITE_INSERT			= 18;	/// Table Name		NULL
+const int SQLITE_PRAGMA			= 19;	/// Pragma Name		1st arg or NULL
+const int SQLITE_READ			= 20;	/// Table Name		Column Name
+const int SQLITE_SELECT			= 21;	/// NULL		NULL
+const int SQLITE_TRANSACTION		= 22;	/// NULL		NULL
+const int SQLITE_UPDATE			= 23;	/// Table Name		Column Name
+const int SQLITE_ATTACH			= 24;	/// Filename		NULL
+const int SQLITE_DETACH			= 25;	/// Database Name	NULL
+const int SQLITE_ALTER_TABLE		= 26;	/// Database Name	Table Name
+const int SQLITE_REINDEX		= 27;	/// Index Name		NULL
+const int SQLITE_ANALYZE		= 28;	/// Table Name		NULL
+const int SQLITE_CREATE_VTABLE		= 29;	/// Table Name		Module Name
+const int SQLITE_DROP_VTABLE		= 30;	/// Table Name		Module Name
+const int SQLITE_FUNCTION		= 31;	/// Function Name	NULL
 
-const uint SQLITE_INDEX_CONSTRAINT_EQ	= 2;	///
-const uint SQLITE_INDEX_CONSTRAINT_GT	= 4;	///
-const uint SQLITE_INDEX_CONSTRAINT_LE	= 8;	///
-const uint SQLITE_INDEX_CONSTRAINT_LT	= 16;	///
-const uint SQLITE_INDEX_CONSTRAINT_GE	= 32;	///
-const uint SQLITE_INDEX_CONSTRAINT_MATCH = 64;	///
+const int SQLITE_INDEX_CONSTRAINT_EQ	= 2;	///
+const int SQLITE_INDEX_CONSTRAINT_GT	= 4;	///
+const int SQLITE_INDEX_CONSTRAINT_LE	= 8;	///
+const int SQLITE_INDEX_CONSTRAINT_LT	= 16;	///
+const int SQLITE_INDEX_CONSTRAINT_GE	= 32;	///
+const int SQLITE_INDEX_CONSTRAINT_MATCH = 64;	///
+
+const int SQLITE_IOERR_READ		= SQLITE_IOERR | (1<<8); ///
+const int SQLITE_IOERR_SHORT_READ	= SQLITE_IOERR | (2<<8); ///
+const int SQLITE_IOERR_WRITE		= SQLITE_IOERR | (3<<8); ///
+const int SQLITE_IOERR_FSYNC		= SQLITE_IOERR | (4<<8); ///
+const int SQLITE_IOERR_DIR_FSYNC	= SQLITE_IOERR | (5<<8); ///
+const int SQLITE_IOERR_TRUNCATE		= SQLITE_IOERR | (6<<8); ///
+const int SQLITE_IOERR_FSTAT		= SQLITE_IOERR | (7<<8); ///
+const int SQLITE_IOERR_UNLOCK		= SQLITE_IOERR | (8<<8); ///
+const int SQLITE_IOERR_RDLOCK		= SQLITE_IOERR | (9<<8); ///
 
 extern (C):
 
@@ -225,6 +233,11 @@ void* sqlite3_aggregate_context (sqlite3_context* ctx, int nBytes);
  *
  */
 deprecated int sqlite3_aggregate_count (sqlite3_context* ctx);
+
+/**
+ *
+ */
+int sqlite3_auto_extension (void* xEntryPoint);
 
 /**
  *
@@ -509,6 +522,11 @@ int sqlite3_expired (sqlite3_stmt* stmt);
 /**
  *
  */
+int sqlite3_extended_result_codes (sqlite3* database, int onoff);
+
+/**
+ *
+ */
 int sqlite3_finalize (sqlite3_stmt* stmt);
 
 /**
@@ -584,6 +602,10 @@ int sqlite3_open16 (void* filename, sqlite3** database);
 /**
  *
  */
+int sqlite3_overload_function (sqlite3* database, char* zFuncName, int nArg);
+/**
+ *
+ */
 int sqlite3_prepare (sqlite3* database, char* zSql, int nBytes, sqlite3_stmt** stmt, char** zTail);
 
 /**
@@ -610,6 +632,11 @@ int sqlite3_release_memory (int n);
  *
  */
 int sqlite3_reset (sqlite3_stmt* stmt);
+
+/**
+ *
+ */
+void sqlite3_reset_auto_extension ();
 
 /**
  *

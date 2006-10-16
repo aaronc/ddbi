@@ -50,10 +50,10 @@
 <p>Part of the D DBI project.
 
 </p>
-<p><strong>Version:</strong><br />SQLite version 3.3.7
+<p><strong>Version:</strong><br />SQLite version 3.3.8
 <br /><br />
 
-	Import library version 0.03
+	Import library version 0.04
 
 </p>
 <p><strong>Authors:</strong><br />The D DBI project
@@ -163,6 +163,12 @@
 </p>
 
 </dd>
+<dt><span class="big">char* <span class="underline">zErrMsg</span>;
+</span></dt>
+<dd><p>Error message from sqlite3_mprintf().
+</p>
+
+</dd>
 </dl>
 </dd>
 <dt><span class="big">struct <span class="underline">sqlite3_vtab_cursor</span>;
@@ -180,229 +186,229 @@
 </span></dt>
 <dd><br /><br />
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_OK</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_OK</span>;
 </span></dt>
 <dd><p>Successful result.
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_ERROR</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_ERROR</span>;
 </span></dt>
 <dd><p>SQL error or missing database.
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_INTERNAL</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_INTERNAL</span>;
 </span></dt>
 <dd><p>An internal logic error in SQLite.
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_PERM</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_PERM</span>;
 </span></dt>
 <dd><p>Access permission denied.
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_ABORT</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_ABORT</span>;
 </span></dt>
 <dd><p>Callback routine requested an abort.
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_BUSY</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_BUSY</span>;
 </span></dt>
 <dd><p>The database file is locked.
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_LOCKED</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_LOCKED</span>;
 </span></dt>
 <dd><p>A table in the database is locked.
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_NOMEM</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_NOMEM</span>;
 </span></dt>
 <dd><p>A malloc() failed.
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_READONLY</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_READONLY</span>;
 </span></dt>
 <dd><p>Attempt to write a readonly database.
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_INTERRUPT</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_INTERRUPT</span>;
 </span></dt>
 <dd><p>Operation terminated by sqlite_interrupt().
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_IOERR</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_IOERR</span>;
 </span></dt>
 <dd><p>Some kind of disk I/O error occurred.
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_CORRUPT</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_CORRUPT</span>;
 </span></dt>
 <dd><p>The database disk image is malformed.
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_NOTFOUND</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_NOTFOUND</span>;
 </span></dt>
 <dd><p>(Internal Only) Table or record not found.
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_FULL</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_FULL</span>;
 </span></dt>
 <dd><p>Insertion failed because database is full.
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_CANTOPEN</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_CANTOPEN</span>;
 </span></dt>
 <dd><p>Unable to open the database file.
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_PROTOCOL</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_PROTOCOL</span>;
 </span></dt>
 <dd><p>Database lock protocol error.
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_EMPTY</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_EMPTY</span>;
 </span></dt>
 <dd><p>(Internal Only) Database table is empty.
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_SCHEMA</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_SCHEMA</span>;
 </span></dt>
 <dd><p>The database schema changed.
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_TOOBIG</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_TOOBIG</span>;
 </span></dt>
 <dd><p>Too much data for one row of a table.
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_CONSTRAINT</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_CONSTRAINT</span>;
 </span></dt>
 <dd><p>Abort due to constraint violation.
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_MISMATCH</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_MISMATCH</span>;
 </span></dt>
 <dd><p>Data type mismatch.
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_MISUSE</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_MISUSE</span>;
 </span></dt>
 <dd><p>Library used incorrectly.
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_NOLFS</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_NOLFS</span>;
 </span></dt>
 <dd><p>Uses OS features not supported on host.
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_AUTH</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_AUTH</span>;
 </span></dt>
 <dd><p>Authorization denied.
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_ROW</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_ROW</span>;
 </span></dt>
 <dd><p>sqlite_step() has another row ready.
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_DONE</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_DONE</span>;
 </span></dt>
 <dd><p>sqlite_step() has finished executing.
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_UTF8</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_UTF8</span>;
 </span></dt>
 <dd><p>The text is in UTF8 format.
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_UTF16BE</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_UTF16BE</span>;
 </span></dt>
 <dd><p>The text is in UTF16 big endian format.
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_UTF16LE</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_UTF16LE</span>;
 </span></dt>
 <dd><p>The text is in UTF16 little endian format.
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_UTF16</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_UTF16</span>;
 </span></dt>
 <dd><p>The text is in UTF16 format.
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_ANY</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_ANY</span>;
 </span></dt>
 <dd><p>The text is in some format or another.
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_INTEGER</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_INTEGER</span>;
 </span></dt>
 <dd><p>The data value is an integer.
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_FLOAT</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_FLOAT</span>;
 </span></dt>
 <dd><p>The data value is a float.
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_TEXT</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_TEXT</span>;
 </span></dt>
 <dd><p>The data value is text.
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_BLOB</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_BLOB</span>;
 </span></dt>
 <dd><p>The data value is a blob.
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_NULL</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_NULL</span>;
 </span></dt>
 <dd><p>The data value is null.
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_DENY</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_DENY</span>;
 </span></dt>
 <dd><p>Abort the SQL statement with an error.
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_IGNORE</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_IGNORE</span>;
 </span></dt>
 <dd><p>Don't allow access, but don't generate an error.
 </p>
@@ -420,207 +426,249 @@
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_CREATE_INDEX</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_CREATE_INDEX</span>;
 </span></dt>
 <dd><p>Index Name		Table Name
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_CREATE_TABLE</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_CREATE_TABLE</span>;
 </span></dt>
 <dd><p>Table Name		NULL
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_CREATE_TEMP_INDEX</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_CREATE_TEMP_INDEX</span>;
 </span></dt>
 <dd><p>Index Name		Table Name
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_CREATE_TEMP_TABLE</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_CREATE_TEMP_TABLE</span>;
 </span></dt>
 <dd><p>Table Name		NULL
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_CREATE_TEMP_TRIGGER</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_CREATE_TEMP_TRIGGER</span>;
 </span></dt>
 <dd><p>Trigger Name	Table Name
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_CREATE_TEMP_VIEW</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_CREATE_TEMP_VIEW</span>;
 </span></dt>
 <dd><p>View Name		NULL
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_CREATE_TRIGGER</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_CREATE_TRIGGER</span>;
 </span></dt>
 <dd><p>Trigger Name	Table Name
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_CREATE_VIEW</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_CREATE_VIEW</span>;
 </span></dt>
 <dd><p>View Name		NULL
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_DELETE</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_DELETE</span>;
 </span></dt>
 <dd><p>Table Name		NULL
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_DROP_INDEX</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_DROP_INDEX</span>;
 </span></dt>
 <dd><p>Index Name		Table Name
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_DROP_TABLE</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_DROP_TABLE</span>;
 </span></dt>
 <dd><p>Table Name		NULL
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_DROP_TEMP_INDEX</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_DROP_TEMP_INDEX</span>;
 </span></dt>
 <dd><p>Index Name		Table Name
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_DROP_TEMP_TABLE</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_DROP_TEMP_TABLE</span>;
 </span></dt>
 <dd><p>Table Name		NULL
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_DROP_TEMP_TRIGGER</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_DROP_TEMP_TRIGGER</span>;
 </span></dt>
 <dd><p>Trigger Name	Table Name
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_DROP_TEMP_VIEW</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_DROP_TEMP_VIEW</span>;
 </span></dt>
 <dd><p>View Name		NULL
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_DROP_TRIGGER</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_DROP_TRIGGER</span>;
 </span></dt>
 <dd><p>Trigger Name	Table Name
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_DROP_VIEW</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_DROP_VIEW</span>;
 </span></dt>
 <dd><p>View Name		NULL
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_INSERT</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_INSERT</span>;
 </span></dt>
 <dd><p>Table Name		NULL
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_PRAGMA</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_PRAGMA</span>;
 </span></dt>
 <dd><p>Pragma Name		1st arg or NULL
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_READ</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_READ</span>;
 </span></dt>
 <dd><p>Table Name		Column Name
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_SELECT</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_SELECT</span>;
 </span></dt>
 <dd><p>NULL		NULL
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_TRANSACTION</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_TRANSACTION</span>;
 </span></dt>
 <dd><p>NULL		NULL
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_UPDATE</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_UPDATE</span>;
 </span></dt>
 <dd><p>Table Name		Column Name
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_ATTACH</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_ATTACH</span>;
 </span></dt>
 <dd><p>Filename		NULL
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_DETACH</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_DETACH</span>;
 </span></dt>
 <dd><p>Database Name	NULL
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_ALTER_TABLE</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_ALTER_TABLE</span>;
 </span></dt>
 <dd><p>Database Name	Table Name
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_REINDEX</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_REINDEX</span>;
 </span></dt>
 <dd><p>Index Name		NULL
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_ANALYZE</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_ANALYZE</span>;
 </span></dt>
 <dd><p>Table Name		NULL
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_CREATE_VTABLE</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_CREATE_VTABLE</span>;
 </span></dt>
 <dd><p>Table Name		Module Name
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_DROP_VTABLE</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_DROP_VTABLE</span>;
 </span></dt>
 <dd><p>Table Name		Module Name
 </p>
 
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_INDEX_CONSTRAINT_EQ</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_FUNCTION</span>;
+</span></dt>
+<dd><p>Function Name	NULL
+</p>
+
+</dd>
+<dt><span class="big">const int <span class="underline">SQLITE_INDEX_CONSTRAINT_EQ</span>;
 </span></dt>
 <dd><br /><br />
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_INDEX_CONSTRAINT_GT</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_INDEX_CONSTRAINT_GT</span>;
 </span></dt>
 <dd><br /><br />
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_INDEX_CONSTRAINT_LE</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_INDEX_CONSTRAINT_LE</span>;
 </span></dt>
 <dd><br /><br />
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_INDEX_CONSTRAINT_LT</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_INDEX_CONSTRAINT_LT</span>;
 </span></dt>
 <dd><br /><br />
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_INDEX_CONSTRAINT_GE</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_INDEX_CONSTRAINT_GE</span>;
 </span></dt>
 <dd><br /><br />
 </dd>
-<dt><span class="big">const uint <span class="underline">SQLITE_INDEX_CONSTRAINT_MATCH</span>;
+<dt><span class="big">const int <span class="underline">SQLITE_INDEX_CONSTRAINT_MATCH</span>;
+</span></dt>
+<dd><br /><br />
+</dd>
+<dt><span class="big">const int <span class="underline">SQLITE_IOERR_READ</span>;
+</span></dt>
+<dd><br /><br />
+</dd>
+<dt><span class="big">const int <span class="underline">SQLITE_IOERR_SHORT_READ</span>;
+</span></dt>
+<dd><br /><br />
+</dd>
+<dt><span class="big">const int <span class="underline">SQLITE_IOERR_WRITE</span>;
+</span></dt>
+<dd><br /><br />
+</dd>
+<dt><span class="big">const int <span class="underline">SQLITE_IOERR_FSYNC</span>;
+</span></dt>
+<dd><br /><br />
+</dd>
+<dt><span class="big">const int <span class="underline">SQLITE_IOERR_DIR_FSYNC</span>;
+</span></dt>
+<dd><br /><br />
+</dd>
+<dt><span class="big">const int <span class="underline">SQLITE_IOERR_TRUNCATE</span>;
+</span></dt>
+<dd><br /><br />
+</dd>
+<dt><span class="big">const int <span class="underline">SQLITE_IOERR_FSTAT</span>;
+</span></dt>
+<dd><br /><br />
+</dd>
+<dt><span class="big">const int <span class="underline">SQLITE_IOERR_UNLOCK</span>;
+</span></dt>
+<dd><br /><br />
+</dd>
+<dt><span class="big">const int <span class="underline">SQLITE_IOERR_RDLOCK</span>;
 </span></dt>
 <dd><br /><br />
 </dd>
@@ -629,6 +677,10 @@
 <dd><br /><br />
 </dd>
 <dt><span class="big">deprecated int <span class="underline">sqlite3_aggregate_count</span>(sqlite3_context * <em>ctx</em>);
+</span></dt>
+<dd><br /><br />
+</dd>
+<dt><span class="big">int <span class="underline">sqlite3_auto_extension</span>(void* <em>xEntryPoint</em>);
 </span></dt>
 <dd><br /><br />
 </dd>
@@ -856,6 +908,10 @@
 </span></dt>
 <dd><br /><br />
 </dd>
+<dt><span class="big">int <span class="underline">sqlite3_extended_result_codes</span>(sqlite3 * <em>database</em>, int <em>onoff</em>);
+</span></dt>
+<dd><br /><br />
+</dd>
 <dt><span class="big">int <span class="underline">sqlite3_finalize</span>(sqlite3_stmt * <em>stmt</em>);
 </span></dt>
 <dd><br /><br />
@@ -916,6 +972,10 @@
 </span></dt>
 <dd><br /><br />
 </dd>
+<dt><span class="big">int <span class="underline">sqlite3_overload_function</span>(sqlite3 * <em>database</em>, char* <em>zFuncName</em>, int <em>nArg</em>);
+</span></dt>
+<dd><br /><br />
+</dd>
 <dt><span class="big">int <span class="underline">sqlite3_prepare</span>(sqlite3 * <em>database</em>, char* <em>zSql</em>, int <em>nBytes</em>, sqlite3_stmt ** <em>stmt</em>, char** <em>zTail</em>);
 </span></dt>
 <dd><br /><br />
@@ -937,6 +997,10 @@
 <dd><br /><br />
 </dd>
 <dt><span class="big">int <span class="underline">sqlite3_reset</span>(sqlite3_stmt * <em>stmt</em>);
+</span></dt>
+<dd><br /><br />
+</dd>
+<dt><span class="big">void <span class="underline">sqlite3_reset_auto_extension</span>();
 </span></dt>
 <dd><br /><br />
 </dd>
