@@ -32,6 +32,7 @@
  *
  * Modified:
  *	2006-10-16	Changed build to bud.
+ *	2006-10-20	Fixed linux sleep issues.
  *
  * Copyright: BSD license
  */
@@ -146,6 +147,10 @@ void main (char[][] args) {
 	}
 	buildCommand.length = buildCommand.length - 1;
 	if (system("bud " ~ buildCommand)) {
-		system("pause");
+		version (Windows) {
+			system("pause");
+		} else version (linux) {
+			system("sleep 5");
+		}
 	}
 }
