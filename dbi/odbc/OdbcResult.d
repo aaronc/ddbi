@@ -3,6 +3,11 @@
  *
  * Version: 0.2.4
  *
+ * Modified:
+ *	2006-11-01	Fixed an array bounds exception on null data.
+ *	2006-11-01	Fixed a problem that sometimes caused the column name to be "".
+ *	2006-11-01	Added some casts around nulls.
+ *
  * Copyright: BSD license
  */
 module dbi.odbc.OdbcResult;
@@ -58,7 +63,7 @@ class OdbcResult : Result {
 			if (!SQL_SUCCEEDED(SQLColAttribute(stmt, i, SQL_DESC_TYPE_NAME, typeName, typeName.length, &typeNameLength, null))) {
 				throw new DBIException("Unable to get the SQL column type names.  ODBC returned " ~ getLastErrorMessage, getLastErrorCode);
 			}
-			if (!SQL_SUCCEEDED(SQLColAttribute(stmt, i, SQL_DESC_BASE_COLUMN_NAME, columnName, columnName.length, &columnNameLength, null))) {
+			if (!SQL_SUCCEEDED(SQLColAttribute(stmt, i, SQL_DESC_NAME, columnName, columnName.length, &columnNameLength, null))) {
 				throw new DBIException("Unable to get the SQL column names.  ODBC returned " ~ getLastErrorMessage, getLastErrorCode);
 			}
 
@@ -92,7 +97,11 @@ class OdbcResult : Result {
 						buf[0 .. 4] = cast(SQLCHAR[])"null";
 						buf[4 .. length] = cast(SQLCHAR)'\0';
 					}
-					row.addField(columnNames[i - 1], strip(cast(char[])buf[0 .. indicator]), columnTypesName[i - 1], columnTypesNum[i - 1]);
+					if (indicator < 0) {
+						row.addField(columnNames[i - 1], null, columnTypesName[i - 1], columnTypesNum[i - 1]);
+					} else {
+						row.addField(columnNames[i - 1], strip(cast(char[])buf[0 .. indicator]), columnTypesName[i - 1], columnTypesNum[i - 1]);
+					}
 				}
 			}
 			return row;
@@ -108,11 +117,11 @@ class OdbcResult : Result {
 	 *	DBIException if an ODBC statement couldn't be destroyed.
 	 */
 	override void finish () {
-		if (stmt !is null) {
+		if (cast(void*)stmt !is null) {
 			if (!SQL_SUCCEEDED(SQLFreeHandle(SQL_HANDLE_STMT, stmt))) {
 				throw new DBIException("Unable to destroy an ODBC statement.  ODBC returned " ~ getLastErrorMessage, getLastErrorCode);
 			}
-			stmt = null;
+			stmt = cast(SQLHANDLE)null;
 		}
 	}
 

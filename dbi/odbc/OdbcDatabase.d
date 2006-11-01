@@ -3,6 +3,9 @@
  *
  * Version: 0.2.4
  *
+ * Modified:
+ *	2006-11-01	Added some casts around nulls.
+ *
  * Copyright: BSD license
  */
 module dbi.odbc.OdbcDatabase;
@@ -97,7 +100,7 @@ class OdbcDatabase : Database {
 		if (!SQL_SUCCEEDED(SQLFreeHandle(SQL_HANDLE_DBC, connection))) {
 			throw new DBIException("Unable to close an ODBC connection.  ODBC returned " ~ getLastErrorMessage, getLastErrorCode);
 		}
-		connection = null;
+		connection = cast(SQLHANDLE)null;
 	}
 
 	/**
@@ -165,7 +168,7 @@ class OdbcDatabase : Database {
 	 *	DBIException if there was an error disconnecting.
 	 */
 	override void close () {
-		if (connection !is null && !SQL_SUCCEEDED(SQLDisconnect(connection))) {
+		if (cast(void*)connection !is null && !SQL_SUCCEEDED(SQLDisconnect(connection))) {
 			if (getLastErrorMessage[0 .. 5] != "08003") {
 				throw new DBIException("Unable to disconnect from the database.  ODBC returned " ~ getLastErrorMessage, getLastErrorCode);
 			}
@@ -191,7 +194,7 @@ class OdbcDatabase : Database {
 	 */
 	override void execute (char[] sql) {
 		scope (exit)
-			stmt = null;
+			stmt = cast(SQLHANDLE)null;
 		scope (exit)
 			if (!SQL_SUCCEEDED(SQLFreeHandle(SQL_HANDLE_STMT, stmt))) {
 				throw new DBIException("Unable to destroy an ODBC statement.  ODBC returned " ~ getLastErrorMessage, getLastErrorCode);

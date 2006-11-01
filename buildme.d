@@ -33,6 +33,7 @@
  * Modified:
  *	2006-10-16	Changed build to bud.
  *	2006-10-20	Fixed linux sleep issues.
+ *	2006-11-01	Non-Windows library names will now be in the proper style.
  *
  * Copyright: BSD license
  */
@@ -71,7 +72,11 @@ void main (char[][] args) {
 			switchesCompiler["-inline"] = true;
 			switchesCompiler["-O"] = true;
 		}
-		switchesCompiler["-ofdbi"] = true;
+		version (Windows) {
+			switchesCompiler["-ofdbi.lib"] = true;
+		} else {
+			switchesCompiler["-oflibdbi.a"] = true;
+		}
 		version (Ares) {
 			switchesCompiler["-version=Ares"] = true;
 		}
@@ -85,7 +90,11 @@ void main (char[][] args) {
 			switchesCompiler["-finline-functions"] = true;
 			switchesCompiler["-O3"] = true;
 		}
-		switchesCompiler["-o dbi.lib"];
+		version (Windows) {
+			switchesCompiler["-o dbi.lib"];
+		} else {
+			switchesCompiler["-o libdbi.a"];
+		}
 		version (Ares) {
 			switchesCompiler["-fversion=Ares"] = true;
 		}
