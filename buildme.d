@@ -34,6 +34,7 @@
  *	2006-10-16	Changed build to bud.
  *	2006-10-20	Fixed linux sleep issues.
  *	2006-11-01	Non-Windows library names will now be in the proper style.
+ *	2003-11-09	Fixed a "no effect in expression" warning.
  *
  * Copyright: BSD license
  */
@@ -91,9 +92,9 @@ void main (char[][] args) {
 			switchesCompiler["-O3"] = true;
 		}
 		version (Windows) {
-			switchesCompiler["-o dbi.lib"];
+			switchesCompiler["-o dbi.lib"] = true;
 		} else {
-			switchesCompiler["-o libdbi.a"];
+			switchesCompiler["-o libdbi.a"] = true;
 		}
 		version (Ares) {
 			switchesCompiler["-fversion=Ares"] = true;
@@ -150,7 +151,6 @@ void main (char[][] args) {
 		buildCommandArray ~= ("dbi" ~ sep ~ file ~ sep ~ "all.d");
 	}
 	char[] buildCommand;
-	buildCommand.length = buildCommandArray.length * 10;
 	foreach (char[] command; buildCommandArray) {
 		buildCommand ~= command ~ " ";
 	}
