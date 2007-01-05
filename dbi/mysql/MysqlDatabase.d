@@ -9,11 +9,13 @@ module dbi.mysql.MysqlDatabase;
 
 version (Ares) {
 	private static import std.regexp;
-	private import util.string : asString = toString;
+	private import util.string : toDString = toString;
+	private import util.string : toCString = toStringz;
 	debug (UnitTest) private import std.io.Console;
 } else {
 	private static import std.string;
-	alias std.string.toString asString;
+	alias std.string.toString toDString;
+  alias std.string.toStringz toCString;
 	debug (UnitTest) private import std.stdio;
 }
 private import dbi.Database, dbi.DBIException, dbi.Result, dbi.Row, dbi.Statement;
@@ -79,7 +81,7 @@ class MysqlDatabase : Database {
 	override void connect (char[] params, char[] username = null, char[] password = null) {
 		char[] host = "localhost";
 		char[] dbname = "test";
-		char[] sock = "/tmp/mysql.sock";
+		char[] sock = null;
 		uint port = 0;
 
 		void parseKeywords () {
@@ -112,7 +114,9 @@ class MysqlDatabase : Database {
 			}
 		}
 
-		mysql_real_connect(connection, host, username, password, dbname, port, sock, 0);
+		mysql_real_connect(connection, toCString(host), toCString(username), 
+        toCString(password), toCString(dbname), port, 
+        sock ? toCString(sock) : null, 0);
 		if (uint error = mysql_errno(connection)) {
 			throw new DBIException("Unable to connect to the MySQL database.", error, dbi.mysql.MysqlError.specificToGeneral(error));
 		}
@@ -141,7 +145,7 @@ class MysqlDatabase : Database {
 	 *	DBIException if the SQL code couldn't be executed.
 	 */
 	override void execute (char[] sql) {
-		int error = mysql_real_query(connection, sql, sql.length);
+		int error = mysql_real_query(connection, toCString(sql), sql.length);
 		if (error) {
 			throw new DBIException("Unable to execute a command on the MySQL database.", sql, error, dbi.mysql.MysqlError.specificToGeneral(error));
 		}
@@ -160,7 +164,7 @@ class MysqlDatabase : Database {
 	 *	A Result object with the queried information.
 	 */
 	override MysqlResult query (char[] sql) {
-		mysql_real_query(connection, sql, sql.length);
+		mysql_real_query(connection, toCString(sql), sql.length);
 		MYSQL_RES* results = mysql_store_result(connection);
 		//if (results is null) {
 		//	throw new DBIException("Unable to query the MySQL database.", sql);
@@ -194,7 +198,7 @@ class MysqlDatabase : Database {
 	 *	The database specific error message.
 	 */
 	deprecated override char[] getErrorMessage () {
-		return asString(mysql_error(connection));
+		return toDString(mysql_error(connection));
 	}
 
 	private:
