@@ -13,4 +13,5 @@ version (build) {
 
 public import	dbi.pg.PgDatabase,
 		dbi.pg.PgResult,
+		dbi.pg.PgError,
 		dbi.all;

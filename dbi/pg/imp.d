@@ -20,6 +20,8 @@ version (Windows) {
 	pragma (lib, "libpq.lib");
 } else version (linux) {
 	pragma (lib, "libpq.a");
+} else version (Posix) {
+	pragma (lib, "libpq.a");
 } else version (darwin) {
 	pragma (lib, "libpq.a");
 } else {

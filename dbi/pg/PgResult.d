@@ -43,7 +43,7 @@ class PgResult : Result {
 			}
 		}
 
-		if (index > numRows) {
+		if (index >= numRows) {
 			return null;
 		}
 		Row r = new Row();

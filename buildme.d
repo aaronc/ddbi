@@ -76,7 +76,7 @@ void main (char[][] args) {
 		version (Windows) {
 			switchesCompiler["-ofdbi.lib"] = true;
 		} else {
-			switchesCompiler["-oflibdbi.a"] = true;
+			switchesCompiler["-odlibddbi.a"] = true;
 		}
 		version (Ares) {
 			switchesCompiler["-version=Ares"] = true;
@@ -94,7 +94,7 @@ void main (char[][] args) {
 		version (Windows) {
 			switchesCompiler["-o dbi.lib"] = true;
 		} else {
-			switchesCompiler["-o libdbi.a"] = true;
+			switchesCompiler["-o libddbi.a"] = true;
 		}
 		version (Ares) {
 			switchesCompiler["-fversion=Ares"] = true;
@@ -120,7 +120,7 @@ void main (char[][] args) {
 	} else {
 		chdir("dbi");
 		foreach (char[] dir; listdir(getcwd())) {
-			if (isdir(dir)) {
+			if (isdir(dir) && dir != ".svn") {
 				allList[dir] = true;
 			}
 		}

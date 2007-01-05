@@ -7,11 +7,13 @@
  */
 module dbi.pg.PgDatabase;
 
-version (Ares) {
-	private import util.string : asString = toString;
+version (Tango) {
+	private import tango.stdc.stringz : toDString = fromUtf8z;
+	private import tango.stdc.stringz : toCString = toUtf8z;
 	debug (UnitTest) private import std.io.Console;
 } else {
-	private import std.string : asString = toString;
+	private import std.string : toDString = toString;
+	private import std.string : toCString = toStringz;
 	debug (UnitTest) private import std.stdio;
 }
 private import dbi.Database, dbi.DBIException, dbi.Result, dbi.Row, dbi.Statement;
@@ -102,10 +104,10 @@ class PgDatabase : Database {
 		if (password !is null) {
 			params ~= " password=" ~ password ~ "";
 		}
-		connection = PQconnectdb(params);
+		connection = PQconnectdb(toCString(params));
 		m_errorCode = cast(int)PQstatus(connection);
 		if (m_errorCode != ConnStatusType.CONNECTION_OK && m_errorCode) {
-			throw new DBIException(asString(PQerrorMessage(connection)), m_errorCode);
+			throw new DBIException(toDString(PQerrorMessage(connection)), m_errorCode);
 		}
 	}
 
@@ -129,11 +131,11 @@ class PgDatabase : Database {
 	 *	DBIException if the SQL code couldn't be executed.
 	 */
 	override void execute (char[] sql) {
-		PGresult* res = PQexec(connection, sql.dup);
+		PGresult* res = PQexec(connection, toCString(sql.dup));
 		scope(exit) PQclear(res);
 		m_errorCode = cast(int)PQresultStatus(res);
 		if (m_errorCode != ExecStatusType.PGRES_COMMAND_OK && m_errorCode != ExecStatusType.PGRES_TUPLES_OK) {
-			throw new DBIException(asString(PQerrorMessage(connection)), m_errorCode, specificToGeneral(PQresultErrorField(res, PG_DIAG_SQLSTATE)));
+			throw new DBIException(toDString(PQerrorMessage(connection)), m_errorCode, specificToGeneral(PQresultErrorField(res, PG_DIAG_SQLSTATE)));
 		}
 	}
 
@@ -150,11 +152,11 @@ class PgDatabase : Database {
 	 *	DBIException if the SQL code couldn't be executed.
 	 */
 	override PgResult query (char[] sql) {
-		PGresult* res = PQexec(connection, sql.dup);
+		PGresult* res = PQexec(connection, toCString(sql.dup));
 		ExecStatusType status = PQresultStatus(res);
 		m_errorCode = cast(int)PQresultStatus(res);
 		if (m_errorCode != ExecStatusType.PGRES_COMMAND_OK && m_errorCode != ExecStatusType.PGRES_TUPLES_OK) {
-			throw new DBIException(asString(PQerrorMessage(connection)), m_errorCode, specificToGeneral(PQresultErrorField(res, PG_DIAG_SQLSTATE)));
+			throw new DBIException(toDString(PQerrorMessage(connection)), m_errorCode, specificToGeneral(PQresultErrorField(res, PG_DIAG_SQLSTATE)));
 		}
 		return new PgResult(res);
 	}
@@ -194,7 +196,7 @@ class PgDatabase : Database {
 }
 
 unittest {
-	version (Ares) {
+	version (Tango) {
 		void s1 (char[] s) {
 			Cout("" ~ s ~ "\n");
 		}
