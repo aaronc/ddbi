@@ -7,11 +7,13 @@
  */
 module dbi.sqlite.SqliteDatabase;
 
-version (Ares) {
-	private import util.string : asString = toString;
+version (Tango) {
+	private import tango.stdc.stringz : toDString = fromUtf8z;
+	private import tango.stdc.stringz : toCString = toUtf8z;
 	debug (UnitTest) private import std.io.Console;
 } else {
-	private import std.string : asString = toString;
+	private import std.string : toDString = toString;
+	private import std.string : toCString = toStringz;
 	debug (UnitTest) private import std.stdio;
 }
 private import dbi.Database, dbi.DBIException, dbi.Result, dbi.Row, dbi.Statement;
@@ -60,7 +62,7 @@ class SqliteDatabase : Database {
 	 *	---
 	 */
 	override void connect (char[] params, char[] username = null, char[] password = null) {
-		if ((errorCode = sqlite3_open(params, &database)) != SQLITE_OK) {
+		if ((errorCode = sqlite3_open(toCString(params), &database)) != SQLITE_OK) {
 			throw new DBIException("Could not open or create " ~ params, errorCode, specificToGeneral(errorCode));
 		}
 	}
@@ -71,7 +73,7 @@ class SqliteDatabase : Database {
 	override void close () {
 		if (database !is null) {
 			if ((errorCode = sqlite3_close(database)) != SQLITE_OK) {
-				throw new DBIException(asString(sqlite3_errmsg(database)), sql, errorCode, specificToGeneral(errorCode));
+				throw new DBIException(toDString(sqlite3_errmsg(database)), sql, errorCode, specificToGeneral(errorCode));
 			}
 			database = null;
 		}
@@ -89,8 +91,8 @@ class SqliteDatabase : Database {
 	override void execute (char[] sql) {
 		char** errorMessage;
 		this.sql = sql;
-		if ((errorCode = sqlite3_exec(database, sql, null, null, errorMessage)) != SQLITE_OK) {
-			throw new DBIException(asString(sqlite3_errmsg(database)), sql, errorCode, specificToGeneral(errorCode));
+		if ((errorCode = sqlite3_exec(database, toCString(sql), null, null, errorMessage)) != SQLITE_OK) {
+			throw new DBIException(toDString(sqlite3_errmsg(database)), sql, errorCode, specificToGeneral(errorCode));
 		}
 	}
 
@@ -110,8 +112,8 @@ class SqliteDatabase : Database {
 		char** errorMessage;
 		sqlite3_stmt* stmt;
 		this.sql = sql;
-		if ((errorCode = sqlite3_prepare(database, sql, sql.length, &stmt, errorMessage)) != SQLITE_OK) {
-			throw new DBIException(asString(sqlite3_errmsg(database)), sql, errorCode, specificToGeneral(errorCode));
+		if ((errorCode = sqlite3_prepare(database, toCString(sql), sql.length, &stmt, errorMessage)) != SQLITE_OK) {
+			throw new DBIException(toDString(sqlite3_errmsg(database)), sql, errorCode, specificToGeneral(errorCode));
 		}
 		return new SqliteResult(stmt);
 	}
@@ -141,7 +143,7 @@ class SqliteDatabase : Database {
 	 *	The database specific error message.
 	 */
 	deprecated override char[] getErrorMessage () {
-		return asString(sqlite3_errmsg(database));
+		return toDString(sqlite3_errmsg(database));
 	}
 
 	/*
