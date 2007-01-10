@@ -37,7 +37,7 @@ public:
   }
   
   /**
-   * Create a new instance ofgDatabase and connect to a server.
+   * Create a new instance of Database and connect to a server.
    *
    * See_Also:
    *	connect
@@ -52,7 +52,7 @@ public:
    *
    * Params:
    *	params = A string in the form "server port" 
-   *    FIXME: is it supposed to be "keyword1=value1;keyword2=value2;etc."
+   *    TODO: is it supposed to be "keyword1=value1;keyword2=value2;etc."
    *           and be consistent with other DBI's ??
    *
    *	username = The _username to _connect with.
