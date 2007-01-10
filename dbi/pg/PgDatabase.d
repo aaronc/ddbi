@@ -121,6 +121,32 @@ class PgDatabase : Database {
 		}
 	}
 
+  /* Escape a string using the database's native method if possible
+   *
+   * Params:
+   *  str = The string to escape
+   *
+   * Returns:
+   *  The escaped string.
+   */
+
+  override char[] escape (char[] str)
+  {
+    char[] result;
+
+    if(str == "")
+      return str;
+
+    result.length = str.length * 2;
+
+    // It's ok to send str.ptr here because string doesnt need to be 0-term
+    int len = PQescapeStringConn(connection, result.ptr, str.ptr, str.length, 
+        null);
+    result.length = len;
+
+    return result;
+  }
+
 	/**
 	 * Execute a SQL statement that returns no results.
 	 *

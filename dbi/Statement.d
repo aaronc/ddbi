@@ -97,12 +97,35 @@ final class Statement {
 	 * Returns:
 	 *	The escaped form of string.
 	 */
-	char[] escape (char[] string) {
-		version (Ares) {
-			return std.regexp.sub(string, "'", "''");
-		} else {
-			return std.string.replace(string, "'", "''");
-		}
+	char[] escape (char[] string) 
+  {
+    if(database !is null)
+      return database.escape(string);
+    else
+    {
+      char[] result;
+      int count = 0;
+
+      // Maximum length needed if every char is to be quoted
+      result.length = string.length * 2;
+      for(int i = 0; i < string.length; i++)
+      {
+        switch(string[i])
+        {
+          case '"':
+          case '\'':
+          case '\\':
+            result[count++] = '\\';
+            break;
+          default:
+            break;
+        }
+        result[count++] = string[i];
+      }
+
+      result.length = count;
+      return result;
+    } 
 	}
 
 	/**
@@ -114,24 +137,30 @@ final class Statement {
 	 * Todo:
 	 *	Raise an exception if binds.length != count(sql, "?")
 	 */
-	char[] getSqlByQM () {
-		char[] result = sql;
-		int qmIdx = 0, qmCount = 0;
+	char[] getSqlByQM () 
+  {
+		char[] result; 
+    int i = 0, j = 0, count = 0;
 
-		void replace () {
-			result = result[0 .. qmIdx] ~ "'" ~ binds[qmCount] ~ "'" ~ result[qmIdx + 1 .. result.length];
-				qmCount++;
-		}
+    // binds.length is for the '', only 1 because we replace the ? too
+    result.length = sql.length + binds.length;     
+    for(i = 0; i < binds.length; i++)
+      result.length = result.length + binds[i].length;
 
-		version (Ares) {
-			while((qmIdx = std.regexp.find(result, "\\u003F")) != size_t.max) {
-				replace();
-			}
-		} else {
-			while ((qmIdx = std.string.find(result, "?")) != -1) {
-				replace();
-			}
-		}
+    for(i = 0; i < sql.length; i++)
+    {
+      if(sql[i] == '?')
+      {
+        result[j++] = '\'';
+        result[j..j + binds[count].length] = binds[count];
+        j += binds[count++].length;
+        result[j++] = '\'';
+      }
+      else
+        result[j++] = sql[i];
+    }
+
+    sql = result;
 		return result;
 	}
 
@@ -225,10 +254,10 @@ unittest {
 
 	s1("dbi.Statement:");
 	Statement stmt = new Statement(null, "SELECT * FROM people");
-	char[] resultingSql = "SELECT * FROM people WHERE id = '10' OR name LIKE 'John Mc''Donald'";
+	char[] resultingSql = "SELECT * FROM people WHERE id = '10' OR name LIKE 'John Mc\\'Donald'";
 
 	s2("escape");
-	assert(stmt.escape("John Mc'Donald") == "John Mc''Donald");
+	assert(stmt.escape("John Mc'Donald") == "John Mc\\'Donald");
 
 	s2("simple sql");
 	stmt = new Statement(null, "SELECT * FROM people");
@@ -238,6 +267,7 @@ unittest {
 	stmt = new Statement(null, "SELECT * FROM people WHERE id = ? OR name LIKE ?");
 	stmt.bind(1, "10");
 	stmt.bind(2, "John Mc'Donald");
+
 	assert(stmt.getSql() == resultingSql);
 
 	/+
@@ -250,6 +280,6 @@ unittest {
 	stmt = new Statement(null, "SELECT * FROM people WHERE id = :id: OR name LIKE :name:");
 	stmt.bind("id", "10");
 	stmt.bind("name", "John Mc'Donald");
-	assert(stmt.getBoundValue("name") == "John Mc''Donald");
+	assert(stmt.getBoundValue("name") == "John Mc\\'Donald");
 	assert(stmt.getSql() == resultingSql);
 }

@@ -72,6 +72,42 @@ abstract class Database {
 		return new Statement(cast(Database)this, sql);
 	}
 
+  /* Escape a string using the database's native method if possible
+   *
+   * Params:
+   *  str = The string to escape
+   *
+   * Returns:
+   *  The escaped string.
+   */
+
+  char[] escape (char[] str)
+  {
+    char[] result;
+    int count = 0;
+
+    // Maximum length needed if every char is to be quoted
+    result.length = str.length * 2;
+    for(int i = 0; i < str.length; i++)
+    {
+      switch(str[i])
+      {
+        case '"':
+        case '\'':
+        case '\\':
+          result[count++] = '\\';
+          break;
+        default:
+          break;
+      }
+      result[count++] = str[i];
+    }
+
+    result.length = count;
+
+    return result;
+  }
+
 	/**
 	 * Execute a SQL statement that returns no results.
 	 *

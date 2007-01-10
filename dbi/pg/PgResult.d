@@ -48,7 +48,9 @@ class PgResult : Result {
 		}
 		Row r = new Row();
 		for (int a = 0; a < numFields; a++) {
-			r.addField(strip(asString(PQfname(results, a))), strip(asString(PQgetvalue(results, index, a))), "", 0);
+			r.addField(strip(asString(PQfname(results, a))), 
+          strip(asString(PQgetvalue(results, index, a))), "", 
+          PQftype(results, a));
 		}
 		index++;
 		return r;
