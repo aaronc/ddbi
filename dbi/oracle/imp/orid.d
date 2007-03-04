@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Oracle import library.
  *
  * Part of the D DBI project.
@@ -6,7 +6,7 @@
  * Version:
  *	Oracle 10g revision 2
  *
- *	Import library version 0.03
+ *	Import library version 0.04
  *
  * Authors: The D DBI project
  *
@@ -14,7 +14,8 @@
  */
 module dbi.oracle.imp.orid;
 
-private import dbi.oracle.imp.oratypes, dbi.oracle.imp.oro, dbi.oracle.imp.oci, dbi.oracle.imp.ort;
+private import dbi.oracle.imp.oci, dbi.oracle.imp.oratypes, dbi.oracle.imp.oro, dbi.oracle.imp.ort;
+
 /**
  * Set an attribute of an object.
  *

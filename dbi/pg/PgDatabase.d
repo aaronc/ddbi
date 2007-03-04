@@ -1,29 +1,24 @@
-/**
+﻿/**
  * Authors: The D DBI project
  *
- * Version: 0.2.4
+ * Version: 0.2.5
  *
  * Copyright: BSD license
  */
 module dbi.pg.PgDatabase;
 
-version (Tango) {
-	private import tango.stdc.stringz : toDString = fromUtf8z;
-	private import tango.stdc.stringz : toCString = toUtf8z;
-	debug (UnitTest) private import std.io.Console;
+version (Phobos) {
+	private import std.string : toDString = toString, toCString = toStringz;
+	debug (UnitTest) private static import std.stdio;
 } else {
-	private import std.string : toDString = toString;
-	private import std.string : toCString = toStringz;
-	debug (UnitTest) private import std.stdio;
+	private import tango.stdc.stringz : toDString = fromUtf8z, toCString = toUtf8z;
+	debug (UnitTest) private static import tango.io.Stdout;
 }
 private import dbi.Database, dbi.DBIException, dbi.Result, dbi.Row, dbi.Statement;
 private import dbi.pg.imp, dbi.pg.PgError, dbi.pg.PgResult;
 
 /**
  * An implementation of Database for use with PostgreSQL databases.
- *
- * Bugs:
- *	Column types aren't retrieved.
  *
  * See_Also:
  *	Database is the interface that this provides an implementation of.
@@ -92,7 +87,7 @@ class PgDatabase : Database {
 	 *	---
 	 *
 	 * See_Also::
-	 *	http://www.postgresql.org/docs/8.1/static/libpq.html
+	 *	http://www.postgresql.org/docs/8.2/static/libpq.html
 	 */
 	override void connect (char[] params, char[] username = null, char[] password = null) {
 		if (params is null) {
@@ -105,9 +100,9 @@ class PgDatabase : Database {
 			params ~= " password=" ~ password ~ "";
 		}
 		connection = PQconnectdb(toCString(params));
-		m_errorCode = cast(int)PQstatus(connection);
-		if (m_errorCode != ConnStatusType.CONNECTION_OK && m_errorCode) {
-			throw new DBIException(toDString(PQerrorMessage(connection)), m_errorCode);
+		errorCode = cast(int)PQstatus(connection);
+		if (errorCode != ConnStatusType.CONNECTION_OK && errorCode) {
+			throw new DBIException(toDString(PQerrorMessage(connection)), errorCode);
 		}
 	}
 
@@ -121,31 +116,27 @@ class PgDatabase : Database {
 		}
 	}
 
-  /* Escape a string using the database's native method if possible
-   *
-   * Params:
-   *  str = The string to escape
-   *
-   * Returns:
-   *  The escaped string.
-   */
+	/* Escape a _string using the database's native method, if possible.
+	 *
+	 * Params:
+	 *	string = The _string to escape.
+	 *
+	 * Returns:
+	 *	The escaped _string.
+	 */
+	override char[] escape (char[] string) {
+		if (string == "") {
+			return string;
+		}
 
-  override char[] escape (char[] str)
-  {
-    char[] result;
+		char[] result;
+		result.length = string.length * 2;
 
-    if(str == "")
-      return str;
+		// It's okay to send string.ptr here because string doesnt need to be 0-term
+		result.length = PQescapeStringConn(connection, result.ptr, string.ptr, string.length, null);;
 
-    result.length = str.length * 2;
-
-    // It's ok to send str.ptr here because string doesnt need to be 0-term
-    int len = PQescapeStringConn(connection, result.ptr, str.ptr, str.length, 
-        null);
-    result.length = len;
-
-    return result;
-  }
+		return result;
+	}
 
 	/**
 	 * Execute a SQL statement that returns no results.
@@ -157,11 +148,11 @@ class PgDatabase : Database {
 	 *	DBIException if the SQL code couldn't be executed.
 	 */
 	override void execute (char[] sql) {
-		PGresult* res = PQexec(connection, toCString(sql.dup));
+		PGresult* res = PQexec(connection, toCString(sql));
 		scope(exit) PQclear(res);
-		m_errorCode = cast(int)PQresultStatus(res);
-		if (m_errorCode != ExecStatusType.PGRES_COMMAND_OK && m_errorCode != ExecStatusType.PGRES_TUPLES_OK) {
-			throw new DBIException(toDString(PQerrorMessage(connection)), m_errorCode, specificToGeneral(PQresultErrorField(res, PG_DIAG_SQLSTATE)));
+		errorCode = cast(int)PQresultStatus(res);
+		if (errorCode != ExecStatusType.PGRES_COMMAND_OK && errorCode != ExecStatusType.PGRES_TUPLES_OK) {
+			throw new DBIException(toDString(PQerrorMessage(connection)), errorCode, specificToGeneral(PQresultErrorField(res, PG_DIAG_SQLSTATE)));
 		}
 	}
 
@@ -178,13 +169,13 @@ class PgDatabase : Database {
 	 *	DBIException if the SQL code couldn't be executed.
 	 */
 	override PgResult query (char[] sql) {
-		PGresult* res = PQexec(connection, toCString(sql.dup));
+		PGresult* res = PQexec(connection, toCString(sql));
 		ExecStatusType status = PQresultStatus(res);
-		m_errorCode = cast(int)PQresultStatus(res);
-		if (m_errorCode != ExecStatusType.PGRES_COMMAND_OK && m_errorCode != ExecStatusType.PGRES_TUPLES_OK) {
-			throw new DBIException(toDString(PQerrorMessage(connection)), m_errorCode, specificToGeneral(PQresultErrorField(res, PG_DIAG_SQLSTATE)));
+		errorCode = cast(int)PQresultStatus(res);
+		if (errorCode != ExecStatusType.PGRES_COMMAND_OK && errorCode != ExecStatusType.PGRES_TUPLES_OK) {
+			throw new DBIException(toDString(PQerrorMessage(connection)), errorCode, specificToGeneral(PQresultErrorField(res, PG_DIAG_SQLSTATE)));
 		}
-		return new PgResult(res);
+		return new PgResult(connection, res);
 	}
 
 	/**
@@ -198,7 +189,7 @@ class PgDatabase : Database {
 	 *	The database specific error code.
 	 */
 	deprecated override int getErrorCode () {
-		return m_errorCode;
+		return errorCode;
 	}
 
 	/**
@@ -212,31 +203,30 @@ class PgDatabase : Database {
 	 *	The database specific error message.
 	 */
 	deprecated override char[] getErrorMessage () {
-		return m_errorString;
+		return "not implemented";
 	}
 
 	private:
 	PGconn* connection;
-	int m_errorCode;
-	char[] m_errorString;
+	int errorCode;
 }
 
 unittest {
-	version (Tango) {
+	version (Phobos) {
 		void s1 (char[] s) {
-			Cout("" ~ s ~ "\n");
+			std.stdio.writefln("%s", s);
 		}
 
 		void s2 (char[] s) {
-			Cout("   ..." ~ s ~ "\n");
+			std.stdio.writefln("   ...%s", s);
 		}
 	} else {
 		void s1 (char[] s) {
-			writefln("%s", s);
+			tango.io.Stdout.Stdout(s).newline();
 		}
 
 		void s2 (char[] s) {
-			writefln("   ...%s", s);
+			tango.io.Stdout.Stdout("   ..." ~ s).newline();
 		}
 	}
 
@@ -258,9 +248,8 @@ unittest {
 	assert (row.get("id") == "1");
 	assert (row.get("name") == "John Doe");
 	assert (row.get("dateofbirth") == "1970-01-01");
-	/** Todo: PostgreSQL type retrieval is not functioning */
-	//assert (row.getFieldType(1) == FIELD_TYPE_STRING);
-	//assert (row.getFieldDecl(1) == "char(40)");
+	assert (row.getFieldType(1) == 1042);
+//	assert (row.getFieldDecl(1) == "char(40)");
 	res.finish();
 
 	s2("prepare");

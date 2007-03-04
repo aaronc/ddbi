@@ -1,7 +1,7 @@
 /**
  * Authors: The D DBI project
  *
- * Version: 0.2.4
+ * Version: 0.2.5
  *
  * Copyright: BSD license
  */
@@ -19,7 +19,7 @@ private import dbi.ib.imp;
 class IbResult : Result {
 	public:
 	this () {
-		
+
 	}
 
 	/**
@@ -36,7 +36,7 @@ class IbResult : Result {
 	 * Free all database resources used by a result set.
 	 */
 	override void finish () {
-		
+
 	}
 
 	private:

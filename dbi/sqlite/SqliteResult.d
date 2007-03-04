@@ -1,16 +1,16 @@
-/**
+﻿/**
  * Authors: The D DBI project
  *
- * Version: 0.2.4
+ * Version: 0.2.5
  *
  * Copyright: BSD license
  */
 module dbi.sqlite.SqliteResult;
 
-version (Ares) {
-	private import util.string : asString = toString;
-} else {
+version (Phobos) {
 	private import std.string : asString = toString;
+} else {
+	private import tango.stdc.stringz : asString = fromUtf8z;
 }
 private import dbi.Result, dbi.Row;
 private import dbi.sqlite.imp;

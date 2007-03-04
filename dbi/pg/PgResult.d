@@ -1,20 +1,20 @@
-/**
+﻿/**
  * Authors: The D DBI project
  *
- * Version: 0.2.4
+ * Version: 0.2.5
  *
  * Copyright: BSD license
  */
 module dbi.pg.PgResult;
 
-version (Ares) {
-	private static import std.regexp;
-	private import util.string : asString = toString;
+version (Phobos) {
+	private import std.string : trim = strip, toDString = toString;
 } else {
-	private import std.string : strip, asString = toString;
+	private import tango.stdc.stringz : toDString = fromUtf8z;
+	private import tango.text.Util : trim;
 }
-private import dbi.Result, dbi.Row;
-private import dbi.pg.imp;
+private import dbi.DBIException, dbi.Result, dbi.Row;
+private import dbi.pg.imp, dbi.pg.PgError;
 
 /**
  * Manage a result set from a PostgreSQL database query.
@@ -24,7 +24,7 @@ private import dbi.pg.imp;
  */
 class PgResult : Result {
 	public:
-	this (PGresult* results) {
+	this (PGconn* conn, PGresult* results) {
 		this.results = results;
 		numRows = PQntuples(results);
 		numFields = PQnfields(results);
@@ -37,20 +37,12 @@ class PgResult : Result {
 	 *	A Row object with the queried information or null for an empty set.
 	 */
 	override Row fetchRow () {
-		version (Ares) {
-			char[] strip (char[] string) {
-				return std.regexp.sub(std.regexp.sub(string, "^[ \t\v\r\n\f]+", ""), " [\t\v\r\n\f]+$", "");
-			}
-		}
-
 		if (index >= numRows) {
 			return null;
 		}
 		Row r = new Row();
 		for (int a = 0; a < numFields; a++) {
-			r.addField(strip(asString(PQfname(results, a))), 
-          strip(asString(PQgetvalue(results, index, a))), "", 
-          PQftype(results, a));
+			r.addField(trim(toDString(PQfname(results, a))), trim(toDString(PQgetvalue(results, index, a))), "", PQftype(results, a));
 		}
 		index++;
 		return r;

@@ -1,10 +1,7 @@
-/**
+﻿/**
  * Authors: The D DBI project
  *
- * Version: 0.2.4
- *
- * Modified:
- *	2006-11-01	Added some casts around nulls.
+ * Version: 0.2.5
  *
  * Copyright: BSD license
  */
@@ -14,19 +11,19 @@ module dbi.odbc.OdbcDatabase;
 // WindowsAPI revision 144.  I'll see about fixing their ODBC and SQL files soon.
 // WindowsAPI should also include odbc32.lib itself.
 
-version (Ares) {
-	private static import std.array;
-	debug (UnitTest) private import std.io.Console;
-} else {
+version (Phobos) {
 	private static import std.string;
-	debug (UnitTest) private import std.stdio;
+	debug (UnitTest) private static import std.stdio;
+} else {
+	private static import tango.text.Util;
+	debug (UnitTest) private static import tango.io.Stdout;
 }
 private import dbi.Database, dbi.DBIException, dbi.Result;
 private import dbi.odbc.OdbcResult;
 private import win32.odbcinst, win32.sql, win32.sqlext, win32.sqltypes, win32.sqlucode, win32.windef;
 debug (UnitTest) private import dbi.Row, dbi.Statement;
 
-pragma (lib, "odbc32.lib");
+version (Windows) pragma (lib, "odbc32.lib");
 
 private SQLHENV environment;
 
@@ -106,12 +103,12 @@ class OdbcDatabase : Database {
 	/**
 	 * Connect to a database using ODBC.
 	 *
-	 * This function will connect DSN-lessly if params has a "=" and with DSN
-	 * otherwise.  For information on how to use connect DSN-lessly, see the
+	 * This function will connect without DSN if params has a '=' and with DSN
+	 * otherwise.  For information on how to use connect without DSN, see the
 	 * ODBC documentation.
 	 *
 	 * Bugs:
-	 *	Connecting DSN-lessly ignores username and password.
+	 *	Connecting without DSN ignores username and password.
 	 *
 	 * Params:
 	 *	params = The DSN to use or the connection parameters.
@@ -134,31 +131,30 @@ class OdbcDatabase : Database {
 		void connectWithoutDSN () {
 			SQLCHAR[1024] buffer;
 
-			if (!SQL_SUCCEEDED(SQLDriverConnect(connection, null, cast(SQLCHAR*)params, cast(SQLSMALLINT)params.length, buffer, buffer.length, null, SQL_DRIVER_COMPLETE))) {
+			if (!SQL_SUCCEEDED(SQLDriverConnect(connection, null, cast(SQLCHAR*)params.ptr, cast(SQLSMALLINT)params.length, buffer.ptr, buffer.length, null, SQL_DRIVER_COMPLETE))) {
 				throw new DBIException("Unable to connect to the database.  ODBC returned " ~ getLastErrorMessage, getLastErrorCode);
 			}
 		}
 
 		void connectWithDSN () {
-			if (!SQL_SUCCEEDED(SQLConnect(connection, cast(SQLCHAR*)params, cast(SQLSMALLINT)params.length, cast(SQLCHAR*)username, cast(SQLSMALLINT)username.length, cast(SQLCHAR*)password, cast(SQLSMALLINT)password.length))) {
+			if (!SQL_SUCCEEDED(SQLConnect(connection, cast(SQLCHAR*)params.ptr, cast(SQLSMALLINT)params.length, cast(SQLCHAR*)username.ptr, cast(SQLSMALLINT)username.length, cast(SQLCHAR*)password.ptr, cast(SQLSMALLINT)password.length))) {
 				throw new DBIException("Unable to connect to the database.  ODBC returned " ~ getLastErrorMessage, getLastErrorCode);
 			}
 		}
 
-		version (Ares) {
-			if (std.regexp.find(params, "=") == size_t.max) {
-				connectWithDSN();
-			} else {
-				connectWithoutDSN();
-			}
-		} else {
+		version (Phobos) {
 			if (std.string.find(params, "=") == -1) {
 				connectWithDSN();
 			} else {
 				connectWithoutDSN();
 			}
+		} else {
+			if (tango.text.Util.contains(params, '=')) {
+				connectWithoutDSN();
+			} else {
+				connectWithDSN();
+			}
 		}
-
 	}
 
 	/**
@@ -199,17 +195,17 @@ class OdbcDatabase : Database {
 			if (!SQL_SUCCEEDED(SQLFreeHandle(SQL_HANDLE_STMT, stmt))) {
 				throw new DBIException("Unable to destroy an ODBC statement.  ODBC returned " ~ getLastErrorMessage, getLastErrorCode);
 			}
-		scope (failure) 
+		scope (failure)
 			if (!SQL_SUCCEEDED(SQLEndTran(SQL_HANDLE_DBC, connection, SQL_ROLLBACK))) {
 				throw new DBIException("Unable to rollback after a query failure.  ODBC returned " ~ getLastErrorMessage, sql, getLastErrorCode);
 			}
 		if (!SQL_SUCCEEDED(SQLAllocHandle(SQL_HANDLE_STMT, connection, &stmt))) {
 			throw new DBIException("Unable to create an ODBC statement.  ODBC returned " ~ getLastErrorMessage, getLastErrorCode);
 		}
-		if (!SQL_SUCCEEDED(SQLExecDirect(stmt, cast(SQLCHAR*)sql, sql.length))) {
+		if (!SQL_SUCCEEDED(SQLExecDirect(stmt, cast(SQLCHAR*)sql.ptr, sql.length))) {
 			throw new DBIException("Unable to execute SQL code.  ODBC returned " ~ getLastErrorMessage, sql, getLastErrorCode);
 		}
-		
+
 	}
 
 	/**
@@ -237,14 +233,14 @@ class OdbcDatabase : Database {
 			if (!SQL_SUCCEEDED(SQLFreeHandle(SQL_HANDLE_STMT, stmt))) {
 				throw new DBIException("Unable to destroy an ODBC statement.  ODBC returned " ~ getLastErrorMessage, getLastErrorCode);
 			}
-		scope (failure) 
+		scope (failure)
 			if (!SQL_SUCCEEDED(SQLEndTran(SQL_HANDLE_DBC, connection, SQL_ROLLBACK))) {
 				throw new DBIException("Unable to rollback after a query failure.  ODBC returned " ~ getLastErrorMessage, sql, getLastErrorCode);
 			}
 		if (!SQL_SUCCEEDED(SQLAllocHandle(SQL_HANDLE_STMT, connection, &stmt))) {
 			throw new DBIException("Unable to create an ODBC statement.  ODBC returned " ~ getLastErrorMessage, getLastErrorCode);
 		}
-		if (SQL_SUCCEEDED(SQLExecDirect(stmt, cast(SQLCHAR*)sql, sql.length))) {
+		if (SQL_SUCCEEDED(SQLExecDirect(stmt, cast(SQLCHAR*)sql.ptr, sql.length))) {
 			return new OdbcResult(stmt);
 		} else {
 			throw new DBIException("Unable to query the database.  ODBC returned " ~ getLastErrorMessage, sql, getLastErrorCode);
@@ -277,7 +273,7 @@ class OdbcDatabase : Database {
 	 */
 	deprecated override char[] getErrorMessage () {
 		return getLastErrorMessage();
-	}
+}
 
 	/*
 	 * Note: The following are not in the DBI API.
@@ -298,7 +294,7 @@ class OdbcDatabase : Database {
 		SQLUSMALLINT direction = SQL_FETCH_FIRST;
 		SQLRETURN ret = SQL_SUCCESS;
 
-		while (SQL_SUCCEEDED(ret = SQLDrivers(environment, direction, driver, driver.length, &driverLength, attr, attr.length, &attrLength))) {
+		while (SQL_SUCCEEDED(ret = SQLDrivers(environment, direction, driver.ptr, driver.length, &driverLength, attr.ptr, attr.length, &attrLength))) {
 			direction = SQL_FETCH_NEXT;
 			driverList ~= driver[0 .. driverLength] ~ cast(SQLCHAR[])" ~ " ~ attr[0 .. attrLength];
 			if (ret == SQL_SUCCESS_WITH_INFO) {
@@ -323,7 +319,7 @@ class OdbcDatabase : Database {
 		SQLUSMALLINT direction = SQL_FETCH_FIRST;
 		SQLRETURN ret = SQL_SUCCESS;
 
-		while (SQL_SUCCEEDED(ret = SQLDataSources(environment, direction, dsn, dsn.length, &dsnLength, desc, desc.length, &descLength))) {
+		while (SQL_SUCCEEDED(ret = SQLDataSources(environment, direction, dsn.ptr, dsn.length, &dsnLength, desc.ptr, desc.length, &descLength))) {
 			if (ret == SQL_SUCCESS_WITH_INFO) {
 				throw new DBIException("Data truncation occurred in the data source list.  ODBC returned " ~ getLastErrorMessage, getLastErrorCode);
 			}
@@ -351,7 +347,7 @@ class OdbcDatabase : Database {
 		SQLSMALLINT textLength;
 
 		SQLGetDiagField(SQL_HANDLE_DBC, connection, 0, SQL_DIAG_NUMBER, &errorNumber, 0, null);
-		SQLGetDiagRec(SQL_HANDLE_DBC, connection, errorNumber, state, &nativeCode, text, text.length, &textLength);
+		SQLGetDiagRec(SQL_HANDLE_DBC, connection, errorNumber, state.ptr, &nativeCode, text.ptr, text.length, &textLength);
 		return cast(char[])state ~ " = " ~ cast(char[])text;
 	}
 
@@ -369,27 +365,27 @@ class OdbcDatabase : Database {
 		SQLSMALLINT textLength;
 
 		SQLGetDiagField(SQL_HANDLE_DBC, connection, 0, SQL_DIAG_NUMBER, &errorNumber, 0, null);
-		SQLGetDiagRec(SQL_HANDLE_DBC, connection, errorNumber, state, &nativeCode, text, text.length, &textLength);
+		SQLGetDiagRec(SQL_HANDLE_DBC, connection, errorNumber, state.ptr, &nativeCode, text.ptr, text.length, &textLength);
 		return nativeCode;
 	}
 }
 
 unittest {
-	version (Ares) {
+	version (Phobos) {
 		void s1 (char[] s) {
-			Cout("" ~ s ~ "\n");
+			std.stdio.writefln("%s", s);
 		}
 
 		void s2 (char[] s) {
-			Cout("   ..." ~ s ~ "\n");
+			std.stdio.writefln("   ...%s", s);
 		}
 	} else {
 		void s1 (char[] s) {
-			writefln("%s", s);
+			tango.io.Stdout.Stdout(s).newline();
 		}
 
 		void s2 (char[] s) {
-			writefln("   ...%s", s);
+			tango.io.Stdout.Stdout("   ..." ~ s).newline();
 		}
 	}
 

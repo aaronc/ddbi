@@ -1,20 +1,21 @@
-/**
+﻿/**
  * Authors: The D DBI project
  *
- * Version: 0.2.4
+ * Version: 0.2.5
  *
  * Copyright: BSD license
  */
 module dbi.Statement;
 
-version (Ares) {
-	private static import std.regexp;
-	debug (UnitTest) private import std.io.Console;
-} else {
+version (Phobos) {
 	private static import std.string;
-	debug (UnitTest) private import std.stdio;
+	debug (UnitTest) private static import std.stdio;
+} else {
+	private static import tango.text.Util;
+	private static import tango.text.Regex;
+	debug (UnitTest) private static import tango.io.Stdout;
 }
-private import dbi.Database, dbi.Result;
+private import dbi.Database, dbi.DBIException, dbi.Result;
 
 /**
  * A prepared SQL statement.
@@ -97,35 +98,32 @@ final class Statement {
 	 * Returns:
 	 *	The escaped form of string.
 	 */
-	char[] escape (char[] string) 
-  {
-    if(database !is null)
-      return database.escape(string);
-    else
-    {
-      char[] result;
-      int count = 0;
+	char[] escape (char[] string) {
+		if (database !is null) {
+			return database.escape(string);
+		} else {
+			char[] result;
+			size_t count = 0;
 
-      // Maximum length needed if every char is to be quoted
-      result.length = string.length * 2;
-      for(int i = 0; i < string.length; i++)
-      {
-        switch(string[i])
-        {
-          case '"':
-          case '\'':
-          case '\\':
-            result[count++] = '\\';
-            break;
-          default:
-            break;
-        }
-        result[count++] = string[i];
-      }
+			// Maximum length needed if every char is to be quoted
+			result.length = string.length * 2;
 
-      result.length = count;
-      return result;
-    } 
+			for (size_t i = 0; i < string.length; i++) {
+				switch (string[i]) {
+					case '"':
+					case '\'':
+					case '\\':
+						result[count++] = '\\';
+						break;
+					default:
+						break;
+				}
+				result[count++] = string[i];
+			}
+
+			result.length = count;
+			return result;
+		}
 	}
 
 	/**
@@ -137,30 +135,29 @@ final class Statement {
 	 * Todo:
 	 *	Raise an exception if binds.length != count(sql, "?")
 	 */
-	char[] getSqlByQM () 
-  {
-		char[] result; 
-    int i = 0, j = 0, count = 0;
+	char[] getSqlByQM () {
+		char[] result;
+		size_t i = 0, j = 0, count = 0;
 
-    // binds.length is for the '', only 1 because we replace the ? too
-    result.length = sql.length + binds.length;     
-    for(i = 0; i < binds.length; i++)
-      result.length = result.length + binds[i].length;
+		// binds.length is for the '', only 1 because we replace the ? too
+		result.length = sql.length + binds.length;
+		for (i = 0; i < binds.length; i++) {
+			result.length = result.length + binds[i].length;
+		}
 
-    for(i = 0; i < sql.length; i++)
-    {
-      if(sql[i] == '?')
-      {
-        result[j++] = '\'';
-        result[j..j + binds[count].length] = binds[count];
-        j += binds[count++].length;
-        result[j++] = '\'';
-      }
-      else
-        result[j++] = sql[i];
-    }
+		for (i = 0; i < sql.length; i++) {
+			if (sql[i] == '?') {
+				result[j++] = '\'';
+				result[j .. j + binds[count].length] = binds[count];
+				j += binds[count++].length;
+				result[j++] = '\'';
+			}
+			else {
+				result[j++] = sql[i];
+			}
+		}
 
-    sql = result;
+		sql = result;
 		return result;
 	}
 
@@ -175,14 +172,15 @@ final class Statement {
 	 */
 	char[] getSqlByFN () {
 		char[] result = sql;
-		ptrdiff_t begIdx = 0, endIdx = 0;
-		version (Ares) {
-			while ((begIdx = std.regexp.find(result, ":")) != -1 && (endIdx = std.regexp.find(result[begIdx + 1 .. length], ":")) != -1) {
-				result = result[0 .. begIdx] ~ "'" ~ getBoundValue(result[begIdx + 1.. begIdx + endIdx + 1])~ "'" ~ result[begIdx + endIdx + 2 .. length];
+		version (Phobos) {
+			ptrdiff_t beginIndex = 0, endIndex = 0;
+			while ((beginIndex = std.string.find(result, ":")) != -1 && (endIndex = std.string.find(result[beginIndex + 1 .. length], ":")) != -1) {
+				result = result[0 .. beginIndex] ~ "'" ~ getBoundValue(result[beginIndex + 1.. beginIndex + endIndex + 1]) ~ "'" ~ result[beginIndex + endIndex + 2 .. length];
 			}
 		} else {
-			while ((begIdx = std.string.find(result, ":")) != -1 && (endIdx = std.string.find(result[begIdx + 1 .. length], ":")) != -1) {
-				result = result[0 .. begIdx] ~ "'" ~ getBoundValue(result[begIdx + 1.. begIdx + endIdx + 1])~ "'" ~ result[begIdx + endIdx + 2 .. length];
+			uint beginIndex = 0, endIndex = 0;
+			while ((beginIndex = tango.text.Util.locate(result, ':')) != result.length && (endIndex = tango.text.Util.locate(result, ':', beginIndex + 1)) != result.length) {
+				result = result[0 .. beginIndex] ~ "'" ~ getBoundValue(result[beginIndex + 1 .. endIndex]) ~ "'" ~ result[endIndex + 1 .. length];
 			}
 		}
 		return result;
@@ -195,18 +193,18 @@ final class Statement {
 	 *	The current SQL statement with all occurences of variables replaced.
 	 */
 	char[] getSql () {
-		version (Ares) {
-			if (std.regexp.find(sql, "\\u003F") != size_t.max) {
+		version (Phobos) {
+			if (std.string.find(sql, "?") != -1) {
 				return getSqlByQM();
-			} else if (std.regexp.find(sql, ":") != size_t.max) {
+			} else if (std.string.find(sql, ":") != -1) {
 				return getSqlByFN();
 			} else {
 				return sql;
 			}
 		} else {
-			if (std.string.find(sql, "?") != -1) {
+			if (tango.text.Util.contains(sql, '?')) {
 				return getSqlByQM();
-			} else if (std.string.find(sql, ":") != -1) {
+			} else if (tango.text.Util.contains(sql, ':')) {
 				return getSqlByFN();
 			} else {
 				return sql;
@@ -222,33 +220,36 @@ final class Statement {
 	 *
 	 * Returns:
 	 *	The bound value of fn.
+	 *
+	 * Throws:
+	 *	DBIException if fn is not bound
 	 */
 	char[] getBoundValue (char[] fn) {
-		for (ptrdiff_t idx = 0; idx < bindsFNs.length; idx++) {
-			if (bindsFNs[idx] == fn) {
-				return binds[idx];
+		for (size_t index = 0; index < bindsFNs.length; index++) {
+			if (bindsFNs[index] == fn) {
+				return binds[index];
 			}
 		}
-		return null;
+		throw new DBIException(fn ~ " is not bound in the Statement.");
 	}
 }
 
 unittest {
-	version (Ares) {
+	version (Phobos) {
 		void s1 (char[] s) {
-			Cout("" ~ s ~ "\n");
+			std.stdio.writefln("%s", s);
 		}
 
 		void s2 (char[] s) {
-			Cout("   ..." ~ s ~ "\n");
+			std.stdio.writefln("   ...%s", s);
 		}
 	} else {
 		void s1 (char[] s) {
-			writefln("%s", s);
+			tango.io.Stdout.Stdout(s).newline();
 		}
 
 		void s2 (char[] s) {
-			writefln("   ...%s", s);
+			tango.io.Stdout.Stdout("   ..." ~ s).newline();
 		}
 	}
 
@@ -257,29 +258,28 @@ unittest {
 	char[] resultingSql = "SELECT * FROM people WHERE id = '10' OR name LIKE 'John Mc\\'Donald'";
 
 	s2("escape");
-	assert(stmt.escape("John Mc'Donald") == "John Mc\\'Donald");
+	assert (stmt.escape("John Mc'Donald") == "John Mc\\'Donald");
 
 	s2("simple sql");
 	stmt = new Statement(null, "SELECT * FROM people");
-	assert(stmt.getSql() == "SELECT * FROM people");
+	assert (stmt.getSql() == "SELECT * FROM people");
 
 	s2("bind by '?'");
 	stmt = new Statement(null, "SELECT * FROM people WHERE id = ? OR name LIKE ?");
 	stmt.bind(1, "10");
 	stmt.bind(2, "John Mc'Donald");
-
-	assert(stmt.getSql() == resultingSql);
+	assert (stmt.getSql() == resultingSql);
 
 	/+
 	s2("bind by '?' sent to getSql via variable arguments");
 	stmt = new Statement("SELECT * FROM people WHERE id = ? OR name LIKE ?");
-	assert(stmt.getSql("10", "John Mc'Donald") == resultingSql);
+	assert (stmt.getSql("10", "John Mc'Donald") == resultingSql);
 	+/
 
 	s2("bind by ':fieldname:'");
 	stmt = new Statement(null, "SELECT * FROM people WHERE id = :id: OR name LIKE :name:");
 	stmt.bind("id", "10");
 	stmt.bind("name", "John Mc'Donald");
-	assert(stmt.getBoundValue("name") == "John Mc\\'Donald");
-	assert(stmt.getSql() == resultingSql);
+	assert (stmt.getBoundValue("name") == "John Mc\\'Donald");
+	assert (stmt.getSql() == resultingSql);
 }

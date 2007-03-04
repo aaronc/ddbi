@@ -1,5 +1,4 @@
-module dbi.mssql.imp;
-
+﻿module dbi.mssql.imp;
 
 version (Windows) {
 	pragma (lib, "libct.lib");
@@ -10,7 +9,7 @@ version (Windows) {
 } else version (darwin) {
 	pragma (lib, "libct.a");
 } else {
-	static assert (0);
+	pragma (msg, "You will need to manually link in the mSQL library.");
 }
 
 
@@ -18,7 +17,7 @@ extern (C) {
   int cs_ctx_alloc(int version_, void * * ctx);
   int ct_init(void * ctx, int version_);
   int ct_con_alloc(void * ctx, void * * con);
-  int ct_con_props(void * con, int action, int property, void * buffer, 
+  int ct_con_props(void * con, int action, int property, void * buffer,
 		   int buflen, int * out_len);
   int ct_connect(void * con, char * servername, int snamelen);
 
@@ -27,11 +26,11 @@ extern (C) {
   int ct_send(void * cmd);
 
   int ct_results(void * cmd, int * result_type);
-  int ct_res_info(void * cmd, int type, void * buffer, int buflen, 
+  int ct_res_info(void * cmd, int type, void * buffer, int buflen,
 		  int * out_len);
   int ct_fetch(void * cmd, int type, int offset, int option, int * rows_read);
   int ct_describe(void * cmd, int item, _cs_datafmt * datafmt);
-  int ct_bind(void * cmd, int item, _cs_datafmt * datafmt, void * buffer, 
+  int ct_bind(void * cmd, int item, _cs_datafmt * datafmt, void * buffer,
 	      int * copied, short * indicator);
 
   int ct_close(void * con, int option);
@@ -127,4 +126,3 @@ struct _cs_money {
   int mnyhigh;
   uint mnylow;
 }
-

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * InterBase import library.
  *
  * Part of the D DBI project.
@@ -6,7 +6,7 @@
  * Version:
  *	InterBase version 7.5.1
  *
- *	Import library version 0.01
+ *	Import library version 0.02
  *
  * Authors: The D DBI project
  *
@@ -15,13 +15,15 @@
 module dbi.ib.imp;
 
 version (Windows) {
-	
+	pragma (msg, "You will need to manually link in the InterBase library.");
 } else version (linux) {
-	
+	pragma (msg, "You will need to manually link in the InterBase library.");
+} else version (Posix) {
+	pragma (msg, "You will need to manually link in the InterBase library.");
 } else version (darwin) {
-	static assert (0);
+	pragma (msg, "You will need to manually link in the InterBase library.");
 } else {
-	static assert (0);
+	pragma (msg, "You will need to manually link in the InterBase library.");
 }
 
 alias int ISC_LONG;
@@ -1164,7 +1166,7 @@ int isc_add_user (ISC_STATUS*, USER_SEC_DATA*);
 int isc_delete_user (ISC_STATUS*, USER_SEC_DATA*);
 
 int isc_modify_user (ISC_STATUS*, USER_SEC_DATA*);
-                                         
+
 ISC_STATUS isc_compile_request (ISC_STATUS*, isc_db_handle*, isc_req_handle*, short, char*);
 
 ISC_STATUS isc_compile_request2 (ISC_STATUS*, isc_db_handle*, isc_req_handle*, short, char*);

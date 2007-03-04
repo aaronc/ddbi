@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Oracle import library.
  *
  * Part of the D DBI project.
@@ -6,7 +6,7 @@
  * Version:
  *	Oracle 10g revision 2
  *
- *	Import library version 0.03
+ *	Import library version 0.04
  *
  * Authors: The D DBI project
  *
@@ -14,7 +14,7 @@
  */
 module dbi.oracle.imp.ociextp;
 
-private import dbi.oracle.imp.oratypes, dbi.oracle.imp.oci;
+private import dbi.oracle.imp.oci, dbi.oracle.imp.oratypes;
 
 const uint OCIEXTPROC_SUCCESS		= 0;		/// The external procedure failed.
 const uint OCIEXTPROC_ERROR		= 1;		/// The external procedure succeeded.
@@ -35,9 +35,9 @@ struct OCIExtProcContext {
  * Allocate memory for the duration of the External Procedure.
  *
  * Memory thus allocated will be freed by PL/SQL upon return from the
- * External Procedure. You must not use any kind of 'free' function on 
+ * External Procedure. You must not use any kind of 'free' function on
  * memory allocated by OCIExtProcAllocCallMemory.
- * 
+ *
  * Params:
  *	with_context = The OCI context.
  *	amount = The number of bytes to allocate.
@@ -70,7 +70,7 @@ alias ocieperr OCIExtProcRaiseExcp;
  * Raise an exception to PL/SQL. In addition, substitute the
  * following error message string within the standard Oracle error
  * message string. See note for OCIExtProcRaiseExcp
- * 
+ *
  * Params:
  *	with_context = The OCI context.
  *	errnum = The Oracle error number to signal to PL/SQL. errnum must be in the range 1 to MAX_OEN.
@@ -86,7 +86,7 @@ alias ociepmsg OCIExtProcRaiseExcpWithMsg;
 
 /**
  * Get the OCI environment.
- * 
+ *
  * Params:
  *	with_context = The OCI context.
  *	envh = The OCI environment handle.
@@ -101,7 +101,7 @@ alias ociepgoe OCIExtProcGetEnv;
 
 /**
  * Initialize a statement handle.
- * 
+ *
  * Params:
  *	with_context = The OCI context.
  *	cursorno = The cursor number for which we need to initialize the statement handle.

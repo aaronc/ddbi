@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Oracle import library.
  *
  * Part of the D DBI project.
@@ -6,7 +6,7 @@
  * Version:
  *	Oracle 10g revision 2
  *
- *	Import library version 0.03
+ *	Import library version 0.04
  *
  * Authors: The D DBI project
  *
@@ -321,7 +321,7 @@ enum nzerror {
 	NZERROR_CERT_NOT_IN_CRL		= 29177,	/// Cert is not in CRL - cert is not revoked.
 	NZERROR_CERT_IN_CRL		= 29178,	/// Cert is in CRL - cert is revoked.
 	NZERROR_CERT_IN_CRL_CHECK_FAILED= 29179,	/// Cert revocation check failed.
-	NZERROR_INVALID_CERT_STATUS_PROTOCOL = 29180, 
+	NZERROR_INVALID_CERT_STATUS_PROTOCOL = 29180,
 	NZERROR_LDAP_OPEN_FAILED	= 29181,	/// ldap_open failed.
 	NZERROR_LDAP_BIND_FAILED	= 29182,	/// ldap_bind failed.
 	NZERROR_LDAP_SEARCH_FAILED	= 29183,	/// ldap_search failed.
@@ -332,7 +332,7 @@ enum nzerror {
 	NZERROR_LDAP_COUNT_ENTRIES_FAILED = 29188,	/// ldap_count_entries failed.
 	NZERROR_LDAP_NO_ENTRY_FOUND	= 29189,	/// No entry found in OID.
 	NZERROR_LDAP_MULTIPLE_ENTRIES_FOUND = 29190,	/// Multiple entries in OID.
-	NZERROR_OID_INFO_NOT_SET	= 29191, 
+	NZERROR_OID_INFO_NOT_SET	= 29191,
 	NZERROR_LDAP_VALMEC_NOT_SET	= 29192,	/// Validation mechanism not set in OID.
 	NZERROR_CRLDP_NO_CRL_FOUND	= 29193,	/// No CRL found using CRLDP mechanism.
 	NZERROR_CRL_NOT_IN_CACHE	= 29194,	/// No CRL found in the cache.

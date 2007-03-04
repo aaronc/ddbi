@@ -1,9 +1,17 @@
-/**
- * 
+﻿/**
+ * Authors: The D DBI project
+ *
+ * Version: 0.2.5
+ *
+ * Copyright: BSD license
  */
 module dbi.mssql.all;
 
-import dbi.mssql.MssqlDatabase, 
-  dbi.mssql.MssqlResult, 
-  dbi.mssql.MssqlDate,  
-  dbi.all;
+version (build) {
+	pragma (ignore);
+}
+
+public import	dbi.mssql.MssqlDatabase,
+		dbi.mssql.MssqlDate,
+		dbi.mssql.MssqlResult,
+		dbi.all;

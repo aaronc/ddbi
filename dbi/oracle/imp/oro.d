@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Oracle import library.
  *
  * Part of the D DBI project.
@@ -6,7 +6,7 @@
  * Version:
  *	Oracle 10g revision 2
  *
- *	Import library version 0.03
+ *	Import library version 0.04
  *
  * Authors: The D DBI project
  *
@@ -14,7 +14,7 @@
  */
 module dbi.oracle.imp.oro;
 
-private import dbi.oracle.imp.oratypes, dbi.oracle.imp.ocidfn;
+private import dbi.oracle.imp.ocidfn, dbi.oracle.imp.oratypes;
 
 /**
  * OCI object reference.
@@ -59,7 +59,7 @@ const uint OCI_ATTR_CACHE_ARRAYFLUSH	= 0x00000040;	/// To enable sorting of the 
  * using the following criteria:
  *   If the object copy is not loaded, load it from the persistent store.
  *   Otherwise, the loaded object copy is returned to the program.
- * 
+ *
  * OCI_PIN_RECENT pins the latest copy of an object.  The object is
  * pinned using the following criteria:
  *   If the object is not loaded, load the object from the persistent store
@@ -161,7 +161,7 @@ deprecated enum OCIObjectProperty {
  *
  * This option is used to specify the set of objects to be refreshed.
  *
- * OCI_REFRESH_LOAD refreshes the objects that are loaded in the current  
+ * OCI_REFRESH_LOAD refreshes the objects that are loaded in the current
  * transaction.
  */
 enum OCIRefreshOpt {
@@ -798,6 +798,6 @@ const uint OCI_VARRAY_MAXSIZE		= 4000;		/// Default maximum number of elements f
 const uint OCI_STRING_MAXLEN		= 4000;		/// Default maximum length of a vstring.
 
 deprecated alias OCIRefreshOpt OCICoherency;		/// Deprecated: Only used for beta2.
-deprecated OCIRefreshOpt OCI_COHERENCY	= 2;		/// Deprecated: Only used for beta2.
-deprecated OCIRefreshOpt OCI_COHERENCY_NULL = 4;	/// Deprecated: Only used for beta2.
-deprecated OCIRefreshOpt OCI_COHERENCY_ALWAYS = 5;	/// Deprecated: Only used for beta2.
+deprecated OCIRefreshOpt OCI_COHERENCY	= cast(OCIRefreshOpt)2; /// Deprecated: Only used for beta2.
+deprecated OCIRefreshOpt OCI_COHERENCY_NULL = cast(OCIRefreshOpt)4; /// Deprecated: Only used for beta2.
+deprecated OCIRefreshOpt OCI_COHERENCY_ALWAYS = cast(OCIRefreshOpt)5; /// Deprecated: Only used for beta2.

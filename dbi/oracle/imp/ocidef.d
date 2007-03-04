@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Oracle import library.
  *
  * Part of the D DBI project.
@@ -6,7 +6,7 @@
  * Version:
  *	Oracle 10g revision 2
  *
- *	Import library version 0.03
+ *	Import library version 0.04
  *
  * Authors: The D DBI project
  *
@@ -16,7 +16,7 @@ module dbi.oracle.imp.ocidef;
 
 deprecated:
 
-/* 
+/*
 #include <upidef.h>
 #include <riddef.h>		No longer necessary???
 */
@@ -160,7 +160,7 @@ const uint OTYROL			= 55;		/// Rollback.
 const uint OTYSPT			= 56;		/// Savepoint.
 
 const uint OTYDEV			= 10;		/// Old DEFINE VIEW = create view.
- 
+
 const uint OCLFPA			= 2;		/// Parse - OSQL.
 const uint OCLFEX			= 4;		/// Execute - OEXEC.
 const uint OCLFBI			= 6;		/// Bind by name - OBIND.
@@ -276,9 +276,9 @@ extern (C) sword ocilof (ldadef* lda);
 
 extern (C) sword ocierr (ldadef* lda, b2 rcode, oratext* buffer, sword bufl);
 extern (C) sword ocidhe (b2 rcode, oratext* buffer);
-    /* 
+    /*
     ** Move the text explanation for an ORACLE error to a user defined buffer
-    **  ocierr - will return the message associated with the hstdef stored 
+    **  ocierr - will return the message associated with the hstdef stored
     **           in the lda.
     **  ocidhe - will return the message associated with the default host.
     **    lda    - lda associated with the login session
@@ -289,7 +289,7 @@ extern (C) sword ocidhe (b2 rcode, oratext* buffer);
 extern (C) sword ociope (csrdef* cursor, ldadef* lda, oratext* dbn, sword dbnl, sword areasize, oratext* uid, sword uidl);
 
 extern (C) sword ociclo (csrdef* cursor);
-   /* 
+   /*
    ** open or close a cursor.
    **   cursor - pointer to csrdef
    **   ldadef - pointer to ldadef
@@ -310,19 +310,19 @@ extern (C) sword ocibre (ldadef* lda);
    **  cancelled.  May be called  asynchronously.   DOES  NOT  SET
    **  OERRCD in the hst.  This is because ocibrk  may  be  called
    **  asynchronously.  Callers must test the return code.
-   **    lda  - pointer to a ldadef 
+   **    lda  - pointer to a ldadef
    */
 
 extern (C) sword ocican (csrdef* cursor);
    /*
    **  cancel the operation on the cursor, no additional OFETCH calls
-   **  will be issued for the existing cursor without an intervening 
+   **  will be issued for the existing cursor without an intervening
    **  OEXEC call.
    **   cursor  - pointer to csrdef
    */
 
 extern (C) sword ocisfe (csrdef* cursor, sword erropt, sword waitopt);
-   /* 
+   /*
    ** ocisfe - user interface set error options
    ** set the error and cursor options.
    ** allows user to set the options for dealing with fatal dml errors
@@ -339,7 +339,7 @@ extern (C) sword ocirol (ldadef* lda);
    ** ocicom - commit the current transaction
    ** ocirol - roll back the current transaction
    */
- 
+
 extern (C) sword ocicon (ldadef* lda);
 extern (C) sword ocicof (ldadef* lda);
    /*
@@ -445,14 +445,14 @@ extern (C) sword ocidpr (ldadef* lda, oratext* object_name, size_t object_length
    ** OCIDPR - User Program Interface: Describe Stored Procedure
    **
    ** This routine is used to obtain information about the calling
-   ** arguments of a stored procedure.  The client provides the 
+   ** arguments of a stored procedure.  The client provides the
    ** name of the procedure using "object_name" and "database_name"
-   ** (database name is optional).  The client also supplies the 
-   ** arrays for OCIDPR to return the values and indicates the 
+   ** (database name is optional).  The client also supplies the
+   ** arrays for OCIDPR to return the values and indicates the
    ** length of array via the "total_elements" parameter.  Upon return
-   ** the number of elements used in the arrays is returned in the 
-   ** "total_elements" parameter.  If the array is too small then 
-   ** an error will be returned and the contents of the return arrays 
+   ** the number of elements used in the arrays is returned in the
+   ** "total_elements" parameter.  If the array is too small then
+   ** an error will be returned and the contents of the return arrays
    ** are invalid.
    **
    **
@@ -462,7 +462,7 @@ extern (C) sword ocidpr (ldadef* lda, oratext* object_name, size_t object_length
    **
    **   object_name    - SCOTT.ACCOUNT_UPDATE@BOSTON
    **   total_elements - 100
-   **   
+   **
    **
    **   ACCOUNT_UPDATE is an overloaded function with specification :
    **
@@ -471,11 +471,11 @@ extern (C) sword ocidpr (ldadef* lda, oratext* object_name, size_t object_length
    **                    balance number(7,2))
    **     table person  (person_id number(4), person_nm varchar2(10))
    **
-   **      function ACCOUNT_UPDATE (account number, 
+   **      function ACCOUNT_UPDATE (account number,
    **         person person%rowtype, amounts number_table,
    **         trans_date date) return accounts.balance%type;
    **
-   **      function ACCOUNT_UPDATE (account number, 
+   **      function ACCOUNT_UPDATE (account number,
    **         person person%rowtype, amounts number_table,
    **         trans_no number) return accounts.balance%type;
    **
@@ -506,10 +506,10 @@ extern (C) sword ocidpr (ldadef* lda, oratext* object_name, size_t object_length
    **  OCIDPR Argument Descriptions -
    **
    **  ldadef           - pointer to ldadef
-   **  object_name      - object name, synonyms are also accepted and will 
+   **  object_name      - object name, synonyms are also accepted and will
    **                     be translate, currently only procedure and function
    **                     names are accepted, also NLS names are accepted.
-   **                     Currently, the accepted format of a name is 
+   **                     Currently, the accepted format of a name is
    **                     [[part1.]part2.]part3[@dblink] (required)
    **  object_length    - object name length (required)
    **  reserved1        - reserved for future use
@@ -517,12 +517,12 @@ extern (C) sword ocidpr (ldadef* lda, oratext* object_name, size_t object_length
    **  reserved2        - reserved for future use
    **  reserved2_length - reserved for future use
    **  overload         - array indicating overloaded procedure # (returned)
-   **  position         - array of argument positions, position 0 is a 
+   **  position         - array of argument positions, position 0 is a
    **                     function return argument (returned)
    **  level            - array of argument type levels, used to describe
    **                     sub-datatypes of data structures like records
    **                     and arrays (returned)
-   **  argument_name    - array of argument names, only returns first 
+   **  argument_name    - array of argument names, only returns first
    **                     30 characters of argument names, note storage
    **                     for 30 characters is allocated by client (returned)
    **  argument_length  - array of argument name lengths (returned)
@@ -574,19 +574,19 @@ extern (C) sword ocisetpi (csrdef* cursor, ub1 piece, dvoid* bufp, ub4* lenp);
 extern (C) sword ociexe (csrdef* cursor);
 extern (C) sword ociexn (csrdef* cursor, sword iters, sword roff);
 extern (C) sword ociefn (csrdef* cursor, ub4 nrows, sword can, sword exact);
-    /* 
+    /*
     ** ociexe  - execute a cursor
     ** ociexn  - execute a cursosr N times
     **  cursor   - pointer to a csrdef
     **  iters    - number of times to execute cursor
-    **  roff     - offset within the bind variable array at which to begin 
+    **  roff     - offset within the bind variable array at which to begin
     **             operations.
     */
 
 extern (C) sword ocifet (csrdef* cursor);
 extern (C) sword ocifen (csrdef* cursor, sword nrows);
     /* ocifet - fetch the next row
-    ** ocifen - fetch n rows 
+    ** ocifen - fetch n rows
     ** cursor   - pointer to csrdef
     ** nrows    - number of rows to be fetched
     */
@@ -601,14 +601,14 @@ extern (C) sword ocic32 (csrdef* cursor);
     **   csrdef->csrft is set to v2 oracle statment type
     **   csrdef->csrrpc is set to the rows processed count
     **   csrdef->csrpeo is set to error postion
-    ** 
+    **
     **     cursor - pointer to csrdef
     */
 
 
 extern (C) sword ocir32 (csrdef* cursor, sword retcode);
-   /*   
-   ** Convert selected version 3 return codes to the equivalent version 2 
+   /*
+   ** Convert selected version 3 return codes to the equivalent version 2
    ** code.
    **
    **    cursor - pointer to csrdef
@@ -619,7 +619,7 @@ extern (C) sword ocir32 (csrdef* cursor, sword retcode);
 extern (C) dvoid ociscn (sword** arglst, char* mask_addr, sword** newlst);
    /*
    ** Convert call-by-ref to call-by-value:
-   ** takes an arg list and a mask address, determines which args need 
+   ** takes an arg list and a mask address, determines which args need
    ** conversion to a value, and creates a new list begging at the address
    ** of newlst.
    **
@@ -630,16 +630,16 @@ extern (C) dvoid ociscn (sword** arglst, char* mask_addr, sword** newlst);
 
 extern (C) eword ocistf (eword typ, eword bufl, eword rdig, oratext* fmt, csrdef* cursor, sword* err);
 /*  Convert a packed  decimal buffer  length  (bytes) and scale to a format
-**  string of the form mm.+/-nn, where  mm is the number of packed 
-**  decimal digits, and nn is the scaling factor.   A positive scale name 
-**  nn digits to the rights of the decimal; a negative scale means nn zeros 
+**  string of the form mm.+/-nn, where  mm is the number of packed
+**  decimal digits, and nn is the scaling factor.   A positive scale name
+**  nn digits to the rights of the decimal; a negative scale means nn zeros
 **  should be supplied to the left of the decimal.
 **     bufl   - length of the packed decimal buffer
 **     rdig   - number of fractional digits
 **     fmt    - pointer to a string holding the conversion format
-**     cursor - pointer to csrdef 
+**     cursor - pointer to csrdef
 **     err    - pointer to word storing error code
-*/ 
+*/
 
 extern (C) sword ocinbs (ldadef* lda);  /* set a connection to non-blocking   */
 extern (C) sword ocinbt (ldadef* lda);  /* test if connection is non-blocking */
@@ -649,7 +649,7 @@ extern (C) sword ocinbc (ldadef* lda);  /* clear a connection to blocking     */
 **   lda     - pointer to ldadef
 **   hst     - pointer to a 256 byte area, must be cleared to zero before call
 **   conn    - the database link (if specified @LINK in uid will be ignored)
-**   connl   - length of conn; if -1 strlen(conn) is used   
+**   connl   - length of conn; if -1 strlen(conn) is used
 **   uid     - user id [USER[/PASSWORD][@LINK]]
 **   uidl    - length of uid, if -1 strlen(uid) is used
 **   psw     - password string; ignored if specified in uid
@@ -658,21 +658,21 @@ extern (C) sword ocinbc (ldadef* lda);  /* clear a connection to blocking     */
 */
 
 /* Note: The following routines are used in Pro*C and have the
-   same interface as their couterpart in OCI. 
-   Althought the interface follows for more details please refer 
+   same interface as their couterpart in OCI.
+   Althought the interface follows for more details please refer
    to the above routines */
 extern (C) sword ocipin (ub4 mode);
 
 extern (C) sword ologin (ldadef* lda, b2 areacount);
 extern (C) sword ologon (ldadef* lda, b2 areacount);
 
-/* 
+/*
 ** ocisqd - oci delayed parse (Should be used only with deferred upi/oci)
 ** FUNCTION: Call upidpr to delay the parse of the sql statement till the
 **           time that a call needs to be made to the kernel (execution or
 **           describe time )
 ** RETURNS: Oracle return code.
-*/ 
+*/
 extern (C) sword ocisq7 (csrdef* cursor, oratext* sqlstm, sb4 sqllen, sword defflg, ub4 sqlt);
 
 extern (C) sword obind (csrdef* cursor, oratext* sqlvar, sword sqlvl, ub1* progv, sword progvl, sword ftype, sword scale, oratext* fmt, sword fmtl, sword fmtt);

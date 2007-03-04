@@ -4,9 +4,9 @@
  * Part of the D DBI project.
  *
  * Version:
- *	PostgreSQL version 8.1.4
+ *	PostgreSQL version 8.2.1
  *
- *	Import library version 1.03
+ *	Import library version 1.04
  *
  * Authors: The D DBI project
  *
@@ -14,7 +14,11 @@
  */
 module dbi.pg.imp;
 
-private import std.c.stdio;
+version (Phobos) {
+    private import std.c.stdio;
+} else {
+    private import tango.stdc.stdio;
+}
 
 version (Windows) {
 	pragma (lib, "libpq.lib");
@@ -25,11 +29,7 @@ version (Windows) {
 } else version (darwin) {
 	pragma (lib, "libpq.a");
 } else {
-	static assert (0);
-}
-
-version (SSL) {
-	private import ssl;
+	pragma (msg, "You will need to manually link in the PostgreSQL library.");
 }
 
 /**
@@ -209,7 +209,7 @@ struct PGcancel {
  */
 struct pgNotify {
 	char* relname;			/// Notification condition name.
-	int be_pid;			/// Process ID of server process.
+	int be_pid;			/// Process ID of notifying server process.
 	char* extra;			/// Notification parameter.
 	/* Fields below here are private to libpq; apps should not use 'em */
 	pgNotify* next;			/// List link.
@@ -637,7 +637,7 @@ int PQclientEncoding (PGconn* conn);
 int PQsetClientEncoding (PGconn* conn, char* encoding);
 
 /**
- * Get the SSL structure associated with a connection.
+ * Get the OpenSSL structure associated with a connection.
  *
  * Params:
  *	conn = The PostgreSQL connection.
@@ -645,11 +645,7 @@ int PQsetClientEncoding (PGconn* conn, char* encoding);
  * Returns:
  *	The SSL structure used in the connection or null if SSL is not in use.
  */
-version (SSL) {
-	SSL* PQgetssl (PGconn* conn);
-} else {
-	void* PQgetssl (PGconn* conn);
-}
+void* PQgetssl (PGconn* conn);
 
 /**
  * Tell the interface that SSL has already been initialized within your application.
@@ -940,7 +936,7 @@ int PQgetCopyData (PGconn* conn, char** buffer, int async);
 
 /**
  * Deprecated:
- *	These functions have poor error handling, nonblocking transfers, binary data, 
+ *	These functions have poor error handling, nonblocking transfers, binary data,
  *	or easy end of data detection.  Use PQputCopyData, PQputCopyEnd, and PQgetCopyData instead.
  */
 deprecated int PQgetline (PGconn* conn, char* string, int length);
@@ -973,6 +969,11 @@ int PQsetnonblocking (PGconn* conn, int arg);
  *	1 if the connection is nonblocking and 0 if it is blocking.
  */
 int PQisnonblocking (PGconn* conn);
+
+/**
+ * todo
+ */
+int PQisthreadsafe ();
 
 /**
  * Attempt to send all queries to the server immediately.
@@ -1271,6 +1272,36 @@ int PQgetlength (PGresult* res, int tup_num, int field_num);
 int PQgetisnull (PGresult* res, int tup_num, int field_num);
 
 /**
+ * todo
+ */
+int PQnparams (PGresult* res);
+
+/**
+ * todo
+ */
+Oid PQparamtype (PGresult* res, int param_num);
+
+/**
+ * todo
+ */
+PGresult* PQdescribePrepared (PGconn* conn, char* stmt);
+
+/**
+ * todo
+ */
+PGresult* PQdescribePortal (PGconn* conn, char* portal);
+
+/**
+ * todo
+ */
+int PQsendDescribePrepared (PGconn* conn, char* stmt);
+
+/**
+ * todo
+ */
+int PQsendDescribePortal (PGconn* conn, char* portal);
+
+/**
  * Free all memory associated with a result.  This includes all returned strings.
  *
  * Params:
@@ -1565,16 +1596,21 @@ Oid lo_import (PGconn* conn, char* filename);
 int lo_export (PGconn* conn, Oid lobjId, char* filename);
 
 /**
- *
+ * todo
  */
 int PQmblen (char* s, int encoding);
 
 /**
- *
+ * todo
  */
 int PQdsplen (char* s, int encoding);
 
 /**
- *
+ * todo
  */
 int PQenv2encoding ();
+
+/**
+ * todo
+ */
+char* PQencryptPassword (char* passwd, char* user);

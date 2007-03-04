@@ -1,12 +1,7 @@
-/**
+﻿/**
  * Authors: The D DBI project
  *
- * Version: 0.2.4
- *
- * Modified:
- *	2006-11-01	Fixed an array bounds exception on null data.
- *	2006-11-01	Fixed a problem that sometimes caused the column name to be "".
- *	2006-11-01	Added some casts around nulls.
+ * Version: 0.2.5
  *
  * Copyright: BSD license
  */
@@ -16,15 +11,15 @@ module dbi.odbc.OdbcResult;
 // WindowsAPI revision 144.  I'll see about fixing their ODBC and SQL files soon.
 // WindowsAPI should also include odbc32.lib itself.
 
-version (Ares) {
-	private static import std.regexp;
+version (Phobos) {
+	private import std.string : trim = strip;
 } else {
-	private import std.string : strip;
+	private import tango.text.Util : trim;
 }
 private import dbi.DBIException, dbi.Result, dbi.Row;
 private import win32.odbcinst, win32.sql, win32.sqlext, win32.sqltypes, win32.sqlucode, win32.windef;
 
-pragma (lib, "odbc32.lib");
+version (Windows) pragma (lib, "odbc32.lib");
 
 /*
  * This is in the sql headers, but wasn't ported in WindowsAPI revision 144.
@@ -60,10 +55,10 @@ class OdbcResult : Result {
 			if (!SQL_SUCCEEDED(SQLColAttribute(stmt, i, SQL_DESC_TYPE, null, 0, null, &typeNum))) {
 				throw new DBIException("Unable to get the SQL column types.  ODBC returned " ~ getLastErrorMessage, getLastErrorCode);
 			}
-			if (!SQL_SUCCEEDED(SQLColAttribute(stmt, i, SQL_DESC_TYPE_NAME, typeName, typeName.length, &typeNameLength, null))) {
+			if (!SQL_SUCCEEDED(SQLColAttribute(stmt, i, SQL_DESC_TYPE_NAME, typeName.ptr, typeName.length, &typeNameLength, null))) {
 				throw new DBIException("Unable to get the SQL column type names.  ODBC returned " ~ getLastErrorMessage, getLastErrorCode);
 			}
-			if (!SQL_SUCCEEDED(SQLColAttribute(stmt, i, SQL_DESC_NAME, columnName, columnName.length, &columnNameLength, null))) {
+			if (!SQL_SUCCEEDED(SQLColAttribute(stmt, i, SQL_DESC_NAME, columnName.ptr, columnName.length, &columnNameLength, null))) {
 				throw new DBIException("Unable to get the SQL column names.  ODBC returned " ~ getLastErrorMessage, getLastErrorCode);
 			}
 
@@ -80,19 +75,13 @@ class OdbcResult : Result {
 	 *	A Row object with the queried information or null for an empty set.
 	 */
 	override Row fetchRow () {
-		version (Ares) {
-			char[] strip (char[] string) {
-				return std.regexp.sub(std.regexp.sub(string, "^[ \t\v\r\n\f]+", ""), " [\t\v\r\n\f]+$", "");
-			}
-		}
-
 		if (SQL_SUCCEEDED(SQLFetch(stmt))) {
 			Row row = new Row();
 			SQLLEN indicator;
 			SQLCHAR[512] buf;
 
 			for (SQLUSMALLINT i = 1; i <= numColumns; i++) {
-				if (SQL_SUCCEEDED(SQLGetData(stmt, i, SQL_C_CHAR, buf, buf.length, &indicator))) {
+				if (SQL_SUCCEEDED(SQLGetData(stmt, i, SQL_C_CHAR, buf.ptr, buf.length, &indicator))) {
 					if (indicator == SQL_NULL_DATA) {
 						buf[0 .. 4] = cast(SQLCHAR[])"null";
 						buf[4 .. length] = cast(SQLCHAR)'\0';
@@ -100,7 +89,7 @@ class OdbcResult : Result {
 					if (indicator < 0) {
 						row.addField(columnNames[i - 1], null, columnTypesName[i - 1], columnTypesNum[i - 1]);
 					} else {
-						row.addField(columnNames[i - 1], strip(cast(char[])buf[0 .. indicator]), columnTypesName[i - 1], columnTypesNum[i - 1]);
+						row.addField(columnNames[i - 1], trim(cast(char[])buf[0 .. indicator]), columnTypesName[i - 1], columnTypesNum[i - 1]);
 					}
 				}
 			}
@@ -144,7 +133,7 @@ class OdbcResult : Result {
 		SQLSMALLINT textLength;
 
 		SQLGetDiagField(SQL_HANDLE_STMT, stmt, 0, SQL_DIAG_NUMBER, &errorNumber, 0, null);
-		SQLGetDiagRec(SQL_HANDLE_STMT, stmt, errorNumber, state, &nativeCode, text, text.length, &textLength);
+		SQLGetDiagRec(SQL_HANDLE_STMT, stmt, errorNumber, state.ptr, &nativeCode, text.ptr, text.length, &textLength);
 		return cast(char[])state ~ " = " ~ cast(char[])text;
 	}
 
@@ -159,7 +148,7 @@ class OdbcResult : Result {
 		SQLSMALLINT textLength;
 
 		SQLGetDiagField(SQL_HANDLE_STMT, stmt, 0, SQL_DIAG_NUMBER, &errorNumber, 0, null);
-		SQLGetDiagRec(SQL_HANDLE_STMT, stmt, errorNumber, state, &nativeCode, text, text.length, &textLength);
+		SQLGetDiagRec(SQL_HANDLE_STMT, stmt, errorNumber, state.ptr, &nativeCode, text.ptr, text.length, &textLength);
 		return nativeCode;
 	}
 }

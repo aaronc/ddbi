@@ -6,7 +6,7 @@
  * Version:
  *	mSQL version 3.8
  *
- *	Import library version 0.01
+ *	Import library version 0.02
  *
  * Authors: The D DBI project
  *
@@ -14,17 +14,24 @@
  */
 module dbi.msql.imp;
 
-version (Windows) {
-	
-} else version (linux) {
-	pragma (lib, "libmsql.a");
-} else version (darwin) {
-	
+version (Phobos) {
+    private import std.c.time;
 } else {
-	static assert (0);
+    private import tango.stdc.time;
 }
 
-private import std.c.time;
+
+version (Windows) {
+	pragma (msg, "You will need to manually link in the mSQL library.");
+} else version (linux) {
+	pragma (lib, "libmsql.a");
+} else version (Posix) {
+	pragma (lib, "libmsql.a");
+} else version (darwin) {
+	pragma (msg, "You will need to manually link in the mSQL library.");
+} else {
+	pragma (msg, "You will need to manually link in the mSQL library.");
+}
 
 const uint INT_TYPE		= 1;		///
 const uint CHAR_TYPE		= 2;		///

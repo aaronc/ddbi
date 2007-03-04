@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Oracle import library.
  *
  * Part of the D DBI project.
@@ -6,7 +6,7 @@
  * Version:
  *	Oracle 10g revision 2
  *
- *	Import library version 0.03
+ *	Import library version 0.04
  *
  * Authors: The D DBI project
  *
@@ -14,7 +14,7 @@
  */
 module dbi.oracle.imp.oci8dp;
 
-private import dbi.oracle.imp.oratypes, dbi.oracle.imp.ocidfn, dbi.oracle.imp.oci;
+private import dbi.oracle.imp.ocidfn, dbi.oracle.imp.oci, dbi.oracle.imp.oratypes;
 
 /**
  * Context.
@@ -240,7 +240,7 @@ extern (C) sword OCIDirPathColArrayReset (OCIDirPathColArray* dpca, OCIError* er
 extern (C) sword OCIDirPathColArrayToStream (OCIDirPathColArray* dpca, OCIDirPathCtx* dpctx, OCIDirPathStream* dpstr, OCIError* errhp, ub4 rowcnt, ub4 rowoff);
 
 /**
- * 
+ *
  *
  * Params:
  *	dpstr =

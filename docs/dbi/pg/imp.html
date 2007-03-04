@@ -50,10 +50,10 @@
 <p>Part of the D DBI project.
 
 </p>
-<p><strong>Version:</strong><br />PostgreSQL version 8.1.4
+<p><strong>Version:</strong><br />PostgreSQL version 8.2.1
 <br /><br />
 
-	Import library version 1.03
+	Import library version 1.04
 
 </p>
 <p><strong>Authors:</strong><br />The D DBI project
@@ -115,6 +115,21 @@
 </span></dt>
 <dd><p>Define the string so all uses are consistent.
  
+</p>
+
+</dd>
+<dt><span class="big"><span class="underline">SEEK_SET</span></span></dt>
+<dd><p>Start seeking from the start.
+</p>
+
+</dd>
+<dt><span class="big"><span class="underline">SEEK_CUR</span></span></dt>
+<dd><p>Start seeking from the current position.
+</p>
+
+</dd>
+<dt><span class="big"><span class="underline">SEEK_END</span></span></dt>
+<dd><p>Start seeking from the end.
 </p>
 
 </dd>
@@ -364,7 +379,7 @@ In Postgres 6.4 and later, the be_pid is the notifying backend's,
 </dd>
 <dt><span class="big">int <span class="underline">be_pid</span>;
 </span></dt>
-<dd><p>Process ID of server process.
+<dd><p>Process ID of notifying server process.
 </p>
 
 </dd>
@@ -928,7 +943,7 @@ In Postgres 6.4 and later, the be_pid is the notifying backend's,
 </dd>
 <dt><span class="big">void* <span class="underline">PQgetssl</span>(PGconn * <em>conn</em>);
 </span></dt>
-<dd><p>Get the SSL structure associated with a connection.
+<dd><p>Get the OpenSSL structure associated with a connection.
 </p>
 <strong>Params:</strong><br /><table><tr><td>PGconn * <em>conn</em></td>
 <td>The PostgreSQL connection.</td></tr>
@@ -1340,6 +1355,13 @@ A PGresult structure containing the results or <strong>null</strong> on a seriou
 </p>
 
 </dd>
+<dt><span class="big">int <span class="underline">PQisthreadsafe</span>();
+</span></dt>
+<dd><p>todo
+ 
+</p>
+
+</dd>
 <dt><span class="big">int <span class="underline">PQflush</span>(PGconn * <em>conn</em>);
 </span></dt>
 <dd><p>Attempt to send all queries to the server immediately.
@@ -1678,6 +1700,48 @@ A PGresult structure containing the results or <strong>null</strong> on a seriou
 <td>The number of the column.</td></tr>
 </table>
 <p><strong>Returns:</strong><br />1 if it is <strong>null</strong> or 0 otherwise.
+ 
+</p>
+
+</dd>
+<dt><span class="big">int <span class="underline">PQnparams</span>(PGresult * <em>res</em>);
+</span></dt>
+<dd><p>todo
+ 
+</p>
+
+</dd>
+<dt><span class="big">Oid <span class="underline">PQparamtype</span>(PGresult * <em>res</em>, int <em>param_num</em>);
+</span></dt>
+<dd><p>todo
+ 
+</p>
+
+</dd>
+<dt><span class="big">PGresult * <span class="underline">PQdescribePrepared</span>(PGconn * <em>conn</em>, char* <em>stmt</em>);
+</span></dt>
+<dd><p>todo
+ 
+</p>
+
+</dd>
+<dt><span class="big">PGresult * <span class="underline">PQdescribePortal</span>(PGconn * <em>conn</em>, char* <em>portal</em>);
+</span></dt>
+<dd><p>todo
+ 
+</p>
+
+</dd>
+<dt><span class="big">int <span class="underline">PQsendDescribePrepared</span>(PGconn * <em>conn</em>, char* <em>stmt</em>);
+</span></dt>
+<dd><p>todo
+ 
+</p>
+
+</dd>
+<dt><span class="big">int <span class="underline">PQsendDescribePortal</span>(PGconn * <em>conn</em>, char* <em>portal</em>);
+</span></dt>
+<dd><p>todo
  
 </p>
 
@@ -2047,15 +2111,31 @@ A PGresult structure containing the results or <strong>null</strong> on a seriou
 </dd>
 <dt><span class="big">int <span class="underline">PQmblen</span>(char* <em>s</em>, int <em>encoding</em>);
 </span></dt>
-<dd><br /><br />
+<dd><p>todo
+ 
+</p>
+
 </dd>
 <dt><span class="big">int <span class="underline">PQdsplen</span>(char* <em>s</em>, int <em>encoding</em>);
 </span></dt>
-<dd><br /><br />
+<dd><p>todo
+ 
+</p>
+
 </dd>
 <dt><span class="big">int <span class="underline">PQenv2encoding</span>();
 </span></dt>
-<dd><br /><br />
+<dd><p>todo
+ 
+</p>
+
+</dd>
+<dt><span class="big">char* <span class="underline">PQencryptPassword</span>(char* <em>passwd</em>, char* <em>user</em>);
+</span></dt>
+<dd><p>todo
+ 
+</p>
+
 </dd>
 </dl>
 

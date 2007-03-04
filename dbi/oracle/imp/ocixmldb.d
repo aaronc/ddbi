@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Oracle import library.
  *
  * Part of the D DBI project.
@@ -6,7 +6,7 @@
  * Version:
  *	Oracle 10g revision 2
  *
- *	Import library version 0.03
+ *	Import library version 0.04
  *
  * Authors: The D DBI project
  *
@@ -14,8 +14,7 @@
  */
 module dbi.oracle.imp.ocixmldb;
 
-private import dbi.oracle.imp.oratypes;
-private import dbi.oracle.imp.oci;
+private import dbi.oracle.imp.oci, dbi.oracle.imp.oratypes;
 
 /**
  *
@@ -55,7 +54,7 @@ const uint NUM_OCIXMLDBPARAMS		= 2;		///
  *			Pointer to the error handling function.  Defaults to null.
  *
  * Returns:
- *	A pointer to an xmlctx structure, with xdb context, error handler and callbacks 
+ *	A pointer to an xmlctx structure, with xdb context, error handler and callbacks
  *	populated with appropriate values. This is later used for all API calls.  null
  *	if no database connection is available.
  */

@@ -1,17 +1,17 @@
-
+﻿
 /**
  * Authors: The D DBI project
  *
- * Version: 0.2.4
+ * Version: 0.2.5
  *
  * Copyright: BSD license
  */
 module dbi.Row;
 
-version (Ares) {
-	debug (UnitTest) private import std.io.Console;
+version (Phobos) {
+	debug (UnitTest) private static import std.stdio;
 } else {
-	debug (UnitTest) private import std.stdio;
+	debug (UnitTest) private static import tango.io.Stdout;
 }
 private import dbi.DBIException;
 
@@ -61,7 +61,7 @@ final class Row {
 	 *	wriefln("first=%s, last=%s\n", row["first"], row["last"]);
 	 *	---
 	 *
-	 * Returns: 
+	 * Returns:
 	 *	The field's contents.
 	 */
 	char[] opIndex (char[] name) {
@@ -155,7 +155,7 @@ final class Row {
 	 *	each DBD module will act exactly alike.
 	 */
 	void addField (char[] name, char[] value, char[] decl, int type) {
-		fieldNames ~= name.dup;
+		fieldNames ~= name;
 		fieldValues ~= value.dup;
 		fieldDecls ~= decl.dup;
 		fieldTypes ~= type;
@@ -169,47 +169,47 @@ final class Row {
 }
 
 unittest {
-	version (Ares) {
+	version (Phobos) {
 		void s1 (char[] s) {
-			Cout("" ~ s ~ "\n");
+			std.stdio.writefln("%s", s);
 		}
 
 		void s2 (char[] s) {
-			Cout("   ..." ~ s ~ "\n");
+			std.stdio.writefln("   ...%s", s);
 		}
 	} else {
 		void s1 (char[] s) {
-			writefln("%s", s);
+			tango.io.Stdout.Stdout(s).newline();
 		}
 
 		void s2 (char[] s) {
-			writefln("   ...%s", s);
+			tango.io.Stdout.Stdout("   ..." ~ s).newline();
 		}
 	}
 
 	s1("dbi.Row:");
 	Row r1 = new Row();
-	r1.addField("name", "John Doe", "text",    3);
-	r1.addField("age",  "23",       "integer", 1);
+	r1.addField("name", "John Doe", "text", 3);
+	r1.addField("age", "23", "integer", 1);
 
 	s2("get(int)");
-	assert(r1.get(0) == "John Doe");
+	assert (r1.get(0) == "John Doe");
 
 	s2("get(char[])");
-	assert(r1.get("name") == "John Doe");
+	assert (r1.get("name") == "John Doe");
 
 	s2("[int]");
-	assert(r1[0] == "John Doe");
+	assert (r1[0] == "John Doe");
 
 	s2("[char[]]");
-	assert(r1["age"] == "23");
+	assert (r1["age"] == "23");
 
 	s2("getFieldIndex");
-	assert(r1.getFieldIndex("name") == 0);
+	assert (r1.getFieldIndex("name") == 0);
 
 	s2("getFieldType");
-	assert(r1.getFieldType(0) == 3);
-    
+	assert (r1.getFieldType(0) == 3);
+
 	s2("getFieldDecl");
-	assert(r1.getFieldDecl(1) == "integer");
+	assert (r1.getFieldDecl(1) == "integer");
 }

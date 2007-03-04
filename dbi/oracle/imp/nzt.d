@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Oracle import library.
  *
  * Part of the D DBI project.
@@ -6,7 +6,7 @@
  * Version:
  *	Oracle 10g revision 2
  *
- *	Import library version 0.03
+ *	Import library version 0.04
  *
  * Authors: The D DBI project
  *
@@ -14,7 +14,7 @@
  */
 module dbi.oracle.imp.nzt;
 
-private import dbi.oracle.imp.oratypes, dbi.oracle.imp.nzerror;
+private import dbi.oracle.imp.nzerror, dbi.oracle.imp.oratypes;
 
 const uint NZT_MAX_SHA1			= 20;		///
 const uint NZT_MAX_MD5			= 16;		///
@@ -142,7 +142,7 @@ enum nzttState {
 
 /**
  * Cert-version types.
- * 
+ *
  * This is used to quickly look-up the cert-type.
  */
 enum nzttVersion {
@@ -208,7 +208,7 @@ enum nzttPolicy {
  * Persona Usage.
  *
  * Deprecated:
- *	
+ *
  *
  * What a persona will be used for?
  */
@@ -262,7 +262,7 @@ alias ub1[4] nzttTStamp;
  *
  * The flags_nzttBufferBlock member tells the function whether the
  * buffer can be grown or not.  If flags_nzttBufferBlock is 0, then
- * the buffer will be realloc'ed automatically.  
+ * the buffer will be realloc'ed automatically.
  *
  * The buflen_nzttBufferBLock member is set to the length of the
  * buffer before the function is called and will be the length of the
@@ -436,15 +436,15 @@ struct nzttIdentityDesc {
  * it and comparing against the password hash stored with the
  * wallet.  The list of personas (and their associated identities)
  * is built and stored into the wallet structure.
- * 
+ *
  * Params:
- *	osscntxt = OSS context. 
+ *	osscntxt = OSS context.
  *	wrllen = Length of WRL.
  *	wrl = WRL.
  *	pwdlen = Length of password.
  *	pwd = Password.
- *	wallet = Initialized wallet structure.   
- *    
+ *	wallet = Initialized wallet structure.
+ *
  * Returns:
  *	NZERROR_OK		Success.
  *	NZERROR_RIO_OPEN	RIO could not open wallet (see network trace file).
@@ -462,7 +462,7 @@ extern (C) nzerror nztwOpenWallet (nzctx* osscntxt, ub4 wrllen, text* wrl, ub4 p
  * if it has changed.  The implication is that a persona can be
  * modified by an application but if it is not explicitly saved it
  * reverts back to what was in the wallet.
- * 
+ *
  * Params:
  *	osscntxt = OSS context.
  *	wallet = Wallet.
@@ -490,13 +490,13 @@ extern (C) nzerror nztwConstructWallet (nzctx* oss_context, nzttPolicy openPolic
  *
  * Retrieves a persona from the wallet based on the index number passed
  * in.  This persona is a COPY of the one stored in the wallet, therefore
- * it is perfectly fine for the wallet to be closed after this call is 
+ * it is perfectly fine for the wallet to be closed after this call is
  * made.
  *
  * The caller is responsible for disposing of the persona when completed.
  *
  * Params:
- *	osscntxt = OSS context. 
+ *	osscntxt = OSS context.
  *	wallet = Wallet.
  *	index = Which wallet index to remove (first persona is zero).
  *	persona = Persona found.
@@ -509,7 +509,7 @@ extern (C) nzerror nztwRetrievePersonaCopy (nzctx* osscntxt, nzttWallet* wallet,
 /**
  * Retrieve a persona based on its name.
  *
- * Retrieves a persona from the wallet based on the name of the persona. 
+ * Retrieves a persona from the wallet based on the name of the persona.
  * This persona is a COPY of the one stored in the wallet, therefore
  * it is perfectly fine for the wallet to be closed after this call is
  * made.
@@ -519,7 +519,7 @@ extern (C) nzerror nztwRetrievePersonaCopy (nzctx* osscntxt, nzttWallet* wallet,
  * Params:
  *	osscntxt = OSS context.
  *	wallet = Wallet.
- *	name = Name of the persona 
+ *	name = Name of the persona
  *	persona = Persona found.
  *
  * Returns:
@@ -531,7 +531,7 @@ extern (C) nzerror nztwRetrievePersonaCopyByName(nzctx* osscntxt, nzttWallet* wa
  * Open a persona.
  *
  * Params:
- *	osscntxt = OSS context. 
+ *	osscntxt = OSS context.
  *	persona = Persona.
  *
  * Returns:
@@ -580,16 +580,16 @@ extern (C) nzerror nzteDestroyPersona (nzctx* osscntxt, nzttPersona** persona);
 /**
  * Retrieve a trusted identity from a persona.
  *
- * Retrieves a trusted identity from the persona based on the index 
- * number passed in.  This identity is a copy of the one stored in 
+ * Retrieves a trusted identity from the persona based on the index
+ * number passed in.  This identity is a copy of the one stored in
  * the persona, therefore it is perfectly fine to close the persona
  * after this call is made.
  *
- * The caller is responsible for freeing the memory of this object 
+ * The caller is responsible for freeing the memory of this object
  * by calling nztiAbortIdentity it is no longer needed.
  *
  * Params:
- *	osscntxt = OSS context. 
+ *	osscntxt = OSS context.
  *	persona = Persona.
  *	index = Which wallet index to remove (first element is zero).
  *	identity = Trusted Identity from this persona.
@@ -603,8 +603,8 @@ extern (C) nzerror nzteRetrieveTrustedIdentCopy (nzctx* osscntxt, nzttPersona* p
  * Get the decrypted Private Key for the Persona.
  *
  * This function will only work for X.509 based persona which contain
- * a private key.  
- * A copy of the private key is returned to the caller so that they do not 
+ * a private key.
+ * A copy of the private key is returned to the caller so that they do not
  * have to worry about the key changing "underneath them."
  * Memory will be allocated for the vkey and therefore, the caller
  * will be responsible for freeing this memory.
@@ -626,8 +626,8 @@ extern (C) nzerror nztePriKey (nzctx* osscntxt, nzttPersona* persona, ub1** vkey
  * Get the X.509 Certificate for a persona.
  *
  * This funiction will only work for X.509 based persona which contain
- * a certificate for the self identity. 
- * A copy of the certificate is returned to the caller so that they do not 
+ * a certificate for the self identity.
+ * A copy of the certificate is returned to the caller so that they do not
  * have to worry about the certificate changing "underneath them."
  * Memory will be allocated for the cert and therefore, the caller
  * will be responsible for freeing this memory.
@@ -729,7 +729,7 @@ version (NZ_OLD_TOOLS) {
  * Get an Identity Description from an identity.
  *
  * Memory is allocated for the Identity Description. It
- * is the caller's responsibility to free this memory by calling 
+ * is the caller's responsibility to free this memory by calling
  * nztiFreeIdentityDesc.
  *
  * Params:
@@ -818,7 +818,7 @@ extern (C) nzerror nztVerify (nzctx* osscntxt, nzttPersona* persona, nzttces sta
  *	osscntxt = OSS context.
  *	persona = Persona.
  *	identity = Identity.
- *	validated = TRUE if identity was validated.  
+ *	validated = TRUE if identity was validated.
  *
  * Returns:
  *	NZERROR_OK		Success.
@@ -837,7 +837,7 @@ extern (C) nzerror nztValidate (nzctx* osscntxt, nzttPersona* persona, nzttIdent
  *	inlen = Length of this input part.
  *	input = The input.
  *	tdubuf = TDU buffer.
- * 
+ *
  * Returns:
  *	NZERROR_OK		Success.
  *	NZERROR_TK_CANTGROW	Needed to grow output buffer but could not.
@@ -895,7 +895,7 @@ extern (C) nzerror nztkec_PKEncrypt (nzctx* osscntxt, nzttPersona* persona, ub4 
  * Determine the buffer size needed for PKEncrypt.
  *
  * Params:
- *	osscntxt = OSS context. 
+ *	osscntxt = OSS context.
  *	persona = Persona.
  *	nrecipients = Number of recipients.
  *	inlen = Length of input.
@@ -1107,7 +1107,7 @@ extern (C) nzerror nztbbSetBlock (nzctx* osscntxt, uword flags, ub4 buflen, ub4 
  *	certhashlen = Length of the hash.
  *
  * Returns:
- *	
+ *
  */
 extern (C) nzerror nztiGetSecInfo (nzctx* osscntxt, nzttPersona* persona, text** dname, ub4* dnamelen, text** issuername, ub4*, ub1**, ub4*);
 
@@ -1121,7 +1121,7 @@ extern (C) nzerror nztiGetSecInfo (nzctx* osscntxt, nzttPersona* persona, text**
  *	dnlen = Length of the dname.
  *
  * Returns:
- *	
+ *
  */
 extern (C) nzerror nztiGetDName (nzctx* osscntxt, nzttIdentity* identity, text** dn, ub4* dnlen);
 
@@ -1135,7 +1135,7 @@ extern (C) nzerror nztiGetDName (nzctx* osscntxt, nzttIdentity* identity, text**
  *	issuernamelen = Length of the issuer's name
  *
  * Returns:
- *	
+ *
  */
 extern (C) nzerror nztiGetIssuerName (nzctx* osscntxt, nzttIdentity* identity, text** issuername, ub4* issuernamelen);
 
@@ -1151,7 +1151,7 @@ extern (C) nzerror nztiGetIssuerName (nzctx* osscntxt, nzttIdentity* identity, t
  *	hashLen = Length of the certHash.
  *
  * Returns:
- *	
+ *
  */
 extern (C) nzerror nztgch_GetCertHash (nzctx* osscntxt, nzttIdentity* identity, ub1** certHash, ub4* hashLen);
 
@@ -1163,7 +1163,7 @@ extern (C) nzerror nztgch_GetCertHash (nzctx* osscntxt, nzttIdentity* identity, 
  *	buf = Allocated buffer to be destroyed.
  *
  * Returns:
- *	
+ *
  */
 extern (C) nzerror nztdbuf_DestroyBuf (nzctx* osscntxt, dvoid** buf);
 
@@ -1177,7 +1177,7 @@ extern (C) nzerror nztdbuf_DestroyBuf (nzctx* osscntxt, dvoid** buf);
  *	osscntxt = OSS context.
  *
  * Returns:
- *	
+ *
  */
 extern (C) nzerror nztGetCertChain (nzctx* osscntxt, nzttWallet* );
 
@@ -1233,7 +1233,7 @@ extern (C) nzerror nztIPrivateAlloc (nzctx* osscntxt, nzttIdentityPrivate** ipri
  *	osscntxt = OSS context.
  *	targetIdentity = Target identity.
  *	sourceIdentity = Source identity.
- *  
+ *
  * Returns:
  *	NZERROR_OK		Success.
  *	others			Failure.
@@ -1247,7 +1247,7 @@ extern (C) nzerror nztIDupContent (nzctx* osscntxt, nzttIdentity* targetIdentity
  *	osscntxt = OSS context.
  *	target_ipriv = Target identityPrivate.
  *	source_ipriv = Source identityPrivate.
- * 
+ *
  * Returns:
  *	NZERROR_OK		Success.
  *	others			Failure.
@@ -1291,7 +1291,7 @@ extern (C) nzerror nztFreeIdentList (nzctx* osscntxt, nzttIdentity** identity);
  *	osscntxt = OSS context.
  *	start_time = Start time of the certificate.
  *	end_time = End time of the certificate.
- * 
+ *
  * Returns:
  *	NZERROR_OK		Success.
  *	others			Failure.
@@ -1380,7 +1380,7 @@ extern (C) nzerror nztwDestroyWallet (nzctx* osscntxt, ub4 wrllen, text* wrl, ub
  *	This function is unsupported at this time.
  *
  * Params:
- *	osscntxt = OSS context. 
+ *	osscntxt = OSS context.
  *	persona = Persona.
  *	wallet = Wallet.
  *
@@ -1453,7 +1453,7 @@ extern (C) nzerror nzteCreatePersona (nzctx* osscntxt, nzttVersion itype, nzttCi
  * Params:
  *	osscntxt = Success.
  *	identity = Trusted Identity.
- *	persona = Persona.    
+ *	persona = Persona.
  *
  * Returns:
  *	NZERROR_OK		Success.
@@ -1511,7 +1511,7 @@ extern (C) nzerror nzteGetProtection (nzctx* osscntxt, nzttPersona* persona, nzt
  *	This function is unsupported at this time.
  *
  * Params:
- *	osscntxt = OSS context. 
+ *	osscntxt = OSS context.
  *	identity = Identity.
  *
  * Returns:
@@ -1823,7 +1823,7 @@ extern (C) nzerror nztGetValidDate (nzctx*, nzttIdentity*, ub4*, ub4*);
  * Bugs:
  *	An unknown parameter is missing from the documentation.
  */
-extern (C) nzerror nztGetVersion (nzctx*, nzttIdentity*, nzstrc*); 
+extern (C) nzerror nztGetVersion (nzctx*, nzttIdentity*, nzstrc*);
 
 /**
  * Bugs:

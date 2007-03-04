@@ -1,16 +1,16 @@
-/**
+﻿/**
  * Authors: The D DBI project
  *
- * Version: 0.2.4
+ * Version: 0.2.5
  *
  * Copyright: BSD license
  */
 module dbi.DBIException;
 
-version (Ares) {
-	private import std.vararg : va_arg;
-} else {
+version (Phobos) {
 	private import std.stdarg : va_arg;
+} else {
+	private import tango.core.Vararg : va_arg;
 }
 private import dbi.ErrorCode;
 
@@ -33,7 +33,7 @@ class DBIException : Exception {
 	 *
 	 * Params:
 	 *	msg = The message to report to the users.
-	 *	
+	 *
 	 * Throws:
 	 *	DBIException on invalid arguments.
 	 */
@@ -61,7 +61,11 @@ class DBIException : Exception {
 			} else if (_arguments[i] == typeid(ErrorCode)) {
 				dbiCode = va_arg!(ErrorCode)(_argptr);
 			} else {
-				throw new DBIException("Invalid argument of type \"" ~ _arguments[i].toString() ~ "\" passed to the DBIException constructor.");
+				version (Phobos) {
+					throw new DBIException("Invalid argument of type \"" ~ _arguments[i].toString() ~ "\" passed to the DBIException constructor.");
+				} else {
+					throw new DBIException("Invalid argument of type \"" ~ _arguments[i].toUtf8() ~ "\" passed to the DBIException constructor.");
+				}
 			}
 		}
 	}
@@ -95,8 +99,7 @@ class DBIException : Exception {
 	char[] getSql () {
 		return sql;
 	}
-	deprecated alias getSql getSQL;
-	
+
 	private:
 	char[] sql;
 	long specificCode = 0;

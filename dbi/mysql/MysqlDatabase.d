@@ -1,22 +1,22 @@
-/**
+﻿/**
  * Authors: The D DBI project
  *
- * Version: 0.2.4
+ * Version: 0.2.5
  *
  * Copyright: BSD license
  */
 module dbi.mysql.MysqlDatabase;
 
-version (Ares) {
-	private static import std.regexp;
-	private import util.string : toDString = toString;
-	private import util.string : toCString = toStringz;
-	debug (UnitTest) private import std.io.Console;
+version (Phobos) {
+	private static import std.conv, std.string;
+	private alias std.string.toString toDString;
+	private alias std.string.toStringz toCString;
+	debug (UnitTest) private static import std.stdio;
 } else {
-	private static import std.string;
-	alias std.string.toString toDString;
-  alias std.string.toStringz toCString;
-	debug (UnitTest) private import std.stdio;
+	private import tango.stdc.stringz : toDString = fromUtf8z, toCString = toUtf8z;
+	private static import tango.text.Util;
+	private static import tango.text.convert.Integer;
+	debug (UnitTest) private static import tango.io.Stdout;
 }
 private import dbi.Database, dbi.DBIException, dbi.Result, dbi.Row, dbi.Statement;
 private import dbi.mysql.imp, dbi.mysql.MysqlError, dbi.mysql.MysqlResult;
@@ -96,29 +96,31 @@ class MysqlDatabase : Database {
 				sock = keywords["sock"];
 			}
 			if ("port" in keywords) {
-				port = toInt(keywords["port"]);
+				version (Phobos) {
+					port = std.conv.toInt(keywords["port"]);
+				} else {
+					port = cast(uint)tango.text.convert.Integer.parse(keywords["port"]);
+				}
 			}
 		}
 
-		version (Ares) {
-			if (std.regexp.find(params, "=") != size_t.max) {
-				parseKeywords();
-			} else {
-				dbname = params;
-			}
-		} else {
+		version (Phobos) {
 			if (std.string.find(params, "=") != -1) {
 				parseKeywords();
 			} else {
 				dbname = params;
 			}
+		} else {
+			if (tango.text.Util.contains(params, '=')) {
+				parseKeywords();
+			} else {
+				dbname = params;
+			}
 		}
 
-		mysql_real_connect(connection, toCString(host), toCString(username), 
-        toCString(password), toCString(dbname), port, 
-        sock ? toCString(sock) : null, 0);
+		mysql_real_connect(connection, toCString(host), toCString(username), toCString(password), toCString(dbname), port, toCString(sock), 0);
 		if (uint error = mysql_errno(connection)) {
-			throw new DBIException("Unable to connect to the MySQL database.", error, dbi.mysql.MysqlError.specificToGeneral(error));
+			throw new DBIException("Unable to connect to the MySQL database.", error, specificToGeneral(error));
 		}
 	}
 
@@ -129,9 +131,12 @@ class MysqlDatabase : Database {
 	 *	DBIException if there was an error disconnecting.
 	 */
 	override void close () {
-		mysql_close(connection);
-		if (uint error = mysql_errno(connection)) {
-			throw new DBIException("Unable to close the MySQL database.", error, dbi.mysql.MysqlError.specificToGeneral(error));
+		if (connection !is null) {
+			mysql_close(connection);
+			if (uint error = mysql_errno(connection)) {
+				throw new DBIException("Unable to close the MySQL database.", error, specificToGeneral(error));
+			}
+			connection = null;
 		}
 	}
 
@@ -147,7 +152,7 @@ class MysqlDatabase : Database {
 	override void execute (char[] sql) {
 		int error = mysql_real_query(connection, toCString(sql), sql.length);
 		if (error) {
-			throw new DBIException("Unable to execute a command on the MySQL database.", sql, error, dbi.mysql.MysqlError.specificToGeneral(error));
+			throw new DBIException("Unable to execute a command on the MySQL database.", sql, error, specificToGeneral(error));
 		}
 	}
 
@@ -166,9 +171,9 @@ class MysqlDatabase : Database {
 	override MysqlResult query (char[] sql) {
 		mysql_real_query(connection, toCString(sql), sql.length);
 		MYSQL_RES* results = mysql_store_result(connection);
-		//if (results is null) {
-		//	throw new DBIException("Unable to query the MySQL database.", sql);
-		//}
+		if (results is null) {
+			throw new DBIException("Unable to query the MySQL database.", sql);
+		}
 		assert (results !is null);
 		return new MysqlResult(results);
 	}
@@ -206,21 +211,21 @@ class MysqlDatabase : Database {
 }
 
 unittest {
-	version (Ares) {
+	version (Phobos) {
 		void s1 (char[] s) {
-			Cout("" ~ s ~ "\n");
+			std.stdio.writefln("%s", s);
 		}
 
 		void s2 (char[] s) {
-			Cout("   ..." ~ s ~ "\n");
+			std.stdio.writefln("   ...%s", s);
 		}
 	} else {
 		void s1 (char[] s) {
-			writefln("%s", s);
+			tango.io.Stdout.Stdout(s).newline();
 		}
 
 		void s2 (char[] s) {
-			writefln("   ...%s", s);
+			tango.io.Stdout.Stdout("   ..." ~ s).newline();
 		}
 	}
 
@@ -269,73 +274,4 @@ unittest {
 
 	s2("close");
 	db.close();
-}
-
-/*
- * Copyright (C) 2002-2006 by Digital Mars, www.digitalmars.com
- * Written by Walter Bright
- * Some parts contributed by David L. Davis
- * Modified for use in D DBI.
- *
- *  This software is provided 'as-is', without any express or implied
- *  warranty. In no event will the authors be held liable for any damages
- *  arising from the use of this software.
- *
- *  Permission is granted to anyone to use this software for any purpose,
- *  including commercial applications, and to alter it and redistribute it
- *  freely, subject to the following restrictions:
- *
- *  o  The origin of this software must not be misrepresented; you must not
- *     claim that you wrote the original software. If you use this software
- *     in a product, an acknowledgment in the product documentation would be
- *     appreciated but is not required.
- *  o  Altered source versions must be plainly marked as such, and must not
- *     be misrepresented as being the original software.
- *  o  This notice may not be removed or altered from any source
- *     distribution.
- */
-int toInt (char[] string) {
-	if (!string.length) {
-		throw new DBIException("Couldn't convert \"" ~ string ~ "\" to type \"int.\"");
-	}
-
-	bool negative = false;
-	int v = 0;
-
-	for (size_t i = 0; i < string.length; i++) {
-		char c = string[i];
-
-		if (c >= '0' && c <= '9') {
-			uint v1 = v;
-			v = v * 10 + (c - '0');
-
-			if (cast(uint)v < v1) {
-				throw new DBIException("Couldn't convert \"" ~ string ~ "\" to type \"int.\"");
-			}
-		} else if (c == '-' && i == 0) {
-			negative = true;
-
-			if (string.length == 1) {
-				throw new DBIException("Couldn't convert \"" ~ string ~ "\" to type \"int.\"");
-			}
-		} else if (c == '+' && i == 0) {
-			if (string.length == 1) {
-				throw new DBIException("Couldn't convert \"" ~ string ~ "\" to type \"int.\"");
-			}
-		} else {
-			throw new DBIException("Couldn't convert \"" ~ string ~ "\" to type \"int.\"");
-		}
-	}
-	if (negative) {
-		if (cast(uint)v > 0x80000000) {
-			throw new DBIException("Couldn't convert \"" ~ string ~ "\" to type \"int.\"");
-		}
-
-		v = -v;
-	} else {
-		if (cast(uint)v > 0x7FFFFFFF) {
-			throw new DBIException("Couldn't convert \"" ~ string ~ "\" to type \"int.\"");
-		}
-	}
-	return v;
 }

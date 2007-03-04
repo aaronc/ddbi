@@ -1,7 +1,7 @@
-/**
+﻿/**
  * Authors: The D DBI project
  *
- * Version: 0.2.4
+ * Version: 0.2.5
  *
  * Copyright: BSD license
  */
@@ -39,7 +39,7 @@ class MsqlDatabase : Database {
 	}
 
 	/**
-	 * 
+	 *
 	 */
 	override void connect (char[] params, char[] username = null, char[] password = null) {
 	}
@@ -101,5 +101,5 @@ class MsqlDatabase : Database {
 	}
 
 	private:
-	
+
 }

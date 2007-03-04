@@ -50,10 +50,10 @@
 <p>Part of the D DBI project.
 
 </p>
-<p><strong>Version:</strong><br />SQLite version 3.3.8
+<p><strong>Version:</strong><br />SQLite version 3.3.11
 <br /><br />
 
-	Import library version 0.04
+	Import library version 0.05
 
 </p>
 <p><strong>Authors:</strong><br />The D DBI project
@@ -416,7 +416,7 @@
 </dd>
 <dt><span class="big">const void(* <span class="underline">SQLITE_STATIC</span>)(void*);
 </span></dt>
-<dd><p>The data doesn't need to be freed by SQLite.  
+<dd><p>The data doesn't need to be freed by SQLite.
 </p>
 
 </dd>
@@ -981,6 +981,14 @@
 <dd><br /><br />
 </dd>
 <dt><span class="big">int <span class="underline">sqlite3_prepare16</span>(sqlite3 * <em>database</em>, void* <em>zSql</em>, int <em>nBytes</em>, sqlite3_stmt ** <em>stmt</em>, void** <em>zTail</em>);
+</span></dt>
+<dd><br /><br />
+</dd>
+<dt><span class="big">int <span class="underline">sqlite3_prepare_v2</span>(sqlite3 * <em>database</em>, char* <em>zSql</em>, int <em>nBytes</em>, sqlite3_stmt ** <em>stmt</em>, char** <em>zTail</em>);
+</span></dt>
+<dd><br /><br />
+</dd>
+<dt><span class="big">int <span class="underline">sqlite3_prepare16_v2</span>(sqlite3 * <em>database</em>, void* <em>zSql</em>, int <em>nBytes</em>, sqlite3_stmt ** <em>stmt</em>, void** <em>zTail</em>);
 </span></dt>
 <dd><br /><br />
 </dd>

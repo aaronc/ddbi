@@ -1,12 +1,12 @@
-/**
+﻿/**
  * SQLite import library.
  *
  * Part of the D DBI project.
  *
  * Version:
- *	SQLite version 3.3.8
+ *	SQLite version 3.3.11
  *
- *	Import library version 0.04
+ *	Import library version 0.05
  *
  * Authors: The D DBI project
  *
@@ -19,13 +19,19 @@ version (Windows) {
 	pragma (lib, "sqlite3.lib");
 } else version (linux) {
 	pragma (lib, "libsqlite.so");
+} else version (Posix) {
+	pragma (lib, "libsqlite.so");
 } else version (darwin) {
-	pragma (lib, "libsqlite.so");	
+	pragma (lib, "libsqlite.so");
 } else {
-	static assert (0);
+	pragma (msg, "You will need to manually link in the SQLite library.");
 }
 
-private import std.c.stdarg;
+version (Phobos) {
+	private import std.c.stdarg;
+} else {
+	private import tango.stdc.stdarg;
+}
 
 /**
  *
@@ -170,7 +176,7 @@ const int SQLITE_NULL			= 5;	/// The data value is _null.
 const int SQLITE_DENY			= 1;	/// Abort the SQL statement with an error.
 const int SQLITE_IGNORE			= 2;	/// Don't allow access, but don't generate an error.
 
-const void function(void*) SQLITE_STATIC = cast(void function(void*))0; /// The data doesn't need to be freed by SQLite.  
+const void function(void*) SQLITE_STATIC = cast(void function(void*))0; /// The data doesn't need to be freed by SQLite.
 const void function(void*) SQLITE_TRANSIENT = cast(void function(void*))-1; /// SQLite should make a private copy of the data.
 
 const int SQLITE_CREATE_INDEX		= 1;	/// Index Name		Table Name
@@ -603,6 +609,7 @@ int sqlite3_open16 (void* filename, sqlite3** database);
  *
  */
 int sqlite3_overload_function (sqlite3* database, char* zFuncName, int nArg);
+
 /**
  *
  */
@@ -612,6 +619,16 @@ int sqlite3_prepare (sqlite3* database, char* zSql, int nBytes, sqlite3_stmt** s
  *
  */
 int sqlite3_prepare16 (sqlite3* database, void* zSql, int nBytes, sqlite3_stmt** stmt, void** zTail);
+
+/**
+ *
+ */
+int sqlite3_prepare_v2 (sqlite3* database, char* zSql, int nBytes, sqlite3_stmt** stmt, char** zTail);
+
+/**
+ *
+ */
+int sqlite3_prepare16_v2 (sqlite3* database, void* zSql, int nBytes, sqlite3_stmt** stmt, void** zTail);
 
 /**
  *

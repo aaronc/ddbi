@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Oracle import library.
  *
  * Part of the D DBI project.
@@ -6,7 +6,7 @@
  * Version:
  *	Oracle 10g revision 2
  *
- *	Import library version 0.03
+ *	Import library version 0.04
  *
  * Authors: The D DBI project
  *
@@ -14,7 +14,7 @@
  */
 module dbi.oracle.imp.orl;
 
-private import dbi.oracle.imp.oratypes, dbi.oracle.imp.oro, dbi.oracle.imp.ort, dbi.oracle.imp.oci;
+private import dbi.oracle.imp.oci, dbi.oracle.imp.oratypes, dbi.oracle.imp.oro, dbi.oracle.imp.ort;
 
 const uint OCI_NUMBER_SIZE		= 22;		/// The number of bytes in an OCINumber.
 
@@ -946,7 +946,7 @@ extern (C) sword OCIDateSysDate (OCIError* err, OCIDate* sys_date);
  * The variable-length string is represented in C as a pointer to OCIString
  * structure. The OCIString structure is opaque to the user. Functions are
  * provided to allow the user to manipulate a variable-length string.
- *     
+ *
  * A variable-length string can be declared as:
  *
  * OCIString* vstr;
@@ -1045,7 +1045,7 @@ extern (C) sword OCIStringAllocSize (OCIEnv* env, OCIError* err, OCIString* vs, 
  * The variable-length raw is represented in C as a pointer to OCIRaw
  * structure. The OCIRaw structure is opaque to the user. Functions are
  * provided to allow the user to manipulate a variable-length raw.
- *     
+ *
  * A variable-length raw can be declared as:
  *
  * OCIRaw* raw;
@@ -1404,7 +1404,7 @@ extern (C) sword OCIIterCreate (OCIEnv* env, OCIError* err, OCIColl* coll, OCIIt
                 recorded in 'err' and this function returns OCI_ERROR.
                 The error recorded in 'err' can be retrieved by calling
                 OCIErrorGet().
-        coll (IN) - collection which will be scanned; the different 
+        coll (IN) - collection which will be scanned; the different
                 collection types are varray and nested table
         itr (OUT) - address to the allocated collection iterator is
                 returned by this function
@@ -1412,12 +1412,12 @@ extern (C) sword OCIIterCreate (OCIEnv* env, OCIError* err, OCIColl* coll, OCIIt
         Create an iterator to scan the elements of the collection. The
         iterator is created in the object cache. The iterator is initialized
         to point to the beginning of the collection.
-  
-        If the next function (OCIIterNext) is called immediately 
-        after creating the iterator then the first element of the collection 
-        is returned. 
-        If the previous function (OCIIterPrev) is called immediately after 
-        creating the iterator then "at beginning of collection" error is 
+
+        If the next function (OCIIterNext) is called immediately
+        after creating the iterator then the first element of the collection
+        is returned.
+        If the previous function (OCIIterPrev) is called immediately after
+        creating the iterator then "at beginning of collection" error is
         returned.
    RETURNS:
         OCI_SUCCESS if the function completes successfully.
@@ -1439,7 +1439,7 @@ extern (C) sword OCIIterDelete (OCIEnv* env, OCIError* err, OCIIter** itr);
         itr (IN/OUT) - the allocated collection iterator is destroyed and
                 the 'itr' is set to NULL prior to returning
    DESCRIPTION:
-        Delete the iterator which was previously created by a call to 
+        Delete the iterator which was previously created by a call to
         OCIIterCreate.
    RETURNS:
         OCI_SUCCESS if the function completes successfully.
@@ -1451,7 +1451,7 @@ extern (C) sword OCIIterDelete (OCIEnv* env, OCIError* err, OCIIter** itr);
 
 extern (C) sword OCIIterInit (OCIEnv* env, OCIError* err, OCIColl* coll, OCIIter* itr);
 /*
-   NAME: OCIIterInit - OCIColl Initialize ITerator to scan the given 
+   NAME: OCIIterInit - OCIColl Initialize ITerator to scan the given
                    collection
    PARAMETERS:
         env (IN/OUT) - OCI environment handle initialized in object mode.
@@ -1459,14 +1459,14 @@ extern (C) sword OCIIterInit (OCIEnv* env, OCIError* err, OCIColl* coll, OCIIter
                 recorded in 'err' and this function returns OCI_ERROR.
                 The error recorded in 'err' can be retrieved by calling
                 OCIErrorGet().
-        coll (IN) - collection which will be scanned; the different 
+        coll (IN) - collection which will be scanned; the different
                 collection types are varray and nested table
         itr (IN/OUT) - pointer to an allocated  collection iterator
    DESCRIPTION:
-        Initializes the given iterator to point to the beginning of the 
+        Initializes the given iterator to point to the beginning of the
         given collection. This function can be used to:
-  
-        a. reset an iterator to point back to the beginning of the collection 
+
+        a. reset an iterator to point back to the beginning of the collection
         b. reuse an allocated iterator to scan a different collection
    RETURNS:
         OCI_SUCCESS if the function completes successfully.
@@ -1487,8 +1487,8 @@ extern (C) sword OCIIterGetCurrent (OCIEnv* env, OCIError* err, OCIIter* itr, dv
                 OCIErrorGet().
         itr (IN) - iterator which points to the current element
         elem (OUT) - address of the element pointed by the iterator is returned
-        elemind (OUT) [optional] - address of the element's null indicator 
-                information is returned; if (elemind == NULL) then the null 
+        elemind (OUT) [optional] - address of the element's null indicator
+                information is returned; if (elemind == NULL) then the null
                 indicator information will NOT be returned
    DESCRIPTION:
         Returns pointer to the current element and its corresponding null
@@ -1512,17 +1512,17 @@ extern (C) sword OCIIterNext (OCIEnv* env, OCIError* err, OCIIter* itr, dvoid** 
         itr (IN/OUT) - iterator is updated to point to the next element
         elem (OUT) - after updating the iterator to point to the next element,
                 address of the element is returned
-        elemind (OUT) [optional] - address of the element's null indicator 
-                information is returned; if (elemind == NULL) then the null 
+        elemind (OUT) [optional] - address of the element's null indicator
+                information is returned; if (elemind == NULL) then the null
                 indicator information will NOT be returned
         eoc (OUT) - TRUE if iterator is at End Of Collection (i.e. next
                 element does not exist) else FALSE
    DESCRIPTION:
         Returns pointer to the next element and its corresponding null
         information. The iterator is updated to point to the next element.
-  
+
         If the iterator is pointing to the last element of the collection
-        prior to executing this function, then calling this function will 
+        prior to executing this function, then calling this function will
         set eoc flag to TRUE. The iterator will be left unchanged in this
         situation.
    RETURNS:
@@ -1541,22 +1541,22 @@ extern (C) sword OCIIterPrev (OCIEnv* env, OCIError* err, OCIIter* itr, dvoid** 
                 recorded in 'err' and this function returns OCI_ERROR.
                 The error recorded in 'err' can be retrieved by calling
                 OCIErrorGet().
-        itr (IN/OUT) - iterator is updated to point to the previous 
+        itr (IN/OUT) - iterator is updated to point to the previous
                 element
-        elem (OUT) - after updating the iterator to point to the previous 
+        elem (OUT) - after updating the iterator to point to the previous
                 element, address of the element is returned
-        elemind (OUT) [optional] - address of the element's null indicator 
-                information is returned; if (elemind == NULL) then the null 
+        elemind (OUT) [optional] - address of the element's null indicator
+                information is returned; if (elemind == NULL) then the null
                 indicator information will NOT be returned
         boc (OUT) - TRUE if iterator is at Beginning Of Collection (i.e.
                 previous element does not exist) else FALSE.
    DESCRIPTION:
         Returns pointer to the previous element and its corresponding null
         information. The iterator is updated to point to the previous element.
-  
+
         If the iterator is pointing to the first element of the collection
-        prior to executing this function, then calling this function will 
-        set 'boc' to TRUE. The iterator will be left unchanged in this 
+        prior to executing this function, then calling this function will
+        set 'boc' to TRUE. The iterator will be left unchanged in this
         situation.
    RETURNS:
         OCI_SUCCESS if the function completes successfully.
@@ -1567,7 +1567,7 @@ extern (C) sword OCIIterPrev (OCIEnv* env, OCIError* err, OCIIter* itr, dvoid** 
 
 extern (C) sword OCITableSize (OCIEnv* env, OCIError* err, OCITable* tbl, sb4* size);
 /*
-   NAME: OCITableSize - OCITable return current SIZe of the given 
+   NAME: OCITableSize - OCITable return current SIZe of the given
                    nested table (not including deleted elements)
    PARAMETERS:
         env(IN) - pointer to OCI environment handle
@@ -1579,20 +1579,20 @@ extern (C) sword OCITableSize (OCIEnv* env, OCIError* err, OCITable* tbl, sb4* s
         size (OUT) - current number of elements in the nested table. The count
                 does not include deleted elements.
    DESCRIPTION:
-        Returns the count of elements in the given nested table. 
+        Returns the count of elements in the given nested table.
 
-        The count returned by OCITableSize() will be decremented upon 
-        deleting elements from the nested table. So, this count DOES NOT 
-        includes any "holes" created by deleting elements. 
+        The count returned by OCITableSize() will be decremented upon
+        deleting elements from the nested table. So, this count DOES NOT
+        includes any "holes" created by deleting elements.
         For example:
 
-            OCITableSize(...); 
+            OCITableSize(...);
             // assume 'size' returned is equal to 5
             OCITableDelete(...); // delete one element
             OCITableSize(...);
             // 'size' returned will be equal to 4
 
-        To get the count plus the count of deleted elements use 
+        To get the count plus the count of deleted elements use
         OCICollSize(). Continuing the above example,
 
             OCICollSize(...)
@@ -1664,11 +1664,11 @@ extern (C) sword OCITableFirst (OCIEnv* env, OCIError* err, OCITable* tbl, sb4* 
                 The error recorded in 'err' can be retrieved by calling
                 OCIErrorGet().
         tbl (IN) - table which is scanned
-        index (OUT) - first index of the element which exists in the given 
+        index (OUT) - first index of the element which exists in the given
                 table is returned
    DESCRIPTION:
-        Return the first index of the element which exists in the given 
-        table. 
+        Return the first index of the element which exists in the given
+        table.
    RETURNS:
         OCI_SUCCESS if the function completes successfully.
         OCI_INVALID_HANDLE if 'env' or 'err' is NULL.
@@ -1686,11 +1686,11 @@ extern (C) sword OCITableLast (OCIEnv* env, OCIError* err, OCITable* tbl, sb4* i
                 The error recorded in 'err' can be retrieved by calling
                 OCIErrorGet().
         tbl (IN) - table which is scanned
-        index (OUT) - last index of the element which exists in the given 
+        index (OUT) - last index of the element which exists in the given
                 table is returned
    DESCRIPTION:
-        Return the last index of the element which exists in the given 
-        table. 
+        Return the last index of the element which exists in the given
+        table.
    RETURNS:
         OCI_SUCCESS if the function completes successfully.
         OCI_INVALID_HANDLE if 'env' or 'err' is NULL.
@@ -1710,11 +1710,11 @@ extern (C) sword OCITableNext (OCIEnv* env, OCIError* err, sb4 index, OCITable* 
         index (IN) - starting at 'index' the index of the next element
                 which exists is returned
         tbl (IN) - table which is scanned
-        next_index (OUT) - index of the next element which exists 
+        next_index (OUT) - index of the next element which exists
                 is returned
         exists (OUT) - FALSE if no next index available else TRUE
    DESCRIPTION:
-        Return the smallest position j, greater than 'index', such that 
+        Return the smallest position j, greater than 'index', such that
         exists(j) is TRUE.
    RETURNS:
         OCI_SUCCESS if the function completes successfully.
@@ -1735,11 +1735,11 @@ extern (C) sword OCITablePrev (OCIEnv* env, OCIError* err, sb4 index, OCITable* 
         index (IN) - starting at 'index' the index of the previous element
                 which exists is returned
         tbl (IN) - table which is scanned
-        prev_index (OUT) - index of the previous element which exists 
+        prev_index (OUT) - index of the previous element which exists
                 is returned
         exists (OUT) - FALSE if no next index available else TRUE
    DESCRIPTION:
-        Return the largest position j, less than 'index', such that 
+        Return the largest position j, less than 'index', such that
         exists(j) is TRUE.
    RETURNS:
         OCI_SUCCESS if the function completes successfully.
@@ -1751,16 +1751,16 @@ extern (C) sword OCITablePrev (OCIEnv* env, OCIError* err, sb4 index, OCITable* 
 deprecated lnxnum_t* OCINumberToLnx (OCINumber* num) {
 	return cast(lnxnum_t*)num;
 }
-/* 
+/*
    NAME:   OCINumberToLnx
    PARAMETERS:
            num (IN) - OCINumber to convert ;
-   DESCRIPTION: 
-           Converts OCINumber to its internal lnx format 
+   DESCRIPTION:
+           Converts OCINumber to its internal lnx format
            This is not to be used in Public interfaces , but
-           has been provided due to special requirements from 
-           SQLPLUS development group as they require to call 
-           Core funtions directly . 
+           has been provided due to special requirements from
+           SQLPLUS development group as they require to call
+           Core funtions directly .
 */
 +/
 /**

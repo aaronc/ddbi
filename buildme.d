@@ -28,28 +28,22 @@
  *
  * Authors: The D DBI project
  *
- * Version: 0.2.4
- *
- * Modified:
- *	2006-10-16	Changed build to bud.
- *	2006-10-20	Fixed linux sleep issues.
- *	2006-11-01	Non-Windows library names will now be in the proper style.
- *	2003-11-09	Fixed a "no effect in expression" warning.
+ * Version: 0.2.5
  *
  * Copyright: BSD license
  */
 module buildme;
 
-version (Ares) {
-	private import std.io.FileConst : FileConst;
-	private import std.io.FilePath : FilePath;
-	private import std.c.stdlib : system;
-
-	alias FileConst.PathSeparatorString sep;
-} else {
+version (Phobos) {
 	private import std.file : chdir, getcwd, isdir, listdir;
 	private import std.path : pardir, sep;
 	private import std.process : system;
+} else {
+	private import tango.io.FileConst;
+	private import tango.io.FileProxy : FileProxy;
+	private import tango.stdc.stdlib : system;
+
+	alias FileConst.PathSeparatorString sep;
 }
 
 /// The list of all the files that can be compiled.
@@ -78,8 +72,8 @@ void main (char[][] args) {
 		} else {
 			switchesCompiler["-odlibddbi.a"] = true;
 		}
-		version (Ares) {
-			switchesCompiler["-version=Ares"] = true;
+		version (Phobos) {
+			switchesCompiler["-version=Phobos"] = true;
 		}
 	} else version (GNU) {
 		debug {
@@ -96,8 +90,8 @@ void main (char[][] args) {
 		} else {
 			switchesCompiler["-o libddbi.a"] = true;
 		}
-		version (Ares) {
-			switchesCompiler["-fversion=Ares"] = true;
+		version (Phobos) {
+			switchesCompiler["-fversion=Phobos"] = true;
 		}
 	} else {
 		pragma (msg, "The switches for your compiler are unknown.  You will need to enter them manually.");
@@ -108,16 +102,7 @@ void main (char[][] args) {
 	switchesCompiler["-lib"] = true;
 
 	// Make the "all" list.
-	version (Ares) {
-		// Ares doesn't seem to have a listdir() equivalent.
-		allList["ib"] = true;
-		allList["msql"] = true;
-		allList["mysql"] = true;
-		allList["odbc"] = true;
-		allList["oracle"] = true;
-		allList["pg"] = true;
-		allList["sqlite"] = true;
-	} else {
+	version (Phobos) {
 		chdir("dbi");
 		foreach (char[] dir; listdir(getcwd())) {
 			if (isdir(dir) && dir != ".svn") {
@@ -125,6 +110,14 @@ void main (char[][] args) {
 			}
 		}
 		chdir(pardir);
+	} else {
+		void addDirs (char[] parent, char[] name, bool isDir) {
+			if (isDir && name != ".svn") {
+				allList[name] = true;
+			}
+	}
+		FileProxy proxy = new FileProxy("dbi");
+		proxy.toList(&addDirs);
 	}
 
 	// Parse the command line arguments.
@@ -155,11 +148,21 @@ void main (char[][] args) {
 		buildCommand ~= command ~ " ";
 	}
 	buildCommand.length = buildCommand.length - 1;
-	if (system("bud " ~ buildCommand)) {
-		version (Windows) {
-			system("pause");
-		} else version (linux) {
-			system("sleep 5");
+	version (Phobos) {
+		if (system("bud " ~ buildCommand)) {
+			version (Windows) {
+				system("pause");
+			} else version (linux) {
+				system("sleep 5");
+			}
+		}
+	} else {
+		if (system(("bud " ~ buildCommand).ptr)) {
+			version (Windows) {
+				system("pause");
+			} else version (linux) {
+				system("sleep 5");
+			}
 		}
 	}
 }

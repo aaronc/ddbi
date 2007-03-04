@@ -1,20 +1,17 @@
-/**
+﻿/**
  * Authors: The D DBI project
  *
- * Version: 0.2.4
+ * Version: 0.2.5
  *
  * Copyright: BSD license
  */
 module dbi.sqlite.SqliteDatabase;
 
-version (Tango) {
-	private import tango.stdc.stringz : toDString = fromUtf8z;
-	private import tango.stdc.stringz : toCString = toUtf8z;
-	debug (UnitTest) private import std.io.Console;
-} else {
-	private import std.string : toDString = toString;
-	private import std.string : toCString = toStringz;
+version (Phobos) {
+	private import std.string : toDString = toString, toCString = toStringz;
 	debug (UnitTest) private import std.stdio;
+} else {
+	private import tango.stdc.stringz : toDString = fromUtf8z, toCString = toUtf8z;
 }
 private import dbi.Database, dbi.DBIException, dbi.Result, dbi.Row, dbi.Statement;
 private import dbi.sqlite.imp, dbi.sqlite.SqliteError, dbi.sqlite.SqliteResult;
@@ -31,7 +28,7 @@ class SqliteDatabase : Database {
 	/**
 	 * Create a new instance of SqliteDatabase, but don't open a database.
 	 */
-	this () {	
+	this () {
 	}
 
 	/**
@@ -73,7 +70,7 @@ class SqliteDatabase : Database {
 	override void close () {
 		if (database !is null) {
 			if ((errorCode = sqlite3_close(database)) != SQLITE_OK) {
-				throw new DBIException(toDString(sqlite3_errmsg(database)), sql, errorCode, specificToGeneral(errorCode));
+				throw new DBIException(asString(sqlite3_errmsg(database)), errorCode, specificToGeneral(errorCode));
 			}
 			database = null;
 		}
@@ -90,8 +87,7 @@ class SqliteDatabase : Database {
 	 */
 	override void execute (char[] sql) {
 		char** errorMessage;
-		this.sql = sql;
-		if ((errorCode = sqlite3_exec(database, toCString(sql), null, null, errorMessage)) != SQLITE_OK) {
+		if ((errorCode = sqlite3_exec(database, sql.dup.ptr, null, null, errorMessage)) != SQLITE_OK) {
 			throw new DBIException(toDString(sqlite3_errmsg(database)), sql, errorCode, specificToGeneral(errorCode));
 		}
 	}
@@ -111,7 +107,6 @@ class SqliteDatabase : Database {
 	override SqliteResult query (char[] sql) {
 		char** errorMessage;
 		sqlite3_stmt* stmt;
-		this.sql = sql;
 		if ((errorCode = sqlite3_prepare(database, toCString(sql), sql.length, &stmt, errorMessage)) != SQLITE_OK) {
 			throw new DBIException(toDString(sqlite3_errmsg(database)), sql, errorCode, specificToGeneral(errorCode));
 		}
@@ -173,7 +168,7 @@ class SqliteDatabase : Database {
 	/**
 	 * Get a list of all the table names.
 	 *
-	 * Returns: 
+	 * Returns:
 	 *	An array of all the table names.
 	 */
 	char[][] getTableNames () {
@@ -243,7 +238,6 @@ class SqliteDatabase : Database {
 	sqlite3* database;
 	bool isOpen = false;
 	int errorCode;
-	char[] sql;
 
 	/**
 	 *
@@ -251,8 +245,8 @@ class SqliteDatabase : Database {
 	char[][] getItemNames(char[] type) {
 		char[][] items;
 		Row[] rows = queryFetchAll("SELECT name FROM sqlite_master WHERE type='" ~ type ~ "'");
-		for (int idx = 0; idx < rows.length; idx++) {
-			items ~= rows[idx].get(0);
+		for (size_t i = 0; i < rows.length; i++) {
+			items ~= rows[i].get(0);
 		}
 		return items;
 	}
@@ -270,21 +264,21 @@ class SqliteDatabase : Database {
 }
 
 unittest {
-	version (Ares) {
+	version (Phobos) {
 		void s1 (char[] s) {
-			Cout("" ~ s ~ "\n");
+			std.stdio.writefln("%s", s);
 		}
 
 		void s2 (char[] s) {
-			Cout("   ..." ~ s ~ "\n");
+			std.stdio.writefln("   ...%s", s);
 		}
 	} else {
 		void s1 (char[] s) {
-			writefln("%s", s);
+			tango.io.Stdout.Stdout(s).newline();
 		}
 
 		void s2 (char[] s) {
-			writefln("   ...%s", s);
+			tango.io.Stdout.Stdout("   ..." ~ s).newline();
 		}
 	}
 
@@ -344,5 +338,6 @@ unittest {
 	assert (db.hasIndex("doesnotexist") == false);
 	assert (db.hasView("doesnotexist") == false);
 
+	s2("close");
 	db.close();
 }

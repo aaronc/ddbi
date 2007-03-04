@@ -1,18 +1,18 @@
-/**
+﻿/**
  * Authors: The D DBI project
  *
- * Version: 0.2.4
+ * Version: 0.2.5
  *
  * Copyright: BSD license
  */
 module dbi.Database;
 
-version (Ares) {
-	private static import std.regexp;
-	debug (UnitTest) private import std.io.Console;
-} else {
+version (Phobos) {
 	private static import std.string;
-	debug (UnitTest) private import std.stdio;
+	debug (UnitTest) private static import std.stdio;
+} else {
+	private static import tango.text.Util;
+	debug (UnitTest) private static import tango.io.Stdout;
 }
 private import dbi.DBIException, dbi.Result, dbi.Row, dbi.Statement;
 
@@ -69,44 +69,42 @@ abstract class Database {
 	 *	The prepared statement.
 	 */
 	final Statement prepare (char[] sql) {
-		return new Statement(cast(Database)this, sql);
+		return new Statement(this, sql);
 	}
 
-  /* Escape a string using the database's native method if possible
-   *
-   * Params:
-   *  str = The string to escape
-   *
-   * Returns:
-   *  The escaped string.
-   */
+	/**
+	 * Escape a _string using the database's native method, if possible.
+	 *
+	 * Params:
+	 *	string = The _string to escape,
+	 *
+	 * Returns:
+	 *	The escaped _string.
+	 */
+	char[] escape (char[] string)
+	{
+		char[] result;
+		size_t count = 0;
 
-  char[] escape (char[] str)
-  {
-    char[] result;
-    int count = 0;
+		// Maximum length needed if every char is to be quoted
+		result.length = string.length * 2;
 
-    // Maximum length needed if every char is to be quoted
-    result.length = str.length * 2;
-    for(int i = 0; i < str.length; i++)
-    {
-      switch(str[i])
-      {
-        case '"':
-        case '\'':
-        case '\\':
-          result[count++] = '\\';
-          break;
-        default:
-          break;
-      }
-      result[count++] = str[i];
-    }
+		for (size_t i = 0; i < string.length; i++) {
+			switch (string[i]) {
+				case '"':
+				case '\'':
+				case '\\':
+					result[count++] = '\\';
+					break;
+				default:
+					break;
+			}
+			result[count++] = string[i];
+		}
 
-    result.length = count;
-
-    return result;
-  }
+		result.length = count;
+		return result;
+	}
 
 	/**
 	 * Execute a SQL statement that returns no results.
@@ -197,15 +195,7 @@ abstract class Database {
 	 */
 	final protected char[][char[]] getKeywords (char[] string) {
 		char[][char[]] keywords;
-		version (Ares) {
-			foreach (char[] group; std.regexp.split(string, ";")) {
-				if (group == "") {
-					continue;
-				}
-				char[][] vals = std.regexp.split(group, "=");
-				keywords[vals[0]] = vals[1];
-			}
-		} else {
+		version (Phobos) {
 			foreach (char[] group; std.string.split(string, ";")) {
 				if (group == "") {
 					continue;
@@ -213,6 +203,15 @@ abstract class Database {
 				char[][] vals = std.string.split(group, "=");
 				keywords[vals[0]] = vals[1];
 			}
+		} else {
+			foreach (char[] group; tango.text.Util.delimit(string, ";")) {
+				if (group == "") {
+					continue;
+				}
+				char[][] vals = tango.text.Util.delimit(group, "=");
+				keywords[vals[0]] = vals[1];
+			}
+
 		}
 		return keywords;
 	}
@@ -225,34 +224,32 @@ private class TestDatabase : Database {
 	Result query (char[] sql) {return null;}
 	deprecated int getErrorCode () {return 0;}
 	deprecated char[] getErrorMessage () {return "";}
-
 }
 
 unittest {
-	version (Ares) {
+	version (Phobos) {
 		void s1 (char[] s) {
-			Cout("" ~ s ~ "\n");
+			std.stdio.writefln("%s", s);
 		}
 
 		void s2 (char[] s) {
-			Cout("   ..." ~ s ~ "\n");
+			std.stdio.writefln("   ...%s", s);
 		}
 	} else {
 		void s1 (char[] s) {
-			writefln("%s", s);
+			tango.io.Stdout.Stdout(s).newline();
 		}
 
 		void s2 (char[] s) {
-			writefln("   ...%s", s);
+			tango.io.Stdout.Stdout("   ..." ~ s).newline();
 		}
 	}
-
 
 	s1("dbi.Database:");
 	TestDatabase db;
 
 	s2("getKeywords");
 	char[][char[]] keywords = db.getKeywords("dbname=hi;host=local;");
-	assert(keywords["dbname"] == "hi");
-	assert(keywords["host"] == "local");
+	assert (keywords["dbname"] == "hi");
+	assert (keywords["host"] == "local");
 }

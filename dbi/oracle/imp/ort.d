@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Oracle import library.
  *
  * Part of the D DBI project.
@@ -6,7 +6,7 @@
  * Version:
  *	Oracle 10g revision 2
  *
- *	Import library version 0.03
+ *	Import library version 0.04
  *
  * Authors: The D DBI project
  *
@@ -14,7 +14,7 @@
  */
 module dbi.oracle.imp.ort;
 
-private import dbi.oracle.imp.oratypes, dbi.oracle.imp.oro, dbi.oracle.imp.oci;
+private import dbi.oracle.imp.oci, dbi.oracle.imp.oratypes, dbi.oracle.imp.oro;
 
 /**
  * OCI Type Description
@@ -262,7 +262,7 @@ deprecated extern (C) oratext* OCITypeName (OCIEnv* env, OCIError* err, OCIType*
    RETURNS:
         the name of the type
    NOTES:
-        The type descriptor, 'tdo', must be unpinned when the accessed 
+        The type descriptor, 'tdo', must be unpinned when the accessed
         information is no longer needed.
  */
 
@@ -282,7 +282,7 @@ deprecated extern (C) oratext* OCITypeSchema (OCIEnv* env, OCIError* err, OCITyp
                routine.
    REQUIRES:
         1) All type accessors require that the type be pinned before calling
-           any accessor. 
+           any accessor.
         2) All input parameters must not be NULL and must be valid.
         3) 'n_length' must point to an allocated ub4.
    DESCRIPTION:
@@ -290,7 +290,7 @@ deprecated extern (C) oratext* OCITypeSchema (OCIEnv* env, OCIError* err, OCITyp
    RETURNS:
         the schema name of the type
    NOTES:
-        The type descriptor, 'tdo', must be unpinned when the accessed 
+        The type descriptor, 'tdo', must be unpinned when the accessed
         information is no longer needed.
  */
 
@@ -298,7 +298,7 @@ deprecated extern (C) oratext* OCITypeSchema (OCIEnv* env, OCIError* err, OCITyp
 deprecated extern (C) OCITypeCode OCITypeTypeCode (OCIEnv* env, OCIError* err, OCIType* tdo);
 /*
    NAME: OCITypeTypeCode - OCI Get a Type's Type Code.
-   PARAMETERS: 
+   PARAMETERS:
         env (IN/OUT) - OCI environment handle initialized in object mode
         err (IN/OUT) - error handle. If there is an error, it is
                 recorded in 'err' and this function returns OCI_ERROR.
@@ -306,15 +306,15 @@ deprecated extern (C) OCITypeCode OCITypeTypeCode (OCIEnv* env, OCIError* err, O
                 OCIErrorGet().
         tdo (IN) - pointer to to the type descriptor in the object cache
    REQUIRES:
-        1) All type accessors require that the type be pinned before calling 
-           any accessor. 
+        1) All type accessors require that the type be pinned before calling
+           any accessor.
         2) All input parameters must not be NULL and must be valid.
    DESCRIPTION:
         Get the type code of the type.
    RETURNS:
         The type code of the type.
    NOTES:
-        The type descriptor, 'tdo', must be unpinned when the accessed 
+        The type descriptor, 'tdo', must be unpinned when the accessed
         information is no longer needed.
  */
 
@@ -322,7 +322,7 @@ deprecated extern (C) OCITypeCode OCITypeTypeCode (OCIEnv* env, OCIError* err, O
 deprecated extern (C) OCITypeCode OCITypeCollTypeCode (OCIEnv* env, OCIError* err, OCIType* tdo);
 /*
    NAME: OCITypeCollTypeCode - OCI Get a Domain Type's Type Code.
-   PARAMETERS: 
+   PARAMETERS:
         env (IN/OUT) - OCI environment handle initialized in object mode
         err (IN/OUT) - error handle. If there is an error, it is
                 recorded in 'err' and this function returns OCI_ERROR.
@@ -330,8 +330,8 @@ deprecated extern (C) OCITypeCode OCITypeCollTypeCode (OCIEnv* env, OCIError* er
                 OCIErrorGet().
         tdo (IN) - pointer to to the type descriptor in the object cache
    REQUIRES:
-        1) All type accessors require that the type be pinned before calling 
-           any accessor. 
+        1) All type accessors require that the type be pinned before calling
+           any accessor.
         2) All input parameters must not be NULL and must be valid.
         3) 'tdo' MUST point to a named collection type.
    DESCRIPTION:
@@ -341,27 +341,27 @@ deprecated extern (C) OCITypeCode OCITypeCollTypeCode (OCIEnv* env, OCIError* er
         OCI_TYPECODE_VARRAY for variable length array, and
         OCI_TYPECODE_TABLE for nested tables.
    NOTES:
-        The type descriptor, 'tdo', should be unpinned when the accessed 
+        The type descriptor, 'tdo', should be unpinned when the accessed
         information is no longer needed.
  */
 
 
 deprecated extern (C) oratext* OCITypeVersion (OCIEnv* env, OCIError* err, OCIType* tdo, ub4* v_length);
 /*
-   NAME: OCITypeVersion - OCI Get a Type's user-readable VersioN. 
-   PARAMETERS: 
+   NAME: OCITypeVersion - OCI Get a Type's user-readable VersioN.
+   PARAMETERS:
         env (IN/OUT) - OCI environment handle initialized in object mode
         err (IN/OUT) - error handle. If there is an error, it is
                 recorded in 'err' and this function returns OCI_ERROR.
                 The error recorded in 'err' can be retrieved by calling
                 OCIErrorGet().
         tdo (IN) - pointer to to the type descriptor in the object cache
-        v_length (OUT) - length (in bytes) of the returned user-readable 
-               version.  The caller must allocate space for the ub4 before 
+        v_length (OUT) - length (in bytes) of the returned user-readable
+               version.  The caller must allocate space for the ub4 before
                calling this routine.
    REQUIRES:
-        1) All type accessors require that the type be pinned before calling 
-           any accessor. 
+        1) All type accessors require that the type be pinned before calling
+           any accessor.
         2) All input parameters must not be NULL and must be valid.
         3) 'v_length' must point to an allocated ub4.
    DESCRIPTION:
@@ -369,15 +369,15 @@ deprecated extern (C) oratext* OCITypeVersion (OCIEnv* env, OCIError* err, OCITy
    RETURNS:
         The user-readable version of the type
    NOTES:
-        The type descriptor, 'tdo', must be unpinned when the accessed 
+        The type descriptor, 'tdo', must be unpinned when the accessed
         information is no longer needed.
  */
 
 
 deprecated extern (C) ub4 OCITypeAttrs (OCIEnv* env, OCIError* err, OCIType* tdo);
 /*
-   NAME: OCITypeAttrs - OCI Get a Type's Number of Attributes. 
-   PARAMETERS: 
+   NAME: OCITypeAttrs - OCI Get a Type's Number of Attributes.
+   PARAMETERS:
         env (IN/OUT) - OCI environment handle initialized in object mode
         err (IN/OUT) - error handle. If there is an error, it is
                 recorded in 'err' and this function returns OCI_ERROR.
@@ -385,23 +385,23 @@ deprecated extern (C) ub4 OCITypeAttrs (OCIEnv* env, OCIError* err, OCIType* tdo
                 OCIErrorGet().
         tdo (IN) - pointer to to the type descriptor in the object cache
    REQUIRES:
-        1) All type accessors require that the type be pinned before calling 
-           any accessor. 
+        1) All type accessors require that the type be pinned before calling
+           any accessor.
         2) All input parameters must not be NULL and must be valid.
    DESCRIPTION:
         Get the number of attributes in the type.
    RETURNS:
         The number of attributes in the type. 0 for ALL non-ADTs.
    NOTES:
-        The type descriptor, 'tdo', must be unpinned when the accessed 
+        The type descriptor, 'tdo', must be unpinned when the accessed
         information is no longer needed.
  */
 
 
 deprecated extern (C) ub4 OCITypeMethods (OCIEnv* env, OCIError* err, OCIType* tdo);
 /*
-   NAME: OCITypeMethods - OCI Get a Type's Number of Methods. 
-   PARAMETERS: 
+   NAME: OCITypeMethods - OCI Get a Type's Number of Methods.
+   PARAMETERS:
         env (IN/OUT) - OCI environment handle initialized in object mode
         err (IN/OUT) - error handle. If there is an error, it is
                 recorded in 'err' and this function returns OCI_ERROR.
@@ -409,35 +409,35 @@ deprecated extern (C) ub4 OCITypeMethods (OCIEnv* env, OCIError* err, OCIType* t
                 OCIErrorGet().
         tdo (IN) - pointer to to the type descriptor in the object cache
    REQUIRES:
-        1) All type accessors require that the type be pinned before calling 
-           any accessor. 
+        1) All type accessors require that the type be pinned before calling
+           any accessor.
         2) All input parameters must not be NULL and must be valid.
    DESCRIPTION:
         Get the number of methods in a type.
    RETURNS:
         The number of methods in the type
    NOTES:
-        The type descriptor, 'tdo', must be unpinned when the accessed 
+        The type descriptor, 'tdo', must be unpinned when the accessed
         information is no longer needed.
  */
 
 
 deprecated extern (C) oratext* OCITypeElemName (OCIEnv* env, OCIError* err, OCITypeElem* elem, ub4 n_length);
 /*
-   NAME: OCITypeElemName - OCI Get an Attribute's NaMe. 
-   PARAMETERS: 
+   NAME: OCITypeElemName - OCI Get an Attribute's NaMe.
+   PARAMETERS:
         env (IN/OUT) - OCI environment handle initialized in object mode
         err (IN/OUT) - error handle. If there is an error, it is
                 recorded in 'err' and this function returns OCI_ERROR.
                 The error recorded in 'err' can be retrieved by calling
                 OCIErrorGet().
         elem (IN) - pointer to the type element descriptor in the object cache
-        n_length (OUT) - length (in bytes) of the returned attribute name.  
-               The caller must allocate space for the ub4 before calling this 
+        n_length (OUT) - length (in bytes) of the returned attribute name.
+               The caller must allocate space for the ub4 before calling this
                routine.
    REQUIRES:
-        1) All type accessors require that the type be pinned before calling 
-           any accessor. 
+        1) All type accessors require that the type be pinned before calling
+           any accessor.
         2) All input parameters must not be NULL and must be valid.
         3) 'n_length' must point to an allocated ub4.
    DESCRIPTION:
@@ -445,15 +445,15 @@ deprecated extern (C) oratext* OCITypeElemName (OCIEnv* env, OCIError* err, OCIT
    RETURNS:
         the name of the attribute and the length in n_length
    NOTES:
-        The type must be unpinned when the accessed information is no 
+        The type must be unpinned when the accessed information is no
         longer needed.
  */
 
 
 deprecated extern (C) OCITypeCode OCITypeElemTypeCode (OCIEnv* env, OCIError* err, OCITypeElem* elem);
 /*
-   NAME: OCITypeElemTypeCode - OCI Get an Attribute's TypeCode. 
-   PARAMETERS: 
+   NAME: OCITypeElemTypeCode - OCI Get an Attribute's TypeCode.
+   PARAMETERS:
         env (IN/OUT) - OCI environment handle initialized in object mode
         err (IN/OUT) - error handle. If there is an error, it is
                 recorded in 'err' and this function returns OCI_ERROR.
@@ -461,14 +461,14 @@ deprecated extern (C) OCITypeCode OCITypeElemTypeCode (OCIEnv* env, OCIError* er
                 OCIErrorGet().
         elem (IN) - pointer to the type element descriptor in the object cache
    REQUIRES:
-        1) All type accessors require that the type be pinned before calling 
-           any accessor. 
+        1) All type accessors require that the type be pinned before calling
+           any accessor.
         2) All input parameters must not be NULL and must be valid.
    DESCRIPTION:
         Get the typecode of an attribute's type.
    RETURNS:
-        the typecode of the attribute's type.  If this is a scalar type, the 
-        typecode sufficiently describes the scalar type and no further calls 
+        the typecode of the attribute's type.  If this is a scalar type, the
+        typecode sufficiently describes the scalar type and no further calls
         need to be made.  Valid scalar types include: OCI_TYPECODE_SIGNED8,
         OCI_TYPECODE_UNSIGNED8, OCI_TYPECODE_SIGNED16, OCI_TYPECODE_UNSIGNED16,
         OCI_TYPECODE_SIGNED32, OCI_TYPECODE_UNSIGNED32, OCI_TYPECODE_REAL,
@@ -477,7 +477,7 @@ deprecated extern (C) OCITypeCode OCITypeElemTypeCode (OCIEnv* env, OCIError* er
         This function converts the CREF (stored in the attribute) into a
         typecode.
    NOTES:
-       The type must be unpinned when the accessed information is no 
+       The type must be unpinned when the accessed information is no
        longer needed.
  */
 
@@ -505,7 +505,7 @@ deprecated extern (C) sword OCITypeElemType (OCIEnv* env, OCIError* err, OCIType
      Get the type tdo of the type of this element.
   RETURNS
      OCI_SUCCESS if the function completes successfully.
-     OCI_INVALID_HANDLE if 'env' or 'err' is null. 
+     OCI_INVALID_HANDLE if 'env' or 'err' is null.
      OCI_ERROR if
          1) any of the parameters is null.
 
@@ -519,8 +519,8 @@ deprecated extern (C) ub4 OCITypeElemFlags (OCIEnv* env, OCIError* err, OCITypeE
 /*
    NAME: OCITypeElemFlags - OCI Get a Elem's FLags
                               (inline, constant, virtual, constructor,
-                              destructor). 
-   PARAMETERS: 
+                              destructor).
+   PARAMETERS:
         env (IN/OUT) - OCI environment handle initialized in object mode
         err (IN/OUT) - error handle. If there is an error, it is
                 recorded in 'err' and this function returns OCI_ERROR.
@@ -528,8 +528,8 @@ deprecated extern (C) ub4 OCITypeElemFlags (OCIEnv* env, OCIError* err, OCITypeE
                 OCIErrorGet().
         elem (IN) - pointer to the type element descriptor in the object cache
    REQUIRES:
-        1) All type accessors require that the type be pinned before calling 
-           any accessor. 
+        1) All type accessors require that the type be pinned before calling
+           any accessor.
         2) All input parameters must not be NULL and must be valid.
    DESCRIPTION:
         Get the flags of a type element (attribute, parameter).
@@ -547,7 +547,7 @@ deprecated extern (C) ub1 OCITypeElemNumPrec (OCIEnv* env, OCIError* err, OCITyp
 /*
    NAME: OCITypeElemNumPrec - Get a Number's Precision.  This includes float,
                               decimal, real, double, and oracle number.
-   PARAMETERS: 
+   PARAMETERS:
         env (IN/OUT) - OCI environment handle initialized in object mode
         err (IN/OUT) - error handle. If there is an error, it is
                 recorded in 'err' and this function returns OCI_ERROR.
@@ -557,18 +557,18 @@ deprecated extern (C) ub1 OCITypeElemNumPrec (OCIEnv* env, OCIError* err, OCITyp
    REQUIRES:
         All input parameters must not be NULL and must be valid.
    DESCRIPTION:
-        Get the precision of a float, decimal, long, unsigned long, real, 
-        double, or Oracle number type. 
+        Get the precision of a float, decimal, long, unsigned long, real,
+        double, or Oracle number type.
    RETURNS:
         the precision of the float, decimal, long, unsigned long, real, double,
-        or Oracle number 
+        or Oracle number
  */
 
 
 deprecated extern (C) sb1 OCITypeElemNumScale (OCIEnv* env, OCIError* err, OCITypeElem* elem);
 /*
-   NAME: OCITypeElemNumScale - Get a decimal or oracle Number's Scale 
-   PARAMETERS: 
+   NAME: OCITypeElemNumScale - Get a decimal or oracle Number's Scale
+   PARAMETERS:
         env (IN/OUT) - OCI environment handle initialized in object mode
         err (IN/OUT) - error handle. If there is an error, it is
                 recorded in 'err' and this function returns OCI_ERROR.
@@ -578,9 +578,9 @@ deprecated extern (C) sb1 OCITypeElemNumScale (OCIEnv* env, OCIError* err, OCITy
    REQUIRES:
         All input parameters must not be NULL and must be valid.
    DESCRIPTION:
-        Get the scale of a decimal, or Oracle number type. 
+        Get the scale of a decimal, or Oracle number type.
    RETURNS:
-        the scale of the decimal, or Oracle number 
+        the scale of the decimal, or Oracle number
  */
 
 
@@ -588,7 +588,7 @@ deprecated extern (C) ub4 OCITypeElemLength (OCIEnv* env, OCIError* err, OCIType
 /*
    NAME: OCITypeElemLength - Get a raw, fixed or variable length String's
                              length in bytes.
-   PARAMETERS: 
+   PARAMETERS:
         env (IN/OUT) - OCI environment handle initialized in object mode
         err (IN/OUT) - error handle. If there is an error, it is
                 recorded in 'err' and this function returns OCI_ERROR.
@@ -598,7 +598,7 @@ deprecated extern (C) ub4 OCITypeElemLength (OCIEnv* env, OCIError* err, OCIType
    REQUIRES:
         All input parameters must not be NULL and must be valid.
    DESCRIPTION:
-        Get the length of a raw, fixed or variable length string type. 
+        Get the length of a raw, fixed or variable length string type.
    RETURNS:
         length of the raw, fixed or variable length string
  */
@@ -608,7 +608,7 @@ deprecated extern (C) ub2 OCITypeElemCharSetID (OCIEnv* env, OCIError* err, OCIT
 /*
    NAME: OCITypeElemCharSetID - Get a fixed or variable length String's
                                 character set ID
-   PARAMETERS: 
+   PARAMETERS:
         env (IN/OUT) - OCI environment handle initialized in object mode
         err (IN/OUT) - error handle. If there is an error, it is
                 recorded in 'err' and this function returns OCI_ERROR.
@@ -618,7 +618,7 @@ deprecated extern (C) ub2 OCITypeElemCharSetID (OCIEnv* env, OCIError* err, OCIT
    REQUIRES:
         All input parameters must not be NULL and must be valid.
    DESCRIPTION:
-        Get the character set ID of a fixed or variable length string type. 
+        Get the character set ID of a fixed or variable length string type.
    RETURNS:
         character set ID of the fixed or variable length string
  */
@@ -628,7 +628,7 @@ deprecated extern (C) ub2 OCITypeElemCharSetForm (OCIEnv* env, OCIError* err, OC
 /*
    NAME: OCITypeElemCharSetForm - Get a fixed or variable length String's
                                   character set specification form.
-   PARAMETERS: 
+   PARAMETERS:
         env (IN/OUT) - OCI environment handle initialized in object mode
         err (IN/OUT) - error handle. If there is an error, it is
                 recorded in 'err' and this function returns OCI_ERROR.
@@ -652,19 +652,19 @@ deprecated extern (C) ub2 OCITypeElemCharSetForm (OCIEnv* env, OCIError* err, OC
 
 deprecated extern (C) sword OCITypeElemParameterizedType (OCIEnv* env, OCIError* err, OCITypeElem* elem, OCIType** type_stored);
 /*
-   NAME: OCITypeElemParameterizedType 
-   PARAMETERS: 
+   NAME: OCITypeElemParameterizedType
+   PARAMETERS:
         env (IN/OUT) - OCI environment handle initialized in object mode
         err (IN/OUT) - error handle. If there is an error, it is
                 recorded in 'err' and this function returns OCI_ERROR.
                 The error recorded in 'err' can be retrieved by calling
                 OCIErrorGet().
         elem (IN) - pointer to the type element descriptor in the object cache
-        type_stored (OUT) - If the function completes successfully, 
+        type_stored (OUT) - If the function completes successfully,
                and the parameterized type is complex, 'type_stored' is NULL.
-               Otherwise, 'type_stored' points to the type descriptor (in the 
-               object cache) of the type that is stored in the parameterized 
-               type.  The caller must allocate space for the OCIType* 
+               Otherwise, 'type_stored' points to the type descriptor (in the
+               object cache) of the type that is stored in the parameterized
+               type.  The caller must allocate space for the OCIType*
                before calling this routine and must not write into the space.
    REQUIRES:
         All input parameters must be valid.
@@ -678,16 +678,16 @@ deprecated extern (C) sword OCITypeElemParameterizedType (OCIEnv* env, OCIError*
         For example, it is set for REF T or VARRAY(n) OF REF T.
    RETURNS:
         OCI_SUCCESS if the function completes successfully.
-        OCI_INVALID_HANDLE if 'env' or 'err' is null. 
+        OCI_INVALID_HANDLE if 'env' or 'err' is null.
         OCI_ERROR if
             1) any of the parameters is null.
             2) 'type_stored' is not NULL but points to NULL data.
    NOTES:
-        Complex parameterized types will be in a future release (once 
-        typedefs are supported.  When setting the parameterized type 
+        Complex parameterized types will be in a future release (once
+        typedefs are supported.  When setting the parameterized type
         information, the user must typedef the contents if it's a
         complex parameterized type.  Ex. for varray<varray<car>>, use
-        'typedef varray<car> varcar' and then use varray<varcar>. 
+        'typedef varray<car> varcar' and then use varray<varcar>.
  */
 
 
@@ -719,35 +719,35 @@ deprecated extern (C) OCITypeCode OCITypeElemExtTypeCode (OCIEnv* env, OCIError*
 
 deprecated extern (C) sword OCITypeAttrByName (OCIEnv* env, OCIError* err, OCIType* tdo, oratext* name, ub4 n_length, OCITypeElem** elem);
 /*
-   NAME: OCITypeAttrByName - OCI Get an Attribute By Name. 
-   PARAMETERS: 
+   NAME: OCITypeAttrByName - OCI Get an Attribute By Name.
+   PARAMETERS:
         env (IN/OUT) - OCI environment handle initialized in object mode
         err (IN/OUT) - error handle. If there is an error, it is
                 recorded in 'err' and this function returns OCI_ERROR.
                 The error recorded in 'err' can be retrieved by calling
                 OCIErrorGet().
         tdo (IN) - pointer to to the type descriptor in the object cache
-        name (IN) - the attribute's name 
+        name (IN) - the attribute's name
         n_length (IN) - length (in bytes) of the 'name' parameter
-        elem (OUT) - If this function completes successfully, 'elem' points to 
+        elem (OUT) - If this function completes successfully, 'elem' points to
                the selected type element descriptor pertaining to the
                attributein the object cache.
    REQUIRES:
-        1) All type accessors require that the type be pinned before calling 
-           any accessor. 
-        2) if 'tdo' is not null, it must point to a valid type descriptor 
+        1) All type accessors require that the type be pinned before calling
+           any accessor.
+        2) if 'tdo' is not null, it must point to a valid type descriptor
            in the object cache.
    DESCRIPTION:
-        Get an attribute given its name.  
+        Get an attribute given its name.
    RETURNS:
         OCI_SUCCESS if the function completes successfully.
-        OCI_INVALID_HANDLE if 'env' or 'err' is null. 
+        OCI_INVALID_HANDLE if 'env' or 'err' is null.
         OCI_ERROR if
             1) any of the required parameters is null.
-            2) the type does not contain an attribute with the input 'name'. 
+            2) the type does not contain an attribute with the input 'name'.
             3) 'name' is NULL.
    NOTES:
-        The type descriptor, 'tdo', must be unpinned when the accessed 
+        The type descriptor, 'tdo', must be unpinned when the accessed
         information is no longer needed.
         Schema and type names are CASE-SENSITIVE. If they have been created
         via SQL, you need to use uppercase names.
@@ -757,7 +757,7 @@ deprecated extern (C) sword OCITypeAttrByName (OCIEnv* env, OCIError* err, OCITy
 deprecated extern (C) sword OCITypeAttrNext (OCIEnv* env, OCIError* err, OCITypeIter* iterator_ort, OCITypeElem** elem);
 /*
    NAME: OCITypeAttrNext - OCI Get an Attribute By Iteration.
-   PARAMETERS: 
+   PARAMETERS:
         env (IN/OUT) - OCI environment handle initialized in object mode
         err (IN/OUT) - error handle. If there is an error, it is
                 recorded in 'err' and this function returns OCI_ERROR.
@@ -765,13 +765,13 @@ deprecated extern (C) sword OCITypeAttrNext (OCIEnv* env, OCIError* err, OCIType
                 OCIErrorGet().
         iterator_ort (IN/OUT) - iterator for retrieving the next attribute;
                see OCITypeIterNew() to initialize iterator.
-        elem (OUT) - If this function completes successfully, 'elem' points to 
+        elem (OUT) - If this function completes successfully, 'elem' points to
                the selected type element descriptor pertaining to the
                attributein the object cache.
    REQUIRES:
-        1) All type accessors require that the type be pinned before calling 
-            any accessor. 
-        2) if 'tdo' is not null, it must point to a valid type descriptor 
+        1) All type accessors require that the type be pinned before calling
+            any accessor.
+        2) if 'tdo' is not null, it must point to a valid type descriptor
            in the object cache.
    DESCRIPTION:
         Iterate to the next attribute to retrieve.
@@ -779,11 +779,11 @@ deprecated extern (C) sword OCITypeAttrNext (OCIEnv* env, OCIError* err, OCIType
         OCI_SUCCESS if the function completes successfully.
         OCI_NO_DATA if there are no more attributes to iterate on; use
             OCITypeIterSet() to reset the iterator if necessary.
-        OCI_INVALID_HANDLE if 'env' or 'err' is null. 
+        OCI_INVALID_HANDLE if 'env' or 'err' is null.
         OCI_ERROR if
             1) any of the required parameters is null.
    NOTES:
-        The type must be unpinned when the accessed information is no 
+        The type must be unpinned when the accessed information is no
         longer needed.
  */
 
@@ -791,7 +791,7 @@ deprecated extern (C) sword OCITypeAttrNext (OCIEnv* env, OCIError* err, OCIType
 deprecated extern (C) sword OCITypeCollElem (OCIEnv* env, OCIError* err, OCIType* tdo, OCITypeElem** element);
 /*
    NAME: OCITypeCollElem
-   PARAMETERS: 
+   PARAMETERS:
         env (IN/OUT) - OCI environment handle initialized in object mode
         err (IN/OUT) - error handle. If there is an error, it is
                 recorded in 'err' and this function returns OCI_ERROR.
@@ -817,23 +817,23 @@ deprecated extern (C) sword OCITypeCollElem (OCIEnv* env, OCIError* err, OCIType
         array or the rowtype of a nested table.
    RETURNS:
         OCI_SUCCESS if the function completes successfully.
-        OCI_INVALID_HANDLE if 'env' or 'err' is null. 
+        OCI_INVALID_HANDLE if 'env' or 'err' is null.
         OCI_ERROR if
             1) any of the parameters is null.
             2) the type TDO does not point to a valid collection's type.
    NOTES:
-        Complex parameterized types will be in a future release (once 
-        typedefs are supported.  When setting the parameterized type 
+        Complex parameterized types will be in a future release (once
+        typedefs are supported.  When setting the parameterized type
         information, the user must typedef the contents if it's a
         complex parameterized type.  Ex. for varray<varray<car>>, use
-        'typedef varray<car> varcar' and then use varray<varcar>. 
+        'typedef varray<car> varcar' and then use varray<varcar>.
  */
 
 
 deprecated extern (C) sword OCITypeCollSize (OCIEnv* env, OCIError* err, OCIType* tdo, ub4* num_elems);
 /*
    NAME: OCITypeCollSize - OCI Get a Collection's Number of Elements.
-   PARAMETERS: 
+   PARAMETERS:
         env (IN/OUT) - OCI environment handle initialized in object mode
         err (IN/OUT) - error handle. If there is an error, it is
                 recorded in 'err' and this function returns OCI_ERROR.
@@ -845,20 +845,20 @@ deprecated extern (C) sword OCITypeCollSize (OCIEnv* env, OCIError* err, OCIType
         All input parameters must be valid. tdo points to an array type
         defined as a domain.
    DESCRIPTION:
-        Get the number of elements stored in a fixed array or the maximum 
+        Get the number of elements stored in a fixed array or the maximum
         number of elements in a variable array.
    RETURNS:
         OCI_SUCCESS if the function completes successfully.
-        OCI_INVALID_HANDLE if 'env' or 'err' is null. 
+        OCI_INVALID_HANDLE if 'env' or 'err' is null.
         OCI_ERROR if
             1) any of the parameters is null.
             2) 'tdo' does not point to a domain with a collection type.
    NOTES:
-        Complex parameterized types will be in a future release (once 
-        typedefs are supported.  When setting the parameterized type 
+        Complex parameterized types will be in a future release (once
+        typedefs are supported.  When setting the parameterized type
         information, the user must typedef the contents if it's a
         complex parameterized type.  Ex. for varray<varray<car>>, use
-        'typedef varray<car> varcar' and then use varray<varcar>. 
+        'typedef varray<car> varcar' and then use varray<varcar>.
  */
 
 
@@ -891,7 +891,7 @@ extern (C) sword OCITypeCollExtTypeCode (OCIEnv* env, OCIError* err, OCIType* td
         The type must be unpinned when the accessed information is no
         longer needed.
  */
- 
+
 
 deprecated extern (C) ub4 OCITypeMethodOverload (OCIEnv* env, OCIError* err, OCIType* tdo, oratext method_name, ub4 m_length);
 /*
@@ -925,15 +925,15 @@ deprecated extern (C) ub4 OCITypeMethodOverload (OCIEnv* env, OCIError* err, OCI
 
 deprecated extern (C) sword OCITypeMethodByName (OCIEnv* env, OCIError* err, OCIType* tdo, oratext* method_name, ub4 m_length, OCITypeMethod** mdos);
 /*
-   NAME: OCITypeMethodByName - OCI Get one or more Methods with Name. 
-   PARAMETERS: 
+   NAME: OCITypeMethodByName - OCI Get one or more Methods with Name.
+   PARAMETERS:
         env (IN/OUT) - OCI environment handle initialized in object mode
         err (IN/OUT) - error handle. If there is an error, it is
                 recorded in 'err' and this function returns OCI_ERROR.
                 The error recorded in 'err' can be retrieved by calling
                 OCIErrorGet().
         tdo (IN) - pointer to to the type descriptor in the object cache
-        method_name (IN) - the methods' name  
+        method_name (IN) - the methods' name
         m_length (IN) - length (in bytes) of the 'name' parameter
         mdos (OUT) - If this function completes successfully, 'mdos' points to
                 the selected methods in the object cache.  The caller must
@@ -942,21 +942,21 @@ deprecated extern (C) sword OCITypeMethodByName (OCIEnv* env, OCIError* err, OCI
                 The number of OCITypeMethod pointers that will be returned can
                 be obtained by calling 'OCITypeMethodOverload()'.
    REQUIRES:
-        1) All type accessors require that the type be pinned before calling 
-           any accessor. 
-        2) if 'tdo' is not null, it must point to a valid type descriptor 
+        1) All type accessors require that the type be pinned before calling
+           any accessor.
+        2) if 'tdo' is not null, it must point to a valid type descriptor
            in the object cache.
    DESCRIPTION:
-        Get one or more methods given the name.  
+        Get one or more methods given the name.
    RETURNS:
         OCI_SUCCESS if the function completes successfully.
-        OCI_INVALID_HANDLE if 'env' or 'err' is null. 
+        OCI_INVALID_HANDLE if 'env' or 'err' is null.
         OCI_ERROR if
             1) any of the required parameters is null.
             2) No methods in type has name 'name'.
             3) 'mdos' is not NULL but points to NULL data.
    NOTES:
-        The type must be unpinned when the accessed information is no 
+        The type must be unpinned when the accessed information is no
         longer needed.
         Schema and type names are CASE-SENSITIVE. If they have been created
         via SQL, you need to use uppercase names.
@@ -966,7 +966,7 @@ deprecated extern (C) sword OCITypeMethodByName (OCIEnv* env, OCIError* err, OCI
 deprecated extern (C) sword OCITypeMethodNext (OCIEnv* env, OCIError* err, OCITypeIter* iterator_ort, OCITypeMethod** mdo);
 /*
    NAME: OCITypeMethodNext - OCI Get a Method By Iteration.
-   PARAMETERS: 
+   PARAMETERS:
         env (IN/OUT) - OCI environment handle initialized in object mode
         err (IN/OUT) - error handle. If there is an error, it is
                 recorded in 'err' and this function returns OCI_ERROR.
@@ -974,15 +974,15 @@ deprecated extern (C) sword OCITypeMethodNext (OCIEnv* env, OCIError* err, OCITy
                 OCIErrorGet().
         iterator_ort (IN/OUT) - iterator for retrieving the next method;
                see OCITypeIterNew() to set iterator.
-        mdo (OUT) - If this function completes successfully, 'mdo' points to 
-               the selected method descriptor in the object cache.  Positions 
+        mdo (OUT) - If this function completes successfully, 'mdo' points to
+               the selected method descriptor in the object cache.  Positions
                start at 1.  The caller must allocate space for the
-               OCITypeMethod* before calling this routine and must not write 
-               nto the space. 
+               OCITypeMethod* before calling this routine and must not write
+               nto the space.
    REQUIRES:
-         1) All type accessors require that the type be pinned before calling 
-            any accessor. 
-        2) if 'tdo' is not null, it must point to a valid type descriptor 
+         1) All type accessors require that the type be pinned before calling
+            any accessor.
+        2) if 'tdo' is not null, it must point to a valid type descriptor
            in the object cache.
    DESCRIPTION:
         Iterate to the next method to retrieve.
@@ -990,20 +990,20 @@ deprecated extern (C) sword OCITypeMethodNext (OCIEnv* env, OCIError* err, OCITy
         OCI_SUCCESS if the function completes successfully.
         OCI_NO_DATA if there are no more attributes to iterate on; use
             OCITypeIterSet() to reset the iterator if necessary.
-        OCI_INVALID_HANDLE if 'env' or 'err' is null. 
+        OCI_INVALID_HANDLE if 'env' or 'err' is null.
         OCI_ERROR if
             1) any of the required parameters is null.
             2) 'mdo' is not NULL but points to NULL data.
    NOTES:
-        The type must be unpinned when the accessed information is no 
+        The type must be unpinned when the accessed information is no
         longer needed.
  */
 
 
 deprecated extern (C) oratext* OCITypeMethodName (OCIEnv* env, OCIError* err, OCITypeMethod* mdo, ub4* n_length);
 /*
-   NAME: OCITypeMethodName - OCI Get a Method's NaMe. 
-   PARAMETERS: 
+   NAME: OCITypeMethodName - OCI Get a Method's NaMe.
+   PARAMETERS:
         env (IN/OUT) - OCI environment handle initialized in object mode
         err (IN/OUT) - error handle. If there is an error, it is
                 recorded in 'err' and this function returns OCI_ERROR.
@@ -1013,23 +1013,23 @@ deprecated extern (C) oratext* OCITypeMethodName (OCIEnv* env, OCIError* err, OC
         n_length (OUT) - length (in bytes) of the 'name' parameter.  The caller
                must allocate space for the ub4 before calling this routine.
    REQUIRES:
-        1) All type accessors require that the type be pinned before calling 
-           any accessor. 
+        1) All type accessors require that the type be pinned before calling
+           any accessor.
         2) All input parameters must not be NULL and must be valid.
    DESCRIPTION:
         Get the (non-unique) real name of the method.
    RETURNS:
         the non-unique name of the method or NULL if there is an error.
    NOTES:
-        The type must be unpinned when the accessed information is no 
+        The type must be unpinned when the accessed information is no
         longer needed.
  */
 
 
 deprecated extern (C) OCITypeEncap OCITypeMethodEncap (OCIEnv* env, OCIError* err, OCITypeMethod* mdo);
 /*
-   NAME: OCITypeMethodEncap - Get a Method's ENcapsulation (private/public). 
-   PARAMETERS: 
+   NAME: OCITypeMethodEncap - Get a Method's ENcapsulation (private/public).
+   PARAMETERS:
         env (IN/OUT) - OCI environment handle initialized in object mode
         err (IN/OUT) - error handle. If there is an error, it is
                 recorded in 'err' and this function returns OCI_ERROR.
@@ -1037,15 +1037,15 @@ deprecated extern (C) OCITypeEncap OCITypeMethodEncap (OCIEnv* env, OCIError* er
                 OCIErrorGet().
         mdo (IN) - pointer to the method descriptor in the object cache
    REQUIRES:
-        1) All type accessors require that the type be pinned before calling 
-           any accessor. 
+        1) All type accessors require that the type be pinned before calling
+           any accessor.
         2) All input parameters must not be NULL and must be valid.
    DESCRIPTION:
         Get the encapsulation (private, or public) of a method.
    RETURNS:
         the encapsulation (private, or public) of the method
    NOTES:
-        The type must be unpinned when the accessed information is no 
+        The type must be unpinned when the accessed information is no
         longer needed.
  */
 
@@ -1054,8 +1054,8 @@ deprecated extern (C) OCITypeMethodFlag OCITypeMethodFlags (OCIEnv* env, OCIErro
 /*
    NAME: OCITypeMethodFlags - OCI Get a Method's FLags
                               (inline, constant, virtual, constructor,
-                              destructor). 
-   PARAMETERS: 
+                              destructor).
+   PARAMETERS:
         env (IN/OUT) - OCI environment handle initialized in object mode
         err (IN/OUT) - error handle. If there is an error, it is
                 recorded in 'err' and this function returns OCI_ERROR.
@@ -1063,8 +1063,8 @@ deprecated extern (C) OCITypeMethodFlag OCITypeMethodFlags (OCIEnv* env, OCIErro
                 OCIErrorGet().
         mdo (IN) - pointer to the method descriptor in the object cache
    REQUIRES:
-        1) All type accessors require that the type be pinned before calling 
-           any accessor. 
+        1) All type accessors require that the type be pinned before calling
+           any accessor.
         2) All input parameters must not be NULL and must be valid.
    DESCRIPTION:
         Get the flags (inline, constant, virutal, constructor, destructor) of
@@ -1073,7 +1073,7 @@ deprecated extern (C) OCITypeMethodFlag OCITypeMethodFlags (OCIEnv* env, OCIErro
         the flags (inline, constant, virutal, constructor, destructor) of
         the method
    NOTES:
-        The type must be unpinned when the accessed information is no 
+        The type must be unpinned when the accessed information is no
         longer needed.
  */
 
@@ -1081,19 +1081,19 @@ deprecated extern (C) OCITypeMethodFlag OCITypeMethodFlags (OCIEnv* env, OCIErro
 deprecated extern (C) sword OCITypeMethodMap (OCIEnv* env, OCIError* err, OCIType* tdo, OCITypeMethod** mdo);
 /*
    NAME: OCITypeMethodMap - OCI Get the Method's MAP function.
-   PARAMETERS: 
+   PARAMETERS:
         env (IN/OUT) - OCI environment handle initialized in object mode
         err (IN/OUT) - error handle. If there is an error, it is
                 recorded in 'err' and this function returns OCI_ERROR.
                 The error recorded in 'err' can be retrieved by calling
                 OCIErrorGet().
         tdo (IN) - pointer to to the type descriptor in the object cache
-        mdo (OUT) - If this function completes successfully, and there is a 
-               map function for this type, 'mdo' points to the selected method 
+        mdo (OUT) - If this function completes successfully, and there is a
+               map function for this type, 'mdo' points to the selected method
                descriptor in the object cache.  Otherwise, 'mdo' is null.
    REQUIRES:
-        1) All type accessors require that the type be pinned before calling 
-           any accessor. 
+        1) All type accessors require that the type be pinned before calling
+           any accessor.
         2) All required input parameters must not be NULL and must be valid.
    DESCRIPTION:
         A type may have only one map function.  'OCITypeMethodMap()' finds
@@ -1103,11 +1103,11 @@ deprecated extern (C) sword OCITypeMethodMap (OCIEnv* env, OCIError* err, OCITyp
         to null and an error is returned.
    RETURNS:
         OCI_SUCCESS if the function completes successfully.
-        OCI_INVALID_HANDLE if 'env' or 'err' is null. 
+        OCI_INVALID_HANDLE if 'env' or 'err' is null.
         OCI_ERROR if
             the type does not contain a map function.
    NOTES:
-        The type must be unpinned when the accessed information is no 
+        The type must be unpinned when the accessed information is no
         longer needed.
  */
 
@@ -1115,19 +1115,19 @@ deprecated extern (C) sword OCITypeMethodMap (OCIEnv* env, OCIError* err, OCITyp
 deprecated extern (C) sword OCITypeMethodOrder (OCIEnv* env, OCIError* err, OCIType* tdo, OCITypeMethod ** mdo);
 /*
    NAME: OCITypeMethodOrder - OCI Get the Method's ORder function.
-   PARAMETERS: 
+   PARAMETERS:
         env (IN/OUT) - OCI environment handle initialized in object mode
         err (IN/OUT) - error handle. If there is an error, it is
                 recorded in 'err' and this function returns OCI_ERROR.
                 The error recorded in 'err' can be retrieved by calling
                 OCIErrorGet().
         tdo (IN) - pointer to to the type descriptor in the object cache
-        mdo (OUT) - If this function completes successfully, and there is a 
-               map function for this type, 'mdo' points to the selected method 
+        mdo (OUT) - If this function completes successfully, and there is a
+               map function for this type, 'mdo' points to the selected method
                descriptor in the object cache.  Otherwise, 'mdo' is null.
    REQUIRES:
-        1) All type accessors require that the type be pinned before calling 
-           any accessor. 
+        1) All type accessors require that the type be pinned before calling
+           any accessor.
         2) All required input parameters must not be NULL and must be valid.
    DESCRIPTION:
         A type may have only one ORder or MAP function. 'OCITypeMethodOrder()'
@@ -1137,19 +1137,19 @@ deprecated extern (C) sword OCITypeMethodOrder (OCIEnv* env, OCIError* err, OCIT
         set to null and an error is returned.
    RETURNS:
         OCI_SUCCESS if the function completes successfully.
-        OCI_INVALID_HANDLE if 'env' or 'err' is null. 
+        OCI_INVALID_HANDLE if 'env' or 'err' is null.
         OCI_ERROR if
             the type does not contain a map function.
    NOTES:
-        The type must be unpinned when the accessed information is no 
+        The type must be unpinned when the accessed information is no
         longer needed.
  */
 
 
 deprecated extern (C) ub4 OCITypeMethodParams (OCIEnv* env, OCIError* err, OCITypeMethod* mdo);
 /*
-   NAME: OCITypeMethodParams - OCI Get a Method's Number of Parameters. 
-   PARAMETERS: 
+   NAME: OCITypeMethodParams - OCI Get a Method's Number of Parameters.
+   PARAMETERS:
         env (IN/OUT) - OCI environment handle initialized in object mode
         err (IN/OUT) - error handle. If there is an error, it is
                 recorded in 'err' and this function returns OCI_ERROR.
@@ -1157,15 +1157,15 @@ deprecated extern (C) ub4 OCITypeMethodParams (OCIEnv* env, OCIError* err, OCITy
                 OCIErrorGet().
         mdo (IN) - pointer to the method descriptor in the object cache
    REQUIRES:
-        1) All type accessors require that the type be pinned before calling 
-           any accessor. 
+        1) All type accessors require that the type be pinned before calling
+           any accessor.
         2) All input parameters must not be NULL and must be valid.
    DESCRIPTION:
         Get the number of parameters in a method.
    RETURNS:
         the number of parameters in the method
    NOTES:
-        The type must be unpinned when the accessed information is no 
+        The type must be unpinned when the accessed information is no
         longer needed.
  */
 
@@ -1173,37 +1173,37 @@ deprecated extern (C) ub4 OCITypeMethodParams (OCIEnv* env, OCIError* err, OCITy
 deprecated extern (C) sword OCITypeResult (OCIEnv* env, OCIError* err, OCITypeMethod* mdo, OCITypeElem ** elem);
 /*
    NAME: OCITypeResult - OCI Get a method's result type descriptor.
-   PARAMETERS: 
+   PARAMETERS:
         env (IN/OUT) - OCI environment handle initialized in object mode
         err (IN/OUT) - error handle. If there is an error, it is
                 recorded in 'err' and this function returns OCI_ERROR.
                 The error recorded in 'err' can be retrieved by calling
                 OCIErrorGet().
         mdo (IN) - pointer to the method descriptor in the object cache
-        elem (OUT) - If this function completes successfully, 'rdo' points to 
+        elem (OUT) - If this function completes successfully, 'rdo' points to
                the selected result (parameter) descriptor in the object cache.
    REQUIRES:
-        1) All type accessors require that the type be pinned before calling 
+        1) All type accessors require that the type be pinned before calling
            any accessor.
         2) 'elem' MUST be the address of an OCITypeElem pointer.
    DESCRIPTION:
         Get the result of a method.
    RETURNS:
         OCI_SUCCESS if the function completes successfully.
-        OCI_INVALID_HANDLE if 'env' or 'err' is null. 
+        OCI_INVALID_HANDLE if 'env' or 'err' is null.
         OCI_ERROR if
             1) any of the required parameters is null.
             2) method returns no results.
    NOTES:
-        The method must be unpinned when the accessed information is no 
+        The method must be unpinned when the accessed information is no
         longer needed.
  */
 
 
 deprecated extern (C) sword OCITypeParamByPos (OCIEnv* env, OCIError* err, OCITypeMethod* mdo, ub4 position, OCITypeElem** elem);
 /*
-   NAME: OCITypeParamByPos - OCI Get a Parameter in a method By Position. 
-   PARAMETERS: 
+   NAME: OCITypeParamByPos - OCI Get a Parameter in a method By Position.
+   PARAMETERS:
         env (IN/OUT) - OCI environment handle initialized in object mode
         err (IN/OUT) - error handle. If there is an error, it is
                 recorded in 'err' and this function returns OCI_ERROR.
@@ -1211,31 +1211,31 @@ deprecated extern (C) sword OCITypeParamByPos (OCIEnv* env, OCIError* err, OCITy
                 OCIErrorGet().
         mdo (IN) - pointer to the method descriptor in the object cache
         position (IN) - the parameter's position.  Positions start at 1.
-        elem (OUT) - If this function completes successfully, 'elem' points to 
+        elem (OUT) - If this function completes successfully, 'elem' points to
                the selected parameter descriptor in the object cache.
    REQUIRES:
-        1) All type accessors require that the type be pinned before calling 
-           any accessor. 
+        1) All type accessors require that the type be pinned before calling
+           any accessor.
    DESCRIPTION:
-        Get a parameter given its position in the method.  Positions start 
-        at 1.  
+        Get a parameter given its position in the method.  Positions start
+        at 1.
    RETURNS:
         OCI_SUCCESS if the function completes successfully.
-        OCI_INVALID_HANDLE if 'env' or 'err' is null. 
+        OCI_INVALID_HANDLE if 'env' or 'err' is null.
         OCI_ERROR if
             1) any of the required parameters is null.
             2) 'position' is not >= 1 and <= the number of parameters in the
                method.
    NOTES:
-        The type must be unpinned when the accessed information is no 
+        The type must be unpinned when the accessed information is no
         longer needed.
  */
 
 
 deprecated extern (C) sword OCITypeParamByName (OCIEnv* env, OCIError* err, OCITypeMethod* mdo, oratext* name, ub4 n_length, OCITypeElem** elem);
 /*
-   NAME: OCITypeParamByName - OCI Get a Parameter in a method By Name. 
-   PARAMETERS: 
+   NAME: OCITypeParamByName - OCI Get a Parameter in a method By Name.
+   PARAMETERS:
         env (IN/OUT) - OCI environment handle initialized in object mode
         err (IN/OUT) - error handle. If there is an error, it is
                 recorded in 'err' and this function returns OCI_ERROR.
@@ -1244,23 +1244,23 @@ deprecated extern (C) sword OCITypeParamByName (OCIEnv* env, OCIError* err, OCIT
         mdo (IN) - pointer to the method descriptor in the object cache
         name (IN) - the parameter's name
         n_length (IN) - length (in bytes) of the 'name' parameter
-        elem (OUT) - If this function completes successfully, 'elem' points to 
+        elem (OUT) - If this function completes successfully, 'elem' points to
                the selected parameter descriptor in the object cache.
    REQUIRES:
-        1) All type accessors require that the type be pinned before calling 
-           any accessor. 
-        2) if 'mdo' is not null, it must point to a valid method descriptor 
+        1) All type accessors require that the type be pinned before calling
+           any accessor.
+        2) if 'mdo' is not null, it must point to a valid method descriptor
            in the object cache.
    DESCRIPTION:
-        Get a parameter given its name.  
+        Get a parameter given its name.
    RETURNS:
         OCI_SUCCESS if the function completes successfully.
-        OCI_INVALID_HANDLE if 'env' or 'err' is null. 
+        OCI_INVALID_HANDLE if 'env' or 'err' is null.
         OCI_ERROR if
             1) any of the required parameters is null.
-            2) the method does not contain a parameter with the input 'name'. 
+            2) the method does not contain a parameter with the input 'name'.
    NOTES:
-        The type must be unpinned when the accessed information is no 
+        The type must be unpinned when the accessed information is no
         longer needed.
  */
 
@@ -1268,7 +1268,7 @@ deprecated extern (C) sword OCITypeParamByName (OCIEnv* env, OCIError* err, OCIT
 deprecated extern (C) sword OCITypeParamPos (OCIEnv* env, OCIError* err, OCITypeMethod* mdo, oratext* name, ub4 n_length, ub4* position, OCITypeElem** elem);
 /*
    NAME: OCITypeParamPos - OCI Get a parameter's position in a method
-   PARAMETERS: 
+   PARAMETERS:
         env (IN/OUT) - OCI environment handle initialized in object mode
         err (IN/OUT) - error handle. If there is an error, it is
                 recorded in 'err' and this function returns OCI_ERROR.
@@ -1277,27 +1277,27 @@ deprecated extern (C) sword OCITypeParamPos (OCIEnv* env, OCIError* err, OCIType
         mdo (IN) - pointer to the method descriptor in the object cache
         name (IN) - the parameter's name
         n_length (IN) - length (in bytes) of the 'name' parameter
-        position (OUT) - If this function completes successfully, 'position' 
-               points to the position of the parameter in the method starting 
+        position (OUT) - If this function completes successfully, 'position'
+               points to the position of the parameter in the method starting
                at position 1. position MUST point to space for a ub4.
-        elem (OUT) - If this function completes successfully, and 
-               the input 'elem' is not NULL, 'elem' points to the selected 
+        elem (OUT) - If this function completes successfully, and
+               the input 'elem' is not NULL, 'elem' points to the selected
                parameter descriptor in the object cache.
    REQUIRES:
-        1) All type accessors require that the type be pinned before calling 
-           any accessor. 
-        2) if 'mdo' is not null, it must point to a valid method descriptor 
+        1) All type accessors require that the type be pinned before calling
+           any accessor.
+        2) if 'mdo' is not null, it must point to a valid method descriptor
            in the object cache.
    DESCRIPTION:
         Get the position of a parameter in a method.  Positions start at 1.
    RETURNS:
         OCI_SUCCESS if the function completes successfully.
-        OCI_INVALID_HANDLE if 'env' or 'err' is null. 
+        OCI_INVALID_HANDLE if 'env' or 'err' is null.
         OCI_ERROR if
             1) any of the parameters is null.
-            2) the method does not contain a parameter with the input 'name'. 
+            2) the method does not contain a parameter with the input 'name'.
    NOTES:
-        The type must be unpinned when the accessed information is no 
+        The type must be unpinned when the accessed information is no
         longer needed.
  */
 
@@ -1305,7 +1305,7 @@ deprecated extern (C) sword OCITypeParamPos (OCIEnv* env, OCIError* err, OCIType
 deprecated extern (C) OCITypeParamMode OCITypeElemParamMode (OCIEnv* env, OCIError* err, OCITypeElem* elem);
 /*
    NAME: OCITypeElemParamMode - OCI Get a parameter's mode
-   PARAMETERS: 
+   PARAMETERS:
         env (IN/OUT) - OCI environment handle initialized in object mode
         err (IN/OUT) - error handle. If there is an error, it is
                 recorded in 'err' and this function returns OCI_ERROR.
@@ -1314,23 +1314,23 @@ deprecated extern (C) OCITypeParamMode OCITypeElemParamMode (OCIEnv* env, OCIErr
         elem (IN) - pointer to the parameter descriptor in the object cache
                 (represented by an OCITypeElem)
    REQUIRES:
-        1) All type accessors require that the type be pinned before calling 
-           any accessor. 
+        1) All type accessors require that the type be pinned before calling
+           any accessor.
         2) All input parameters must not be NULL and must be valid.
    DESCRIPTION:
         Get the mode (in, out, or in/out) of the parameter.
    RETURNS:
         the mode (in, out, or in/out) of the parameter
    NOTES:
-        The type must be unpinned when the accessed information is no 
+        The type must be unpinned when the accessed information is no
         longer needed.
  */
 
 
 deprecated extern (C) oratext* OCITypeElemDefaultValue (OCIEnv* env, OCIError* err, OCITypeElem* elem, ub4* d_v_length);
 /*
-   NAME: OCITypeElemDefaultValue - OCI Get the element's Default Value. 
-   PARAMETERS: 
+   NAME: OCITypeElemDefaultValue - OCI Get the element's Default Value.
+   PARAMETERS:
         env (IN/OUT) - OCI environment handle initialized in object mode
         err (IN/OUT) - error handle. If there is an error, it is
                 recorded in 'err' and this function returns OCI_ERROR.
@@ -1339,11 +1339,11 @@ deprecated extern (C) oratext* OCITypeElemDefaultValue (OCIEnv* env, OCIError* e
         elem (IN) - pointer to the parameter descriptor in the object cache
                 (represented by an OCITypeElem)
         d_v_length (OUT) - length (in bytes) of the returned default value.
-               The caller must allocate space for the ub4 before calling this 
+               The caller must allocate space for the ub4 before calling this
                routine.
    REQUIRES:
-        1) All type accessors require that the type be pinned before calling 
-           any accessor. 
+        1) All type accessors require that the type be pinned before calling
+           any accessor.
         2) All input parameters must not be NULL and must be valid.
    DESCRIPTION:
         Get the default value in text form (PL/SQL) of an element. For V8.0,
@@ -1351,10 +1351,10 @@ deprecated extern (C) oratext* OCITypeElemDefaultValue (OCIEnv* env, OCIError* e
    RETURNS:
         The default value (text) of the parameter.
    NOTES:
-        The type must be unpinned when the accessed information is no 
+        The type must be unpinned when the accessed information is no
         longer needed.
  */
- 
+
 
 deprecated extern (C) sword OCITypeVTInit (OCIEnv* env, OCIError* err);
 /*
@@ -1375,7 +1375,7 @@ deprecated extern (C) sword OCITypeVTInit (OCIEnv* env, OCIError* err);
         OCI_INVALID_HANDLE if 'env' or 'err' is null.
         OCI_ERROR if internal errors occurrs during initialization.
  */
- 
+
 
 deprecated extern (C) sword OCITypeVTInsert (OCIEnv* env, OCIError* err, oratext* schema_name, ub4 s_n_length, oratext* type_name, ub4 t_n_length, oratext* user_version, ub4 u_v_length);
 /*
@@ -1386,7 +1386,7 @@ deprecated extern (C) sword OCITypeVTInsert (OCIEnv* env, OCIError* err, oratext
                 recorded in 'err' and this function returns OCI_ERROR.
                 The error recorded in 'err' can be retrieved by calling
                 OCIErrorGet().
-        schema_name (IN, optional) - name of schema associated with the 
+        schema_name (IN, optional) - name of schema associated with the
                   type.  By default, the user's schema name is used.
         s_n_length (IN) - length of the 'schema_name' parameter
         type_name (IN) - type name to insert
@@ -1419,7 +1419,7 @@ deprecated extern (C) sword OCITypeVTSelect (OCIEnv* env, OCIError* err, oratext
                 recorded in 'err' and this function returns OCI_ERROR.
                 The error recorded in 'err' can be retrieved by calling
                 OCIErrorGet().
-        schema_name (IN, optional) - name of schema associated with the 
+        schema_name (IN, optional) - name of schema associated with the
                   type.  By default, the user's schema name is used.
         s_n_length (IN) - length of the 'schema_name' parameter
         type_name (IN) - type name to select
@@ -1461,7 +1461,7 @@ extern (C) sword OCITypeBeginCreate (OCISvcCtx* svchp, OCIError* errhp, OCITypeC
                           calling OCIErrorGet().
        tc               - The TypeCode for the type. The Typecode could
                           correspond to a User Defined Type or a Built-in type.
-                          Currently, the permissible values for User Defined 
+                          Currently, the permissible values for User Defined
                           Types are OCI_TYPECODE_OBJECT for an Object Type
                           (structured), OCI_TYPECODE_VARRAY for a VARRAY
                           collection type or OCI_TYPECODE_TABLE for a nested
@@ -1469,7 +1469,7 @@ extern (C) sword OCITypeBeginCreate (OCISvcCtx* svchp, OCIError* errhp, OCITypeC
                           OCITypeAddAttr() needs to be called to add each of
                           the attribute types. For Collection types,
                           OCITypeSetCollection() needs to be called.
-                          Subsequently, OCITypeEndCreate() needs to be called 
+                          Subsequently, OCITypeEndCreate() needs to be called
                           to finish the creation process.
                           The permissible values for Built-in type codes are
                           specified in the user manual. Additional information
@@ -1496,7 +1496,7 @@ extern (C) sword OCITypeSetCollection (OCISvcCtx* svchp, OCIError* errhp, OCITyp
        OCIType has been constructed with a collection typecode.
    PARAMETERS:
        svchp (IN)      -  The OCI Service Context.
-       errhp (IN/OUT)  -  The OCI error handle. If there is an error, it is 
+       errhp (IN/OUT)  -  The OCI error handle. If there is an error, it is
                           recorded in errhp and this function returns
                           OCI_ERROR. Diagnostic information can be obtained by
                           calling OCIErrorGet().
@@ -1523,7 +1523,7 @@ extern (C) sword OCITypeSetBuiltin (OCISvcCtx* svchp, OCIError* errhp, OCIType* 
        (OCI_TYPECODE_NUMBER etc.).
    PARAMETERS:
        svchp (IN)       - The OCI Service Context.
-       errhp (IN/OUT)   - The OCI error handle. If there is an error, it is 
+       errhp (IN/OUT)   - The OCI error handle. If there is an error, it is
                           recorded in errhp and this function returns
                           OCI_ERROR. Diagnostic information can be obtained by
                           calling OCIErrorGet().

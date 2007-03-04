@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Oracle import library.
  *
  * Part of the D DBI project.
@@ -6,7 +6,7 @@
  * Version:
  *	Oracle 10g revision 2
  *
- *	Import library version 0.03
+ *	Import library version 0.04
  *
  * Authors: The D DBI project
  *
@@ -14,7 +14,7 @@
  */
 module dbi.oracle.imp.ocidem;
 
-private import dbi.oracle.imp.oratypes, dbi.oracle.imp.ocidfn;
+private import dbi.oracle.imp.ocidfn, dbi.oracle.imp.oratypes;
 
 const uint VARCHAR2_TYPE		= 1;		///
 const uint NUMBER_TYPE			= 2;		///

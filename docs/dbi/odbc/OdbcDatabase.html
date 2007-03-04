@@ -48,13 +48,9 @@
 <p><strong>Authors:</strong><br />The D DBI project
 
 </p>
-<p><strong>Version:</strong><br />0.2.4
+<p><strong>Version:</strong><br />0.2.5
 
 </p>
-<strong>Modified:</strong>
-2006-11-01	Added some casts around nulls.
-
-
 
 <dl><dt><span class="big">class <span class="underline">OdbcDatabase</span>: dbi.Database.Database;
 </span></dt>
@@ -92,12 +88,12 @@
 </span></dt>
 <dd><p>Connect to a database using ODBC.
 </p>
-<p>This function will <span class="underline">connect</span> DSN-lessly if <em>params</em> has a "=" and with DSN
- otherwise.  For information on how to use <span class="underline">connect</span> DSN-lessly, see the
+<p>This function will <span class="underline">connect</span> without DSN if <em>params</em> has a '=' and with DSN
+ otherwise.  For information on how to use <span class="underline">connect</span> without DSN, see the
  ODBC documentation.
 
 </p>
-<p><span class="red">BUGS:</span><br />Connecting DSN-lessly ignores <em>username</em> and <em>password</em>.
+<p><span class="red">BUGS:</span><br />Connecting without DSN ignores <em>username</em> and <em>password</em>.
 
 </p>
 <strong>Params:</strong><br /><table><tr><td>char[] <em>params</em></td>
@@ -180,6 +176,24 @@
 </p>
 
 </dd>
+<dt><span class="big">char[][] <span class="underline">getDrivers</span>();
+</span></dt>
+<dd><p>Get a list of currently installed ODBC drivers.
+</p>
+<p><strong>Returns:</strong><br />A list of all the installed ODBC drivers.
+	 
+</p>
+
+</dd>
+<dt><span class="big">char[][] <span class="underline">getDataSources</span>();
+</span></dt>
+<dd><p>Get a list of currently available ODBC data sources.
+</p>
+<p><strong>Returns:</strong><br />A list of all the installed ODBC data sources.
+	 
+</p>
+
+</dd>
 <dt><span class="big">deprecated int <span class="underline">getErrorCode</span>();
 </span></dt>
 <dd><p>Get the error code.
@@ -202,24 +216,6 @@
 
 </p>
 <p><strong>Returns:</strong><br />The database specific error message.
-	 
-</p>
-
-</dd>
-<dt><span class="big">char[][] <span class="underline">getDrivers</span>();
-</span></dt>
-<dd><p>Get a list of currently installed ODBC drivers.
-</p>
-<p><strong>Returns:</strong><br />A list of all the installed ODBC drivers.
-	 
-</p>
-
-</dd>
-<dt><span class="big">char[][] <span class="underline">getDataSources</span>();
-</span></dt>
-<dd><p>Get a list of currently available ODBC data sources.
-</p>
-<p><strong>Returns:</strong><br />A list of all the installed ODBC data sources.
 	 
 </p>
 

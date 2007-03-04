@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Oracle import library.
  *
  * Part of the D DBI project.
@@ -6,7 +6,7 @@
  * Version:
  *	Oracle 10g revision 2
  *
- *	Import library version 0.03
+ *	Import library version 0.04
  *
  * Authors: The D DBI project
  *
@@ -14,7 +14,7 @@
  */
 module dbi.oracle.imp.oci1;
 
-private import dbi.oracle.imp.oratypes, dbi.oracle.imp.ociap;
+private import dbi.oracle.imp.ociap, dbi.oracle.imp.oratypes;
 
 /**
  *

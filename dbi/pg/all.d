@@ -1,7 +1,7 @@
 /**
  * Authors: The D DBI project
  *
- * Version: 0.2.4
+ * Version: 0.2.5
  *
  * Copyright: BSD license
  */
@@ -13,5 +13,4 @@ version (build) {
 
 public import	dbi.pg.PgDatabase,
 		dbi.pg.PgResult,
-		dbi.pg.PgError,
 		dbi.all;

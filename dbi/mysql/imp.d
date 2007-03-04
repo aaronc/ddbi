@@ -1,16 +1,19 @@
-module dbi.mysql.imp;
+﻿module dbi.mysql.imp;
+
+extern (C):
 
 version (Windows) {
 	pragma (lib, "libmysql.lib");
+	extern (Windows):
 } else version (linux) {
+	pragma (lib, "libmysql.a");
+} else version (Posix) {
 	pragma (lib, "libmysql.a");
 } else version (darwin) {
 	pragma (lib, "libmysql.a");
 } else {
-	static assert (0);
+	pragma (msg, "You will need to manually link in the MySQL library.");
 }
-
-extern (C):
 
 alias ubyte __u_char;
 alias ushort __u_short;
@@ -852,7 +855,7 @@ struct charset_info_st
 }
 alias charset_info_st CHARSET_INFO;
 
-// end self inserted 
+// end self inserted
 
 //struct st_mysql_methods; // conflict with line 1211
 

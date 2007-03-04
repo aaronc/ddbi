@@ -1,7 +1,7 @@
-/**
+﻿/**
  * Authors: The D DBI project
  *
- * Version: 0.2.4
+ * Version: 0.2.5
  *
  * Copyright: BSD license
  */
@@ -70,7 +70,7 @@ class OracleDatabase : Database {
 	 *	(end code)
 	 */
 	override void connect (char[] params, char[] username, char[] password) {
-		if (sword error = OCILogon(env, err, &svc, username, username.length, password, password.length, params, params.length) != OCI_SUCCESS) {
+		if (sword error = OCILogon(env, err, &svc, username.ptr, username.length, password.ptr, password.length, params.ptr, params.length) != OCI_SUCCESS) {
 			throw new DBIException("Unable to connect to the Oracle database.", error);
 		}
 	}

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Oracle import library.
  *
  * Part of the D DBI project.
@@ -6,13 +6,26 @@
  * Version:
  *	Oracle 10g revision 2
  *
- *	Import library version 0.03
+ *	Import library version 0.04
  *
  * Authors: The D DBI project
  *
  * Copyright: BSD license
  */
 module dbi.oracle.imp.oci;
+
+
+version (Windows) {
+	pragma (lib, "oci.lib");
+} else version (linux) {
+	pragma (lib, "liboci.a");
+} else version (Posix) {
+	pragma (lib, "liboci.a");
+} else version (darwin) {
+	pragma (msg, "You will need to manually link in the Oracle library.");
+} else {
+	pragma (msg, "You will need to manually link in the Oracle library.");
+}
 
 public import	dbi.oracle.imp.nzerror,
 		dbi.oracle.imp.nzt,
@@ -268,7 +281,7 @@ const uint OCI_ATTR_STATEMENT		= 144;		/// Statement txt in stmt hdl.
 const uint OCI_ATTR_DEQCOND		= 146;		/// Dequeue condition.
 const uint OCI_ATTR_RESERVED_2		= 147;		/// Reserved.
 
-  
+
 const uint OCI_ATTR_SUBSCR_RECPT	= 148;		/// Recepient of subscription.
 const uint OCI_ATTR_SUBSCR_RECPTPROTO	= 149;		/// Protocol for recepient.
 
@@ -370,8 +383,8 @@ const uint OCI_ATTR_USER_MEMORY		= 306;		/// Pointer to user memory.
 const uint OCI_ATTR_SUBSCR_PORTNO	= 390;		/// Port no to listen.
 
 const uint OCI_ATTR_CHNF_TABLENAMES	= 401;		/// Out: array of table names.
-const uint OCI_ATTR_CHNF_ROWIDS		= 402;		/// In: rowids needed. 
-const uint OCI_ATTR_CHNF_OPERATIONS	= 403;		/// In: notification operation filter. 
+const uint OCI_ATTR_CHNF_ROWIDS		= 402;		/// In: rowids needed.
+const uint OCI_ATTR_CHNF_OPERATIONS	= 403;		/// In: notification operation filter.
 const uint OCI_ATTR_CHNF_CHANGELAG	= 404;		/// Txn lag between notifications.
 
 const uint OCI_ATTR_CHDES_DBNAME	= 405;		/// Source database.
@@ -447,7 +460,7 @@ const uint OCI_CRED_RESERVED_2		= 5;		/// Reserved.
 
 const uint OCI_SUCCESS			= 0;		/// Maps to SQL_SUCCESS of SAG CLI.
 const uint OCI_SUCCESS_WITH_INFO	= 1;		/// Maps to SQL_SUCCESS_WITH_INFO.
-const uint OCI_RESERVED_FOR_INT_USE	= 200;		/// Reserved. 
+const uint OCI_RESERVED_FOR_INT_USE	= 200;		/// Reserved.
 const uint OCI_NO_DATA			= 100;		/// Maps to SQL_NO_DATA.
 const int OCI_ERROR			= -1;		/// Maps to SQL_ERROR.
 const int OCI_INVALID_HANDLE		= -2;		/// Maps to SQL_INVALID_HANDLE.
@@ -833,7 +846,7 @@ const uint OCI_ATTR_IS_JAVA_TYPE	= 287;		/// Is Java implemented type ?.
 
 const uint OCI_ATTR_DISTINGUISHED_NAME	= 300;		/// Use DN as user name.
 const uint OCI_ATTR_KERBEROS_TICKET	= 301;		/// Kerberos ticket as cred..
- 
+
 const uint OCI_ATTR_ORA_DEBUG_JDWP	= 302;		/// ORA_DEBUG_JDWP attribute.
 
 const uint OCI_ATTR_RESERVED_14		= 303;		/// Reserved.
@@ -1423,7 +1436,7 @@ const uint OCI_ANSI_DATE		= 1;		///
  *
  * The offset in the lob data.  The offset is specified in terms of bytes for
  * BLOBs and BFILes.  Character offsets are used for CLOBs, NCLOBs.
- * The maximum size of internal lob data is 4 gigabytes.  FILE LOB 
+ * The maximum size of internal lob data is 4 gigabytes.  FILE LOB
  * size is limited by the operating system.
  */
 alias ub4 OCILobOffset;
@@ -1431,7 +1444,7 @@ alias ub4 OCILobOffset;
 /**
  * OCI Lob Length (of lob data).
  *
- * Specifies the length of lob data in bytes for BLOBs and BFILes and in 
+ * Specifies the length of lob data in bytes for BLOBs and BFILes and in
  * characters for CLOBs, NCLOBs.  The maximum length of internal lob
  * data is 4 gigabytes.  The length of FILE LOBs is limited only by the
  * operating system.
@@ -1443,7 +1456,7 @@ alias ub4 OCILobLength;
  *
  * The mode specifies the planned operations that will be performed on the
  * FILE lob data.  The FILE lob can be opened in read-only mode only.
- * 
+ *
  * In the future, we may include read/write, append and truncate modes.  Append
  * is equivalent to read/write mode except that the FILE is positioned for
  * writing to the end.  Truncate is equivalent to read/write mode except that
