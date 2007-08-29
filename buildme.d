@@ -40,7 +40,7 @@ version (Phobos) {
 	private import std.process : system;
 } else {
 	private import tango.io.FileConst;
-	private import tango.io.FileProxy : FileProxy;
+	private import tango.io.FilePath : FilePath;
 	private import tango.stdc.stdlib : system;
 
 	alias FileConst.PathSeparatorString sep;
@@ -113,10 +113,10 @@ void main (char[][] args) {
 	} else {
 		void addDirs (char[] parent, char[] name, bool isDir) {
 			if (isDir && name != ".svn") {
-				allList[name] = true;
+				allList[name.dup] = true;
 			}
 	}
-		FileProxy proxy = new FileProxy("dbi");
+		FilePath proxy = new FilePath("dbi");
 		proxy.toList(&addDirs);
 	}
 
@@ -148,6 +148,7 @@ void main (char[][] args) {
 		buildCommand ~= command ~ " ";
 	}
 	buildCommand.length = buildCommand.length - 1;
+	
 	version (Phobos) {
 		if (system("bud " ~ buildCommand)) {
 			version (Windows) {
