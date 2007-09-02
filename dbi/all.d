@@ -16,4 +16,5 @@ public import	dbi.Database,
 		dbi.ErrorCode,
 		dbi.Result,
 		dbi.Row,
-		dbi.Statement;
+		dbi.Statement,
+		dbi.Registry;
