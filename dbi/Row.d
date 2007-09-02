@@ -161,6 +161,20 @@ final class Row {
 		fieldTypes ~= type;
 	}
 
+        /**
+	 * Ability to do a foreach of each column.
+	 */
+        int opApply(int delegate(inout char[], inout char[]) dg) {
+               int result = 0;
+
+               for (int i = 0; i < fieldNames.length; i++) {
+                   result = dg(fieldNames[i], fieldValues[i]);
+                   if (result)
+		           break;
+               }
+               return result;
+        }
+
 	private:
 	char[][] fieldNames;
 	char[][] fieldValues;
