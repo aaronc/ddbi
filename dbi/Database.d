@@ -180,7 +180,15 @@ abstract class Database {
 	 *	The database specific error message.
 	 */
 	deprecated abstract char[] getErrorMessage ();
-
+ 
+	/**
+	 * Get the integer id of the last row to be inserted.
+	 *
+	 * Returns:
+	 *	The id of the last row inserted into the database.
+	 */
+        abstract long getLastInsertID ();
+  
 	/**
 	 * Split a _string into keywords and values.
 	 *
