@@ -12,8 +12,9 @@ version (Phobos) {
 	debug (UnitTest) private import std.stdio;
 } else {
 	private import tango.stdc.stringz : toDString = fromUtf8z, toCString = toUtf8z;
+	private import tango.util.log.Log;
 }
-private import dbi.Database, dbi.DBIException, dbi.Result, dbi.Row, dbi.Statement;
+private import dbi.Database, dbi.DBIException, dbi.Result, dbi.Row, dbi.Statement, dbi.Registry;
 private import dbi.sqlite.imp, dbi.sqlite.SqliteError, dbi.sqlite.SqliteResult;
 
 /**
@@ -23,12 +24,15 @@ private import dbi.sqlite.imp, dbi.sqlite.SqliteError, dbi.sqlite.SqliteResult;
  *	Database is the interface that this provides an implementation of.
  */
 class SqliteDatabase : Database {
+	
+	private Logger logger;
 	public:
 
 	/**
 	 * Create a new instance of SqliteDatabase, but don't open a database.
 	 */
 	this () {
+		logger = Log.getLogger("dbi.sqlite.Database");
 	}
 
 	/**
@@ -38,6 +42,7 @@ class SqliteDatabase : Database {
 	 *	connect
 	 */
 	this (char[] dbFile) {
+		logger = Log.getLogger("dbi.sqlite.Database");
 		connect(dbFile);
 	}
 
@@ -59,6 +64,7 @@ class SqliteDatabase : Database {
 	 *	---
 	 */
 	override void connect (char[] params, char[] username = null, char[] password = null) {
+		logger.trace("connecting: " ~ params);
 		if ((errorCode = sqlite3_open(toCString(params), &database)) != SQLITE_OK) {
 			throw new DBIException("Could not open or create " ~ params, errorCode, specificToGeneral(errorCode));
 		}
@@ -68,6 +74,7 @@ class SqliteDatabase : Database {
 	 * Close the current connection to the database.
 	 */
 	override void close () {
+		logger.trace("closing database now");
 		if (database !is null) {
 			if ((errorCode = sqlite3_close(database)) != SQLITE_OK) {
 				throw new DBIException(asString(sqlite3_errmsg(database)), errorCode, specificToGeneral(errorCode));
@@ -86,6 +93,7 @@ class SqliteDatabase : Database {
 	 *	DBIException if the SQL code couldn't be executed.
 	 */
 	override void execute (char[] sql) {
+		logger.trace("executing: " ~ sql);
 		char** errorMessage;
 		if ((errorCode = sqlite3_exec(database, sql.dup.ptr, null, null, errorMessage)) != SQLITE_OK) {
 			throw new DBIException(toDString(sqlite3_errmsg(database)), sql, errorCode, specificToGeneral(errorCode));
@@ -105,6 +113,7 @@ class SqliteDatabase : Database {
 	 *	DBIException if the SQL code couldn't be executed.
 	 */
 	override SqliteResult query (char[] sql) {
+		logger.trace("querying: " ~ sql);
 		char** errorMessage;
 		sqlite3_stmt* stmt;
 		if ((errorCode = sqlite3_prepare(database, toCString(sql), sql.length, &stmt, errorMessage)) != SQLITE_OK) {
@@ -141,19 +150,20 @@ class SqliteDatabase : Database {
 		return toDString(sqlite3_errmsg(database));
 	}
 
+	/**
+	 * Get the integer id of the last row to be inserted.
+	 *
+	 * Returns:
+	 *	The id of the last row inserted into the database.
+	 */
+	override long getLastInsertID() {
+		return sqlite3_last_insert_rowid(database);
+	}
+
 	/*
 	 * Note: The following are not in the DBI API.
 	 */
 
-	/**
-	 * Get the rowid of the last insert.
-	 *
-	 * Returns:
-	 *	The row of the last insert or 0 if no inserts have been done.
-	 */
-	long getLastInsertRowId () {
-		return sqlite3_last_insert_rowid(database);
-	}
 
 	/**
 	 * Get the number of rows affected by the last SQL statement.
@@ -261,6 +271,30 @@ class SqliteDatabase : Database {
 		}
 		return false;
 	}
+}
+
+private class SqliteRegister : Registerable {
+	
+	private Logger logger;
+	
+	this() {
+		logger = Log.getLogger("dbi.sqlite");
+	}
+	
+	public char[] getPrefix() {
+		return "sqlite";
+	}
+	
+	public Database getInstance(char[] url) {
+		logger.trace("creating Sqlite database: " ~ url);
+		return new SqliteDatabase(url);
+	}
+}
+
+static this() {
+	auto logger = Log.getLogger("dbi.sqlite");
+	logger.trace("Attempting to register SqliteDatabase in Registry");
+	registerDatabase(new SqliteRegister());
 }
 
 unittest {
