@@ -1145,7 +1145,7 @@ extern (C) sword OCIRawAllocSize (OCIEnv* env, OCIError* err, OCIRaw* raw, ub4* 
  *	env = OCI environment handle initialized in object mode.
  *	ref = A pointer to the OCI object reference to clear.
  */
-extern (C) void OCIRefClear (OCIEnv* env, OCIRef* ref);
+extern (C) void OCIRefClear (OCIEnv* env, OCIRef* reference);
 
 /**
  * Copy an object reference.
@@ -1186,7 +1186,7 @@ extern (C) boolean OCIRefIsEqual (OCIEnv* env, OCIRef* x, OCIRef* y);
  * Returns:
  *	TRUE if it is null or false otherwise.
  */
-extern (C) boolean OCIRefIsNull (OCIEnv* env, OCIRef* ref);
+extern (C) boolean OCIRefIsNull (OCIEnv* env, OCIRef* reference);
 
 /**
  * Get the size of an object reference.
@@ -1198,7 +1198,7 @@ extern (C) boolean OCIRefIsNull (OCIEnv* env, OCIRef* ref);
  * Returns:
  *	The size of ref.
  */
-extern (C) ub4 OCIRefHexSize (OCIEnv* env, OCIRef* ref);
+extern (C) ub4 OCIRefHexSize (OCIEnv* env, OCIRef* reference);
 
 /**
  * Convert a hexadecimal string to an object reference.
@@ -1214,7 +1214,7 @@ extern (C) ub4 OCIRefHexSize (OCIEnv* env, OCIRef* ref);
  * Returns:
  *	OCI_SUCCESS on success, OCI_INVALID_HANDLE on invalid parameters, or OCI_ERROR on error.
  */
-extern (C) sword OCIRefFromHex (OCIEnv* env, OCIError* err, OCISvcCtx* svc, oratext* hex, ub4 length, OCIRef** ref);
+extern (C) sword OCIRefFromHex (OCIEnv* env, OCIError* err, OCISvcCtx* svc, oratext* hex, ub4 length, OCIRef** reference);
 
 /**
  * Convert an object reference into a hexadecimal string.
@@ -1229,7 +1229,7 @@ extern (C) sword OCIRefFromHex (OCIEnv* env, OCIError* err, OCISvcCtx* svc, orat
  * Returns:
  *	OCI_SUCCESS on success, OCI_INVALID_HANDLE on invalid parameters, or OCI_ERROR on error.
  */
-extern (C) sword OCIRefToHex (OCIEnv* env, OCIError* err, OCIRef* ref, oratext* hex, ub4* hex_length);
+extern (C) sword OCIRefToHex (OCIEnv* env, OCIError* err, OCIRef* reference, oratext* hex, ub4* hex_length);
 
 /**
  * Generic collection type.

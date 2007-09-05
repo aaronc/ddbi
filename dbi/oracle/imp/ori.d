@@ -403,7 +403,7 @@ extern (C) sword OCIObjectUnmark (OCIEnv* env, OCIError* err, dvoid* object);
         if operation fails, return OCI_ERROR.
  */
 
-extern (C) sword OCIObjectUnmarkByRef (OCIEnv* env, OCIError* err, OCIRef* ref);
+extern (C) sword OCIObjectUnmarkByRef (OCIEnv* env, OCIError* err, OCIRef* reference);
 /*
    NAME: OCIObjectUnmarkByRef - OCI unmarks an object by Ref
    PARAMETERS:
@@ -1105,7 +1105,7 @@ extern (C) sword OCIObjectArrayPin (OCIEnv* env, OCIError* err, OCIRef** ref_arr
         if operation fails, return OCI_ERROR.
  */
 
-extern (C) sword OCICacheFlush (OCIEnv* env, OCIError* err, OCISvcCtx* svc, dvoid* context, OCIRef* function(dvoid* context, ub1* last) get, OCIRef** ref);
+extern (C) sword OCICacheFlush (OCIEnv* env, OCIError* err, OCISvcCtx* svc, dvoid* context, OCIRef* function(dvoid* context, ub1* last) get, OCIRef** reference);
 /*
    NAME: OCICacheFlush - OCI flush persistent objects
    PARAMETERS:
@@ -1162,7 +1162,7 @@ extern (C) sword OCICacheFlush (OCIEnv* env, OCIError* err, OCISvcCtx* svc, dvoi
         if operation fails, return OCI_ERROR.
  */
 
-extern (C) sword OCICacheRefresh (OCIEnv* env, OCIError* err, OCISvcCtx* svc, OCIRefreshOpt option, dvoid* context, OCIRef* function(dvoid* context) get, OCIRef** ref);
+extern (C) sword OCICacheRefresh (OCIEnv* env, OCIError* err, OCISvcCtx* svc, OCIRefreshOpt option, dvoid* context, OCIRef* function(dvoid* context) get, OCIRef** reference);
 /*
    NAME: OCICacheRefresh - OCI ReFreSh persistent objects
    PARAMETERS:
@@ -1449,7 +1449,7 @@ deprecated extern (C) sword OCICacheRegister (OCIEnv* env, OCIError* err, OCIObj
 /**
  *
  */
-deprecated extern (C) sword OCICacheFlushRefresh (OCIEnv* env, OCIError* err, OCISvcCtx* svc, dvoid* context, OCIRef* function(dvoid* context, ub1* last) get, OCIRef** ref);
+deprecated extern (C) sword OCICacheFlushRefresh (OCIEnv* env, OCIError* err, OCISvcCtx* svc, dvoid* context, OCIRef* function(dvoid* context, ub1* last) get, OCIRef** reference);
 
 /**
  *
