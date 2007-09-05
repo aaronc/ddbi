@@ -9,10 +9,12 @@
  *	Import library version 0.04
  *
  * Authors: The D DBI project
- *
  * Copyright: BSD license
  */
 module dbi.oracle.imp.nzerror;
+
+
+version (dbi_oracle) {
 
 /**
  * Errors - when an error is added here, a message corresponding to the
@@ -417,4 +419,6 @@ enum nzerror {
 nzerror NZERROR_SSL_TO_ORACLE (int ssl_error) {
 	return nzerror.NZERROR_SSLUnknownErr;
 //	return ssl_error == SSLNoErr ? nzerror.NZERROR_OK : cast(nzerror)(ssl_error - SSLMemoryErr + cast(size_t)nzerror.NZERROR_SSLMemoryErr);
+}
+
 }

@@ -9,10 +9,11 @@
  *	Import library version 0.02
  *
  * Authors: The D DBI project
- *
  * Copyright: BSD license
  */
 module dbi.msql.imp;
+
+version (dbi_msql) {
 
 version (Phobos) {
     private import std.c.time;
@@ -546,3 +547,5 @@ time_t msqlMillitimeToUnixTime (char*);
  *
  */
 time_t msqlMillidatetimeToUnixTime (char*);
+
+}

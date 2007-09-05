@@ -9,7 +9,6 @@
  *	Import library version 0.04
  *
  * Authors: The D DBI project
- *
  * Copyright: BSD license
  */
 module dbi.oracle.imp.ocidef;
@@ -20,6 +19,9 @@ deprecated:
 #include <upidef.h>
 #include <riddef.h>		No longer necessary???
 */
+
+version (dbi_oracle) {
+
 private import dbi.oracle.imp.ociapr, dbi.oracle.imp.oratypes;
 
 /**
@@ -688,3 +690,5 @@ extern (C) sword odsrbn (csrdef* cursor, sword pos, b2* dbsize, b2* dtype, b2* f
 extern (C) sword ocignfd (ldadef* lda, dvoid* nfdp);           /* get native fd */
 
 extern (C) ub2 ocigft_getFcnType (ub2 oertyp);      /* get sql function code */
+
+}

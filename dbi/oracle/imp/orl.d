@@ -9,10 +9,11 @@
  *	Import library version 0.04
  *
  * Authors: The D DBI project
- *
  * Copyright: BSD license
  */
 module dbi.oracle.imp.orl;
+
+version (dbi_oracle) {
 
 private import dbi.oracle.imp.oci, dbi.oracle.imp.oratypes, dbi.oracle.imp.oro, dbi.oracle.imp.ort;
 
@@ -1773,4 +1774,6 @@ struct OCIXMLType {
  * OCI representation of OCIDomDocument.
  */
 struct OCIDOMDocument {
+}
+
 }

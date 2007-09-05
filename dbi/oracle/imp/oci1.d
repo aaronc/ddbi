@@ -9,10 +9,11 @@
  *	Import library version 0.04
  *
  * Authors: The D DBI project
- *
  * Copyright: BSD license
  */
 module dbi.oracle.imp.oci1;
+
+version (dbi_oracle) {
 
 private import dbi.oracle.imp.ociap, dbi.oracle.imp.oratypes;
 
@@ -222,3 +223,5 @@ const uint OCI_EXTRACT_TYPE_BOOLEAN	= 1;		/// Key type is boolean.
 const uint OCI_EXTRACT_TYPE_STRING	= 2;		/// Key type is string.
 const uint OCI_EXTRACT_TYPE_INTEGER	= 3;		/// Key type is integer.
 const uint OCI_EXTRACT_TYPE_OCINUM	= 4;		/// Key type is ocinum.
+
+}

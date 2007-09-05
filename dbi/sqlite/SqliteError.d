@@ -1,11 +1,10 @@
 /**
  * Authors: The D DBI project
- *
- * Version: 0.2.5
- *
  * Copyright: BSD license
  */
 module dbi.sqlite.SqliteError;
+
+version (dbi_sqlite) {
 
 private import dbi.ErrorCode;
 private import dbi.sqlite.imp;
@@ -81,4 +80,5 @@ package ErrorCode specificToGeneral (int error) {
 	}
 	// Bugfix for DMD 0.162
 	return ErrorCode.Unknown;
+}
 }

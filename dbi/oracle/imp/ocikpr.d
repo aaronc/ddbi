@@ -9,9 +9,12 @@
  *	Import library version 0.04
  *
  * Authors: The D DBI project
- *
  * Copyright: BSD license
  */
 module dbi.oracle.imp.ocikpr;
 
+version (dbi_oracle) {
+
 // This page has been left blank intentionally.  Keep it that way!
+	
+}

@@ -1,11 +1,10 @@
 ﻿/**
  * Authors: The D DBI project
- *
- * Version: 0.2.5
- *
  * Copyright: BSD license
  */
 module dbi.pg.PgResult;
+
+version (dbi_pg) {
 
 version (Phobos) {
 	private import std.string : trim = strip, toDString = toString;
@@ -63,4 +62,5 @@ class PgResult : Result {
 	int index;
 	const int numRows;
 	const int numFields;
+}
 }

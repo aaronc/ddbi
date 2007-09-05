@@ -9,10 +9,11 @@
  *	Import library version 0.04
  *
  * Authors: The D DBI project
- *
  * Copyright: BSD license
  */
 module dbi.oracle.imp.nzt;
+
+version (dbi_oracle) {
 
 private import dbi.oracle.imp.nzerror, dbi.oracle.imp.oratypes;
 
@@ -1848,3 +1849,5 @@ extern (C) nzerror nztSetAppDefaultLocation (nzctx*, text*, size_t);
  *	An unknown parameter is missing from the documentation.
  */
 extern (C) nzerror nztSearchNZDefault (nzctx*, boolean*);
+
+}

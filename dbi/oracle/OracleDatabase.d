@@ -1,11 +1,10 @@
 ﻿/**
  * Authors: The D DBI project
- *
- * Version: 0.2.5
- *
  * Copyright: BSD license
  */
 module dbi.oracle.OracleDatabase;
+
+version (dbi_oracle) {
 
 private import dbi.Database, dbi.DBIException, dbi.Result, dbi.Row, dbi.Statement;
 private import dbi.oracle.imp.oci, dbi.oracle.OracleResult;
@@ -151,4 +150,6 @@ class OracleDatabase : Database {
 	OCIError* err;
 	OCISvcCtx* svc;
 	OCIStmt* sql;
+}
+
 }

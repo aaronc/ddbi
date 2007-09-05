@@ -14,6 +14,8 @@
  */
 module dbi.oracle.imp.ori;
 
+version (dbi_oracle) {
+
 private import dbi.oracle.imp.oci, dbi.oracle.imp.oratypes, dbi.oracle.imp.oro, dbi.oracle.imp.ort;
 
 /**
@@ -1458,3 +1460,5 @@ deprecated extern (C) sword OCIObjectSetData (OCIEnv* env, OCIError* err, dvoid*
  *
  */
 deprecated extern (C) sword OCIObjectGetNewOID(OCIEnv* env, OCIError* err, OCISvcCtx* svc, ub1* oid);
+
+}

@@ -9,10 +9,11 @@
  *	Import library version 0.04
  *
  * Authors: The D DBI project
- *
  * Copyright: BSD license
  */
 module dbi.oracle.imp.oratypes;
+
+version (dbi_oracle) {
 
 alias ubyte	ub1;					///
 alias byte	sb1;					///
@@ -134,3 +135,5 @@ deprecated ubig_ora UBIGORABITS		= ubig_ora.sizeof * 8; ///
 uword UB1MASK				= 1 << 8 - 1;	///
 
 alias void function() lgenfp_t;				///
+
+}

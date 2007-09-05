@@ -1,4 +1,10 @@
-﻿module dbi.mssql.imp;
+﻿/**
+ * Authors: The D DBI project
+ * Copyright: BSD license
+ */
+module dbi.mssql.imp;
+
+version (dbi_mssql) {
 
 version (Windows) {
 	pragma (lib, "libct.lib");
@@ -125,4 +131,6 @@ alias _cs_money CS_MONEY;
 struct _cs_money {
   int mnyhigh;
   uint mnylow;
+}
+
 }

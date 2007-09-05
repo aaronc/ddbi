@@ -1,4 +1,10 @@
-﻿module dbi.mysql.imp;
+﻿/**
+ * Authors: The D DBI project
+ * Copyright: BSD license
+ */
+module dbi.mysql.imp;
+
+version (dbi_mysql) {
 
 extern (C):
 
@@ -985,7 +991,7 @@ MYSQL_FIELD_OFFSET mysql_field_tell(MYSQL_RES *res);
 
 uint mysql_field_count(MYSQL *mysql);
 my_ulonglong mysql_affected_rows(MYSQL *mysql);
-my_ulonglong mysql_insert_id(MYSQL *mysql);
+long mysql_insert_id(MYSQL *mysql);
 uint mysql_errno(MYSQL *mysql);
  char * mysql_error(MYSQL *mysql);
  char * mysql_sqlstate(MYSQL *mysql);
@@ -1321,3 +1327,5 @@ my_bool mysql_more_results(MYSQL *mysql);
 int mysql_next_result(MYSQL *mysql);
 void mysql_close(MYSQL *sock);
 uint net_safe_read(MYSQL* mysql);
+
+}

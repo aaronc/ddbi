@@ -9,11 +9,12 @@
  *	Import library version 0.04
  *
  * Authors: The D DBI project
- *
  * Copyright: BSD license
  */
 module dbi.oracle.imp.oci;
 
+
+version (dbi_oracle) {
 
 version (Windows) {
 	pragma (lib, "oci.lib");
@@ -1696,3 +1697,5 @@ const uint OCI_DBSHUTDOWN_FINAL		= 5;		/// Orderly shutdown.
 
 const uint OCI_MAJOR_VERSION		= 10;		/// Major release version.
 const uint OCI_MINOR_VERSION		= 2;		/// Minor release version.
+
+}

@@ -1,11 +1,11 @@
 /**
  * Authors: The D DBI project
- *
- * Version: 0.2.5
- *
  * Copyright: BSD license
  */
 module dbi.pg.PgError;
+
+version (dbi_pg) {
+
 
 private import dbi.ErrorCode;
 
@@ -183,4 +183,6 @@ package ErrorCode specificToGeneral (char* error) {
 	}
 	// Bugfix for DMD 0.162
 	return ErrorCode.Unknown;
+}
+
 }

@@ -9,10 +9,11 @@
  *	Import library version 0.04
  *
  * Authors: The D DBI project
- *
  * Copyright: BSD license
  */
 module dbi.oracle.imp.oci8dp;
+
+version (dbi_oracle) {
 
 private import dbi.oracle.imp.ocidfn, dbi.oracle.imp.oci, dbi.oracle.imp.oratypes;
 
@@ -250,3 +251,5 @@ extern (C) sword OCIDirPathColArrayToStream (OCIDirPathColArray* dpca, OCIDirPat
  *	An OCI error code.
  */
 extern (C) sword OCIDirPathStreamReset (OCIDirPathStream* dpstr, OCIError* errhp);
+
+}

@@ -9,10 +9,12 @@
  *	Import library version 0.04
  *
  * Authors: The D DBI project
- *
  * Copyright: BSD license
  */
 module dbi.oracle.imp.orid;
+
+
+version (dbi_oracle) {
 
 private import dbi.oracle.imp.oci, dbi.oracle.imp.oratypes, dbi.oracle.imp.oro, dbi.oracle.imp.ort;
 
@@ -62,3 +64,5 @@ extern (C) sword OCIObjectSetAttr (OCIEnv* env, OCIError* err, dvoid* instance, 
  *	An OROSTA structure.
  */
 extern (C) sword OCIObjectGetAttr (OCIEnv* env, OCIError* err, dvoid* instance, dvoid* null_struct, OCIType* tdo, oratext** names, ub4* lengths, ub4 name_count,  ub4* indexes, ub4 index_count, OCIInd* attr_null_status, dvoid** attr_null_struct, dvoid** attr_value, OCIType** attr_tdo);
+
+}

@@ -9,10 +9,11 @@
  *	Import library version 0.04
  *
  * Authors: The D DBI project
- *
  * Copyright: BSD license
  */
 module dbi.oracle.imp.ociapr;
+
+version (dbi_oracle) {
 
 private import dbi.oracle.imp.ocidfn, dbi.oracle.imp.oratypes;
 
@@ -657,3 +658,5 @@ deprecated extern (C) sword osql3 (cda_def* cda, OraText* sqlstm, sword sqllen);
  *
  */
 deprecated extern (C) sword odsc (cda_def* cursor, sword pos, sb2* dbsize, sb2* fsize, sb2* rcode, sb2* dtype, sb1* buf, sb2* bufl, sb2* dsize);
+
+}

@@ -27,9 +27,6 @@
  *	http://www.dsource.org/projects/ddbi/wiki/HowToBuild
  *
  * Authors: The D DBI project
- *
- * Version: 0.2.5
- *
  * Copyright: BSD license
  */
 module buildme;

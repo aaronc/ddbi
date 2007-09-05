@@ -9,10 +9,11 @@
  *	Import library version 0.04
  *
  * Authors: The D DBI project
- *
  * Copyright: BSD license
  */
 module dbi.oracle.imp.ocixmldb;
+
+version (dbi_oracle) {
 
 private import dbi.oracle.imp.oci, dbi.oracle.imp.oratypes;
 
@@ -67,3 +68,5 @@ extern (C) xmlctx* OCIXmlDbInitXmlCtx (OCIEnv* envhp, OCISvcCtx* svchp, OCIError
  *	xctx = The xmlctx to terminate.
  */
 extern (C) void OCIXmlDbFreeXmlCtx (xmlctx* xctx);
+
+}

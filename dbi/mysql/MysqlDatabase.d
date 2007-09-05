@@ -1,11 +1,10 @@
 ﻿/**
  * Authors: The D DBI project
- *
- * Version: 0.2.5
- *
  * Copyright: BSD license
  */
 module dbi.mysql.MysqlDatabase;
+
+version (dbi_mysql) {
 
 version (Phobos) {
 	private static import std.conv, std.string;
@@ -14,11 +13,12 @@ version (Phobos) {
 	debug (UnitTest) private static import std.stdio;
 } else {
 	private import tango.stdc.stringz : toDString = fromUtf8z, toCString = toUtf8z;
+        private import tango.io.Console;
 	private static import tango.text.Util;
 	private static import tango.text.convert.Integer;
 	debug (UnitTest) private static import tango.io.Stdout;
 }
-private import dbi.Database, dbi.DBIException, dbi.Result, dbi.Row, dbi.Statement;
+private import dbi.Database, dbi.DBIException, dbi.Result, dbi.Row, dbi.Statement, dbi.Registry;
 private import dbi.mysql.imp, dbi.mysql.MysqlError, dbi.mysql.MysqlResult;
 
 /**
@@ -120,6 +120,9 @@ class MysqlDatabase : Database {
 
 		mysql_real_connect(connection, toCString(host), toCString(username), toCString(password), toCString(dbname), port, toCString(sock), 0);
 		if (uint error = mysql_errno(connection)) {
+		        Cout("connect(): ");
+		        Cout(toDString(mysql_error(connection)));
+		        Cout("\n").flush;			
 			throw new DBIException("Unable to connect to the MySQL database.", error, specificToGeneral(error));
 		}
 	}
@@ -134,6 +137,9 @@ class MysqlDatabase : Database {
 		if (connection !is null) {
 			mysql_close(connection);
 			if (uint error = mysql_errno(connection)) {
+   		                Cout("close(): ");
+		                Cout(toDString(mysql_error(connection)));
+		                Cout("\n").flush;			
 				throw new DBIException("Unable to close the MySQL database.", error, specificToGeneral(error));
 			}
 			connection = null;
@@ -152,7 +158,10 @@ class MysqlDatabase : Database {
 	override void execute (char[] sql) {
 		int error = mysql_real_query(connection, toCString(sql), sql.length);
 		if (error) {
-			throw new DBIException("Unable to execute a command on the MySQL database.", sql, error, specificToGeneral(error));
+		        Cout("execute(): ");
+		        Cout(toDString(mysql_error(connection)));
+		        Cout("\n").flush;			
+		        throw new DBIException("Unable to execute a command on the MySQL database.", sql, error, specificToGeneral(error));
 		}
 	}
 
@@ -172,6 +181,9 @@ class MysqlDatabase : Database {
 		mysql_real_query(connection, toCString(sql), sql.length);
 		MYSQL_RES* results = mysql_store_result(connection);
 		if (results is null) {
+		        Cout("query(): ");
+ 		        Cout(toDString(mysql_error(connection)));
+		        Cout("\n").flush;
 			throw new DBIException("Unable to query the MySQL database.", sql);
 		}
 		assert (results !is null);
@@ -189,6 +201,9 @@ class MysqlDatabase : Database {
 	 *	The database specific error code.
 	 */
 	deprecated override int getErrorCode () {
+	        Cout("GetErrorCode: ");
+     	        Cout(toDString(mysql_error(connection)));
+	        Cout("\n").flush;
 		return cast(int)mysql_errno(connection);
 	}
 
@@ -206,8 +221,35 @@ class MysqlDatabase : Database {
 		return toDString(mysql_error(connection));
 	}
 
+	/**
+	 * Get the integer id of the last row to be inserted.
+	 *
+	 * Returns:
+	 *	The id of the last row inserted into the database.
+	 */
+        override long getLastInsertID() {
+                return mysql_insert_id(connection);
+        }
+
 	private:
 	MYSQL* connection;
+}
+
+private class MysqlRegister : Registerable {
+	
+	public char[] getPrefix() {
+		return "mysql";
+	}
+	
+	public Database getInstance(char[] url) {
+		//parse the URL here
+		return new MysqlDatabase();
+	}
+}
+
+static this() {
+	Cout("Attempting to register MysqlDatabase in Registry").newline;
+	registerDatabase(new MysqlRegister());
 }
 
 unittest {
@@ -274,4 +316,6 @@ unittest {
 
 	s2("close");
 	db.close();
+}
+
 }

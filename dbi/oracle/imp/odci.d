@@ -9,10 +9,11 @@
  *	Import library version 0.04
  *
  * Authors: The D DBI project
- *
  * Copyright: BSD license
  */
 module dbi.oracle.imp.odci;
+
+version (dbi_oracle) {
 
 private import dbi.oracle.imp.oci, dbi.oracle.imp.orl, dbi.oracle.imp.oro, dbi.oracle.imp.ort;
 
@@ -585,4 +586,6 @@ struct ODCITabFuncStats {
 struct ODCITabFuncStats_ind {
 	OCIInd _atomic;					///
 	OCIInd num_rows;				///
+}
+
 }

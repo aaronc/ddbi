@@ -9,10 +9,12 @@
  *	Import library version 0.04
  *
  * Authors: The D DBI project
- *
  * Copyright: BSD license
  */
 module dbi.oracle.imp.ocidem;
+
+
+version (dbi_oracle) {
 
 private import dbi.oracle.imp.ocidfn, dbi.oracle.imp.oratypes;
 
@@ -107,3 +109,5 @@ text*[] oci_func_tab = [
 	cast(text*)"OGETPI",				///
 	cast(text*)"OSETPI"				///
 ];
+
+}

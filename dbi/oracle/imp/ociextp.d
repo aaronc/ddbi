@@ -9,10 +9,11 @@
  *	Import library version 0.04
  *
  * Authors: The D DBI project
- *
  * Copyright: BSD license
  */
 module dbi.oracle.imp.ociextp;
+
+version (dbi_oracle) {
 
 private import dbi.oracle.imp.oci, dbi.oracle.imp.oratypes;
 
@@ -117,3 +118,5 @@ alias ociepgoe OCIExtProcGetEnv;
  */
 extern (C) sword ociepish (OCIExtProcContext* with_context, int cursorno, OCISvcCtx** svch, OCIStmt** stmthp, OCIError** errh);
 alias ociepish OCIInitializeStatementHandle;
+
+}

@@ -9,7 +9,6 @@
  *	Import library version 0.02
  *
  * Authors: The D DBI project
- *
  * Copyright: BSD license
  */
 module dbi.ib.imp;
@@ -797,6 +796,8 @@ const uint SQL_DIALECT_V5			= 1; /// Meaning is same as DIALECT_xsqlda.
 const uint SQL_DIALECT_V6_TRANSITION		= 2; /// Flagging anything that is delimited by double quotes as an error and flagging keyword DATE as an error.
 const uint SQL_DIALECT_V6			= 3; /// supports SQL delimited identifier, SQLDATE/DATE, TIME, TIMESTAMP, CURRENT_DATE, CURRENT_TIME, CURRENT_TIMESTAMP, and 64-bit exact numeric type.
 const uint SQL_DIALECT_CURRENT			= SQL_DIALECT_V6; /// latest IB DIALECT.
+version (dbi_ib) {
+
 
 const uint sec_uid_spec			= 0x01;
 const uint sec_gid_spec			= 0x02;
@@ -1343,3 +1344,5 @@ ISC_STATUS isc_put_entree (ISC_STATUS*, isc_req_handle*, short*, char*, ISC_LONG
 ISC_STATUS isc_reset_form (ISC_STATUS*, isc_req_handle*);
 
 ISC_STATUS isc_suspend_window (ISC_STATUS*, isc_win_handle*);
+
+}

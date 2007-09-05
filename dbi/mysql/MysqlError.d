@@ -1,11 +1,10 @@
 /**
  * Authors: The D DBI project
- *
- * Version: 0.2.5
- *
  * Copyright: BSD license
  */
 module dbi.mysql.MysqlError;
+
+version (dbi_mysql) {
 
 private import dbi.ErrorCode;
 
@@ -143,4 +142,6 @@ package ErrorCode specificToGeneral (uint error) {
 	}
 	// Bugfix for DMD 0.162
 	return ErrorCode.Unknown;
+}
+
 }

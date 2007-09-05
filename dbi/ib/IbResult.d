@@ -1,11 +1,10 @@
 /**
  * Authors: The D DBI project
- *
- * Version: 0.2.5
- *
  * Copyright: BSD license
  */
 module dbi.ib.IbResult;
+
+version (dbi_ib) {
 
 private import dbi.DBIException, dbi.Result, dbi.Row;
 private import dbi.ib.imp;
@@ -40,4 +39,5 @@ class IbResult : Result {
 	}
 
 	private:
+}
 }

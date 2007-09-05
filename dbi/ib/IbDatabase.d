@@ -1,11 +1,10 @@
 ﻿/**
  * Authors: The D DBI project
- *
- * Version: 0.2.5
- *
  * Copyright: BSD license
  */
 module dbi.ib.IbDatabase;
+
+version (dbi_ib) {
 
 private import dbi.Database, dbi.DBIException, dbi.Result, dbi.Row, dbi.Statement;
 private import dbi.ib.imp, dbi.ib.IbResult;
@@ -104,5 +103,7 @@ class IbDatabase : Database {
 	}
 
 	private:
+
+}
 
 }

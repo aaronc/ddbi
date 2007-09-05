@@ -1,11 +1,10 @@
 ﻿/**
  * Authors: The D DBI project
- *
- * Version: 0.2.5
- *
  * Copyright: BSD license
  */
 module dbi.mssql.MssqlResult;
+
+version (dbi_mssql) {
 
 version (Phobos) {
 	private import std.string : toDString = toString, toCString = toStringz, locate = find;
@@ -179,4 +178,6 @@ class MssqlResult : Result {
 			}
 		}
 	}
+}
+
 }

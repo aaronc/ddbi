@@ -1,11 +1,10 @@
 ﻿/**
  * Authors: The D DBI project
- *
- * Version: 0.2.5
- *
  * Copyright: BSD license
  */
 module dbi.sqlite.SqliteResult;
+
+version (dbi_sqlite) {
 
 version (Phobos) {
 	private import std.string : asString = toString;
@@ -56,4 +55,6 @@ class SqliteResult : Result {
 
 	private:
 	sqlite3_stmt* stmt;
+}
+
 }

@@ -1,8 +1,5 @@
 ﻿/**
  * Authors: The D DBI project
- *
- * Version: 0.2.5
- *
  * Copyright: BSD license
  */
 module dbi.odbc.OdbcResult;
@@ -10,6 +7,8 @@ module dbi.odbc.OdbcResult;
 // Almost every cast involving chars and SQLCHARs shouldn't exist, but involve bugs in
 // WindowsAPI revision 144.  I'll see about fixing their ODBC and SQL files soon.
 // WindowsAPI should also include odbc32.lib itself.
+
+version (dbi_odbc) {
 
 version (Phobos) {
 	private import std.string : trim = strip;
@@ -151,4 +150,6 @@ class OdbcResult : Result {
 		SQLGetDiagRec(SQL_HANDLE_STMT, stmt, errorNumber, state.ptr, &nativeCode, text.ptr, text.length, &textLength);
 		return nativeCode;
 	}
+}
+
 }

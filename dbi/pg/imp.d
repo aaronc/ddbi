@@ -9,10 +9,12 @@
  *	Import library version 1.04
  *
  * Authors: The D DBI project
- *
  * Copyright: BSD license
  */
 module dbi.pg.imp;
+
+version (dbi_pg) {
+
 
 version (Phobos) {
     private import std.c.stdio;
@@ -1614,3 +1616,5 @@ int PQenv2encoding ();
  * todo
  */
 char* PQencryptPassword (char* passwd, char* user);
+
+}

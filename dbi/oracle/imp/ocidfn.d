@@ -9,10 +9,11 @@
  *	Import library version 0.04
  *
  * Authors: The D DBI project
- *
  * Copyright: BSD license
  */
 module dbi.oracle.imp.ocidfn;
+
+version (dbi_oracle) {
 
 private import dbi.oracle.imp.oratypes;
 
@@ -164,3 +165,5 @@ const uint SQLCS_NCHAR			= 2;		/// For NCHAR, NCHAR VARYING, NCLOB.
 const uint SQLCS_EXPLICIT		= 3;		/// For CHAR, etc, with "CHARACTER SET ..." syntax.
 const uint SQLCS_FLEXIBLE		= 4;		/// For PL/SQL "flexible" parameters.
 const uint SQLCS_LIT_NULL		= 5;		/// F4/29/2006or typecheck of null and empty_clob() lits.
+
+}

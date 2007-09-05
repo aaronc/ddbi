@@ -9,10 +9,11 @@
  *	Import library version 0.04
  *
  * Authors: The D DBI project
- *
  * Copyright: BSD license
  */
 module dbi.oracle.imp.oro;
+
+version (dbi_oracle) {
 
 private import dbi.oracle.imp.ocidfn, dbi.oracle.imp.oratypes;
 
@@ -801,3 +802,5 @@ deprecated alias OCIRefreshOpt OCICoherency;		/// Deprecated: Only used for beta
 deprecated OCIRefreshOpt OCI_COHERENCY	= cast(OCIRefreshOpt)2; /// Deprecated: Only used for beta2.
 deprecated OCIRefreshOpt OCI_COHERENCY_NULL = cast(OCIRefreshOpt)4; /// Deprecated: Only used for beta2.
 deprecated OCIRefreshOpt OCI_COHERENCY_ALWAYS = cast(OCIRefreshOpt)5; /// Deprecated: Only used for beta2.
+
+}

@@ -1,11 +1,11 @@
 ﻿/**
  * Authors: The D DBI project
- *
- * Version: 0.2.5
- *
  * Copyright: BSD license
  */
 module dbi.pg.PgDatabase;
+
+version (dbi_pg) {
+
 
 version (Phobos) {
 	private import std.string : toDString = toString, toCString = toStringz;
@@ -274,4 +274,5 @@ unittest {
 
 	s2("close");
 	db.close();
+}
 }

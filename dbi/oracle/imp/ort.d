@@ -9,10 +9,11 @@
  *	Import library version 0.04
  *
  * Authors: The D DBI project
- *
  * Copyright: BSD license
  */
 module dbi.oracle.imp.ort;
+
+version (dbi_oracle) {
 
 private import dbi.oracle.imp.oci, dbi.oracle.imp.oratypes, dbi.oracle.imp.oro;
 
@@ -1598,4 +1599,6 @@ bool OCI_TYPEELEM_IS_REF (uint elem_flag) {
  */
 bool OCI_TYPEPARAM_IS_REQUIRED (uint param_flag) {
 	return param_flag && OCI_TYPEPARAM_REQUIRED;
+}
+
 }

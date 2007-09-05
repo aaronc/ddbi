@@ -9,11 +9,11 @@
  *	Import library version 0.05
  *
  * Authors: The D DBI project
- *
  * Copyright: BSD license
  */
-
 module dbi.sqlite.imp;
+
+version (dbi_sqlite) {
 
 version (Windows) {
 	pragma (lib, "sqlite3.lib");
@@ -829,3 +829,5 @@ void* sqlite3_value_text16le (sqlite3_value* value);
  *
  */
 int sqlite3_value_type (sqlite3_value* value);
+
+}

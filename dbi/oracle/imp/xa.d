@@ -9,13 +9,15 @@
  *	Import library version 0.04
  *
  * Authors: The D DBI project
- *
  * Copyright: BSD license
  */
 module dbi.oracle.imp.xa;
 
 const uint XIDDATASIZE			= 128;		/// Size in bytes.
 const uint MAXGTRIDSIZE			= 64;		/// Maximum size in bytes of gtrid.
+
+version (dbi_oracle) {
+
 const uint MAXBQUALSIZE			= 64;		/// Maximum size in bytes of bqual.
 
 /**
@@ -114,3 +116,5 @@ const long XAER_PROTO			= -6;		/// Routine invoked in an improper context.
 const long XAER_RMFAIL			= -7;		/// Resource manager unavailable.
 const long XAER_DUPID			= -8;		/// The XID already exists.
 const long XAER_OUTSIDE			= -9;		/// Resource manager doing work outside global transaction.
+
+}

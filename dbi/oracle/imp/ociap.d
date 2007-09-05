@@ -9,10 +9,11 @@
  *	Import library version 0.04
  *
  * Authors: The D DBI project
- *
  * Copyright: BSD license
  */
 module dbi.oracle.imp.ociap;
+
+version (dbi_oracle) {
 
 version (Phobos) {
 	private import std.c.stdarg : va_list;
@@ -10341,3 +10342,5 @@ deprecated extern (C) sword OCIStmtBindByName (OCIStmt* stmtp, OCIBind* bindp, O
  *
  */
 deprecated extern (C) sword ocidefn (OCIStmt* stmtp, OCIDefine* defnp, OCIError* errhp, ub4 position, dvoid* valuep, sb4 value_sz, ub2 dty, dvoid* indp, ub2* rlenp, ub2* rcodep, ub4 mode);
+
+}

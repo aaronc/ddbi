@@ -1,3 +1,7 @@
+/**
+ * Authors: The D DBI project
+ * Copyright: BSD license
+ */
 module dbi.Registry;
 
 private import dbi.Database;
@@ -36,7 +40,7 @@ public static void registerDatabase(Registerable newDB) {
 }
 
 /**
- * Given a database URL, instaniate and return a Database instance.
+ * Given a database URL, instantiate and return a Database instance.
  * 
  * A database URL looks like:
  *   dbprefix://params
