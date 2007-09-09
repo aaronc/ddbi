@@ -171,6 +171,14 @@ final class Row {
                return result;
         }
 
+    /**
+     * 
+     * Returns: the number of columns in the row.
+     */
+    size_t length () {
+    	return fieldTypes.length;
+    } 
+    
 	private:
 	char[][] fieldNames;
 	char[][] fieldValues;
