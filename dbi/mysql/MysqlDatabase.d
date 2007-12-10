@@ -21,6 +21,23 @@ version (Phobos) {
 private import dbi.Database, dbi.DBIException, dbi.Result, dbi.Row, dbi.Statement, dbi.Registry;
 private import dbi.mysql.imp, dbi.mysql.MysqlError, dbi.mysql.MysqlResult;
 
+static this() {
+	uint ver = mysql_get_client_version();
+	if(ver < 50000) {
+		throw new Exception("Unsupported MySQL client version.  Please compile using at least version 5.0 of the MySQL client libray.");
+	}
+	else if(ver < 50100) {
+		if(MYSQL_VERSION != 50000) {
+			throw new Exception("You are linking against version 5.0 of the MySQL client library but you have a build switch turned on for a different version (such as MySQL_51).");
+		}
+	}
+	else {
+		if(MYSQL_VERSION != 50100) {
+			throw new Exception("You are linking against version 5.1 (or higher) of the MySQL client library so you need to use the build switch '-version=MySQL_51'.");
+		}
+	}
+}
+
 /**
  * An implementation of Database for use with MySQL databases.
  *
@@ -231,7 +248,7 @@ class MysqlDatabase : Database {
                 return mysql_insert_id(connection);
         }
 
-	private:
+	package:
 	MYSQL* connection;
 }
 
@@ -270,7 +287,7 @@ unittest {
 			tango.io.Stdout.Stdout("   ..." ~ s).newline();
 		}
 	}
-
+/+
 	s1("dbi.mysql.MysqlDatabase:");
 	MysqlDatabase db = new MysqlDatabase();
 	s2("connect");
@@ -315,7 +332,7 @@ unittest {
 	stmt.execute();
 
 	s2("close");
-	db.close();
+	db.close();+/
 }
 
 }

@@ -7,10 +7,10 @@ module dbi.mysql.imp;
 version (dbi_mysql) {
 
 extern (C):
+version (Windows) extern (Windows):
 
 version (Windows) {
 	pragma (lib, "libmysql.lib");
-	extern (Windows):
 } else version (linux) {
 	pragma (lib, "libmysql.a");
 } else version (Posix) {
@@ -19,6 +19,13 @@ version (Windows) {
 	pragma (lib, "libmysql.a");
 } else {
 	pragma (msg, "You will need to manually link in the MySQL library.");
+}
+
+version(MySQL_51) {
+	const uint MYSQL_VERSION = 50100;
+}
+else {
+	const uint MYSQL_VERSION = 50000;
 }
 
 alias ubyte __u_char;
@@ -683,6 +690,9 @@ struct st_mysql_field {
   uint decimals;
   uint charsetnr;
   enum_field_types type;
+  version(MySQL_51){
+	  void* extension;
+  }
 };
 alias st_mysql_field MYSQL_FIELD;
 
@@ -739,16 +749,29 @@ struct st_mem_root {
 };
 alias st_mem_root MEM_ROOT;
 
-
-struct st_mysql_data {
-  my_ulonglong rows;
-  uint fields;
-  MYSQL_ROWS *data;
-  MEM_ROOT alloc;
-
-  MYSQL_ROWS **prev_ptr;
-
-};
+version(MySQL_51) {
+	struct st_mysql_data {
+		MYSQL_ROWS *data;
+		//embedded_query_result *embedded_info;
+		void* embedded_info;
+		MEM_ROOT alloc;
+		my_ulonglong rows;
+		uint fields;
+		void* extension;
+	
+		};	
+}
+else {
+	struct st_mysql_data {
+	  my_ulonglong rows;
+	  uint fields;
+	  MYSQL_ROWS *data;
+	  MEM_ROOT alloc;
+	
+	  MYSQL_ROWS **prev_ptr;
+	
+	};
+}
 alias st_mysql_data MYSQL_DATA;
 
 
@@ -813,6 +836,9 @@ struct st_mysql_options {
   void (*local_infile_end)(void *);
   int (*local_infile_error)(void *, char *, uint);
   void *local_infile_userdata;
+  version(MySQL_51) {
+	  void* extension;
+  }
 }
 
 enum mysql_status
@@ -918,6 +944,10 @@ struct st_mysql {
 
 
   my_bool *unbuffered_fetch_owner;
+  byte* info_buffer;
+  version(MySQL_51) {
+	  void* extension;
+  }
 };
 alias st_mysql MYSQL;
 
@@ -929,20 +959,44 @@ struct st_mysql_res {
   MYSQL_ROWS *data_cursor;
   uint *lengths;
   MYSQL *handle;
-  MEM_ROOT field_alloc;
-  uint field_count, current_field;
-  MYSQL_ROW row;
-  MYSQL_ROW current_row;
-  my_bool eof;
+  version(MySQL_51) {
+	  const st_mysql_methods *methods;
+	  MYSQL_ROW row;
+	  MYSQL_ROW current_row;
+	  MEM_ROOT field_alloc;
+	  uint field_count, current_field;
+	  my_bool eof;
+	  my_bool unbuffered_fetch_cancelled;	  
+	  void* extension;
+  }
+  else {
+	  MEM_ROOT field_alloc;
+	  uint field_count, current_field;
+	  MYSQL_ROW row;
+	  MYSQL_ROW current_row;
+	  my_bool eof;
 
-  my_bool unbuffered_fetch_cancelled;
-  const st_mysql_methods *methods;
+	  my_bool unbuffered_fetch_cancelled;
+	  const st_mysql_methods *methods;  
+  }
 };
 alias st_mysql_res MYSQL_RES;
 
 struct st_mysql_manager {
   NET net;
   char*  host,user,passwd;
+version(MySQL_51) {
+	char* net_buf,net_buf_pos,net_data_end;
+	uint port;
+	int cmd_status;
+	int last_errno;
+	int net_buf_size;
+	my_bool free_me;
+	my_bool eof;
+	char last_error[256];
+	void* extension;
+}
+else {
   uint port;
   my_bool free_me;
   my_bool eof;
@@ -952,6 +1006,7 @@ struct st_mysql_manager {
   char* net_buf,net_buf_pos,net_data_end;
   int net_buf_size;
   char last_error[256];
+}
 };
 alias st_mysql_manager MYSQL_MANAGER;
 
@@ -1157,30 +1212,62 @@ enum enum_mysql_stmt_state
   MYSQL_STMT_INIT_DONE= 1, MYSQL_STMT_PREPARE_DONE, MYSQL_STMT_EXECUTE_DONE,
   MYSQL_STMT_FETCH_DONE
 };
-struct st_mysql_bind {
-  uint *length;
-  my_bool *is_null;
-  void *buffer;
-
-  my_bool *error;
-  enum_field_types buffer_type;
-
-  uint buffer_length;
-  ubyte *row_ptr;
-  uint offset;
-  uint length_value;
-  uint param_number;
-  uint pack_length;
-  my_bool error_value;
-  my_bool is_unsigned;
-  my_bool int_data_used;
-  my_bool is_null_value;
-  void (*store_param_func)(NET *net, st_mysql_bind *param);
-  void (*fetch_result)(st_mysql_bind *, MYSQL_FIELD *,
-                       ubyte **row);
-  void (*skip_result)(st_mysql_bind *, MYSQL_FIELD *,
-                      ubyte **row);
-};
+version(MySQL_51)
+{
+	struct st_mysql_bind
+	{
+	  uint		*length;          /* output length pointer */
+	  my_bool	*is_null;	  /* Pointer to null indicator */
+	  void		*buffer;	  /* buffer to get/put data */
+	  /* set this if you want to track data truncations happened during fetch */
+	  my_bool       *error;
+	  ubyte *row_ptr;         /* for the current data position */
+	  void (*store_param_func)(NET *net, st_mysql_bind *param);
+	  void (*fetch_result)(st_mysql_bind *, MYSQL_FIELD *,
+	                       ubyte **row);
+	  void (*skip_result)(st_mysql_bind *, MYSQL_FIELD *,
+			      ubyte **row);
+	  /* output buffer length, must be set when fetching str/binary */
+	  uint buffer_length;
+	  uint offset;           /* offset position for char/binary fetch */
+	  uint	length_value;     /* Used if length is 0 */
+	  uint	param_number;	  /* For null count and error messages */
+	  uint  pack_length;	  /* Internal length for packed data */
+	  enum_field_types buffer_type;	/* buffer type */
+	  my_bool       error_value;      /* used if error is 0 */
+	  my_bool       is_unsigned;      /* set if integer type is unsigned */
+	  my_bool	long_data_used;	  /* If used with mysql_send_long_data */
+	  my_bool	is_null_value;    /* Used if is_null is 0 */
+	  void *extension;
+	}
+}
+else
+{
+	struct st_mysql_bind {
+	  uint *length;
+	  my_bool *is_null;
+	  void *buffer;
+	
+	  my_bool *error;
+	  enum_field_types buffer_type;
+	
+	  uint buffer_length;
+	  ubyte *row_ptr;
+	  uint offset;
+	  uint length_value;
+	  uint param_number;
+	  uint pack_length;
+	  my_bool error_value;
+	  my_bool is_unsigned;
+	  my_bool int_data_used;
+	  my_bool is_null_value;
+	  void (*store_param_func)(NET *net, st_mysql_bind *param);
+	  void (*fetch_result)(st_mysql_bind *, MYSQL_FIELD *,
+	                       ubyte **row);
+	  void (*skip_result)(st_mysql_bind *, MYSQL_FIELD *,
+	                      ubyte **row);
+	};
+}
 alias st_mysql_bind MYSQL_BIND;
 
 
@@ -1195,15 +1282,19 @@ struct st_mysql_stmt {
   MYSQL_FIELD *fields;
   MYSQL_DATA result;
   MYSQL_ROWS *data_cursor;
+  version(MySQL_51) {	 
+	  int (*read_row_func)(st_mysql_stmt *stmt,
+	                                  ubyte **row);
+	  my_ulonglong affected_rows;
+	  my_ulonglong insert_id;
+  }
+  else {
+	  my_ulonglong affected_rows;
+	  my_ulonglong insert_id;
+	  int (*read_row_func)(st_mysql_stmt *stmt,
+	                                  ubyte **row);
 
-  my_ulonglong affected_rows;
-  my_ulonglong insert_id;
-
-
-
-
-  int (*read_row_func)(st_mysql_stmt *stmt,
-                                  ubyte **row);
+  }
   uint stmt_id;
   uint flags;
 
@@ -1228,6 +1319,9 @@ struct st_mysql_stmt {
 
 
   my_bool update_max_length;
+  version(MySQL_51) {
+	  void* extension;
+  }
 };
 alias st_mysql_stmt MYSQL_STMT;
 
@@ -1327,5 +1421,17 @@ my_bool mysql_more_results(MYSQL *mysql);
 int mysql_next_result(MYSQL *mysql);
 void mysql_close(MYSQL *sock);
 uint net_safe_read(MYSQL* mysql);
+
+const uint NOT_NULL_FLAG = 1;		/* Field can't be NULL */
+const uint PRI_KEY_FLAG = 2;		/* Field is part of a primary key */
+const uint UNIQUE_KEY_FLAG = 4;		/* Field is part of a unique key */
+const uint MULTIPLE_KEY_FLAG = 8;		/* Field is part of a key */
+const uint BLOB_FLAG = 16;		/* Field is a blob */
+const uint UNSIGNED_FLAG = 32;		/* Field is unsigned */
+const uint ZEROFILL_FLAG = 64;		/* Field is zerofill */
+const uint BINARY_FLAG = 128;		/* Field is binary   */
+
+const int MYSQL_NO_DATA = 100;
+const int MYSQL_DATA_TRUNCATED = 101;
 
 }
