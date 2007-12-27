@@ -4,11 +4,7 @@
  */
 module dbi.Row;
 
-version (Phobos) {
-	debug (UnitTest) private static import std.stdio;
-} else {
-	debug (UnitTest) private static import tango.io.Stdout;
-}
+private static import tango.io.Stdout;
 private import dbi.DBIException;
 
 /**
