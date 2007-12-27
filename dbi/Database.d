@@ -4,13 +4,8 @@
  */
 module dbi.Database;
 
-version (Phobos) {
-	private static import std.string;
-	debug (UnitTest) private static import std.stdio;
-} else {
-	private static import tango.text.Util;
-	debug (UnitTest) private static import tango.io.Stdout;
-}
+private static import tango.text.Util;
+private static import tango.io.Stdout;
 private import dbi.DBIException, dbi.Result, dbi.Row, dbi.Statement;
 
 /**
@@ -200,23 +195,12 @@ abstract class Database {
 	 */
 	final protected char[][char[]] getKeywords (char[] string) {
 		char[][char[]] keywords;
-		version (Phobos) {
-			foreach (char[] group; std.string.split(string, ";")) {
-				if (group == "") {
-					continue;
-				}
-				char[][] vals = std.string.split(group, "=");
-				keywords[vals[0]] = vals[1];
+		foreach (char[] group; tango.text.Util.delimit(string, ";")) {
+			if (group == "") {
+				continue;
 			}
-		} else {
-			foreach (char[] group; tango.text.Util.delimit(string, ";")) {
-				if (group == "") {
-					continue;
-				}
-				char[][] vals = tango.text.Util.delimit(group, "=");
-				keywords[vals[0]] = vals[1];
-			}
-
+			char[][] vals = tango.text.Util.delimit(group, "=");
+			keywords[vals[0]] = vals[1];
 		}
 		return keywords;
 	}
@@ -232,22 +216,12 @@ private class TestDatabase : Database {
 }
 
 unittest {
-	version (Phobos) {
-		void s1 (char[] s) {
-			std.stdio.writefln("%s", s);
-		}
+	void s1 (char[] s) {
+		tango.io.Stdout.Stdout(s).newline();
+	}
 
-		void s2 (char[] s) {
-			std.stdio.writefln("   ...%s", s);
-		}
-	} else {
-		void s1 (char[] s) {
-			tango.io.Stdout.Stdout(s).newline();
-		}
-
-		void s2 (char[] s) {
-			tango.io.Stdout.Stdout("   ..." ~ s).newline();
-		}
+	void s2 (char[] s) {
+		tango.io.Stdout.Stdout("   ..." ~ s).newline();
 	}
 
 	s1("dbi.Database:");

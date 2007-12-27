@@ -35,7 +35,7 @@ public interface Registerable {
  *     asked via getDatabaseForURL.
  */
 public static void registerDatabase(Registerable newDB) {
-	logger.trace("registering database: " ~ newDB.getPrefix());
+	//logger.trace("registering provider: " ~ newDB.getPrefix());
 	dbs[newDB.getPrefix()] = newDB;
 }
 

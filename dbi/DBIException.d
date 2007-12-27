@@ -1,14 +1,10 @@
-﻿/**
+/**
  * Authors: The D DBI project
  * Copyright: BSD license
  */
 module dbi.DBIException;
 
-version (Phobos) {
-	private import std.stdarg : va_arg;
-} else {
-	private import tango.core.Vararg : va_arg;
-}
+private import tango.core.Vararg : va_arg;
 private import dbi.ErrorCode;
 
 /**
@@ -58,11 +54,7 @@ class DBIException : Exception {
 			} else if (_arguments[i] == typeid(ErrorCode)) {
 				dbiCode = va_arg!(ErrorCode)(_argptr);
 			} else {
-				version (Phobos) {
-					throw new DBIException("Invalid argument of type \"" ~ _arguments[i].toString() ~ "\" passed to the DBIException constructor.");
-				} else {
-					throw new DBIException("Invalid argument of type \"" ~ _arguments[i].toUtf8() ~ "\" passed to the DBIException constructor.");
-				}
+			  throw new DBIException("Invalid argument of type \"" ~ _arguments[i].toString() ~ "\" passed to the DBIException constructor.");
 			}
 		}
 	}
