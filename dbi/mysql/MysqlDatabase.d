@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Authors: The D DBI project
  * Copyright: BSD license
  */
@@ -6,18 +6,12 @@ module dbi.mysql.MysqlDatabase;
 
 version (dbi_mysql) {
 
-version (Phobos) {
-	private static import std.conv, std.string;
-	private alias std.string.toString toDString;
-	private alias std.string.toStringz toCString;
-	debug (UnitTest) private static import std.stdio;
-} else {
-	private import tango.stdc.stringz : toDString = fromUtf8z, toCString = toUtf8z;
-        private import tango.io.Console;
-	private static import tango.text.Util;
-	private static import tango.text.convert.Integer;
-	debug (UnitTest) private static import tango.io.Stdout;
-}
+private import tango.stdc.stringz : toDString = fromUtf8z, toCString = toStringz;
+private import tango.io.Console;
+private static import tango.text.Util;
+private static import tango.text.convert.Integer;
+debug (UnitTest) private static import tango.io.Stdout;
+
 private import dbi.Database, dbi.DBIException, dbi.Result, dbi.Row, dbi.Statement, dbi.Registry;
 private import dbi.mysql.imp, dbi.mysql.MysqlError, dbi.mysql.MysqlResult;
 
@@ -113,27 +107,14 @@ class MysqlDatabase : Database {
 				sock = keywords["sock"];
 			}
 			if ("port" in keywords) {
-				version (Phobos) {
-					port = std.conv.toInt(keywords["port"]);
-				} else {
-					port = cast(uint)tango.text.convert.Integer.parse(keywords["port"]);
-				}
+                port = cast(uint)tango.text.convert.Integer.parse(keywords["port"]);
 			}
 		}
-
-		version (Phobos) {
-			if (std.string.find(params, "=") != -1) {
-				parseKeywords();
-			} else {
-				dbname = params;
-			}
-		} else {
-			if (tango.text.Util.contains(params, '=')) {
-				parseKeywords();
-			} else {
-				dbname = params;
-			}
-		}
+        if (tango.text.Util.contains(params, '=')) {
+            parseKeywords();
+        } else {
+            dbname = params;
+        }
 
 		mysql_real_connect(connection, toCString(host), toCString(username), toCString(password), toCString(dbname), port, toCString(sock), 0);
 		if (uint error = mysql_errno(connection)) {
@@ -270,23 +251,14 @@ static this() {
 }
 
 unittest {
-	version (Phobos) {
-		void s1 (char[] s) {
-			std.stdio.writefln("%s", s);
-		}
 
-		void s2 (char[] s) {
-			std.stdio.writefln("   ...%s", s);
-		}
-	} else {
-		void s1 (char[] s) {
-			tango.io.Stdout.Stdout(s).newline();
-		}
+    void s1 (char[] s) {
+        tango.io.Stdout.Stdout(s).newline();
+    }
 
-		void s2 (char[] s) {
-			tango.io.Stdout.Stdout("   ..." ~ s).newline();
-		}
-	}
+    void s2 (char[] s) {
+        tango.io.Stdout.Stdout("   ..." ~ s).newline();
+    }
 /+
 	s1("dbi.mysql.MysqlDatabase:");
 	MysqlDatabase db = new MysqlDatabase();
