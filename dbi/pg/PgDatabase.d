@@ -6,12 +6,7 @@ module dbi.pg.PgDatabase;
 
 version (dbi_pg) {
 
-
-version (Phobos) {
-	private import std.string : toDString = toString, toCString = toStringz;
-	debug (UnitTest) private static import std.stdio;
-} else {
-	private import tango.stdc.stringz : toDString = fromUtf8z, toCString = toUtf8z;
+	private import tango.stdc.stringz : toDString = fromUtf8z, toCString = toStringz;
 	debug (UnitTest) private static import tango.io.Stdout;
 }
 private import dbi.Database, dbi.DBIException, dbi.Result, dbi.Row, dbi.Statement;
@@ -206,29 +201,30 @@ class PgDatabase : Database {
 		return "not implemented";
 	}
 
+	/**
+	 * Get the integer id of the last row to be inserted.
+	 *
+	 * Returns:
+	 *	The id of the last row inserted into the database.
+	 */
+	override long getLastInsertID() {
+        // TODO: Somehow use PQoidValue with the last INSERT result
+        return 0;
+	}
+
 	private:
 	PGconn* connection;
 	int errorCode;
 }
 
 unittest {
-	version (Phobos) {
-		void s1 (char[] s) {
-			std.stdio.writefln("%s", s);
-		}
+    void s1 (char[] s) {
+        tango.io.Stdout.Stdout(s).newline();
+    }
 
-		void s2 (char[] s) {
-			std.stdio.writefln("   ...%s", s);
-		}
-	} else {
-		void s1 (char[] s) {
-			tango.io.Stdout.Stdout(s).newline();
-		}
-
-		void s2 (char[] s) {
-			tango.io.Stdout.Stdout("   ..." ~ s).newline();
-		}
-	}
+    void s2 (char[] s) {
+        tango.io.Stdout.Stdout("   ..." ~ s).newline();
+    }
 
 	s1("dbi.pg.PgDatabase:");
 	PgDatabase db = new PgDatabase();
@@ -274,5 +270,4 @@ unittest {
 
 	s2("close");
 	db.close();
-}
 }
