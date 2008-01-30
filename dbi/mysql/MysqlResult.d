@@ -12,7 +12,12 @@ version (Phobos) {
 	private import tango.stdc.stringz : asString = fromUtf8z;
 }
 private import dbi.DBIException, dbi.Result, dbi.Row;
-private import dbi.mysql.imp;
+version(Windows) {
+	private import dbi.mysql.imp_win;
+}
+else {
+	private import dbi.mysql.imp;
+}
 
 /**
  * Manage a result set from a MySQL database query.

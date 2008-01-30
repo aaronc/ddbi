@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Authors: The D DBI project
  * Copyright: BSD license
  */

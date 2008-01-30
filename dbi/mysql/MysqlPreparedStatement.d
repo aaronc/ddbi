@@ -2,42 +2,31 @@ module dbi.mysql.MysqlPreparedStatement;
 
 version(dbi_mysql) {
 
-	version (Phobos) {
-		private static import std.conv, std.string;
-		private alias std.string.toString toDString;
-		private alias std.string.toStringz toCString;
-		debug (UnitTest) private static import std.stdio;
-	} else {
-		private import tango.stdc.string;
-		private import tango.stdc.stringz : toDString = fromUtf8z, toCString = toUtf8z;
-	        private import tango.io.Console;
-		private static import tango.text.Util;
-		private import Integer = tango.text.convert.Integer;
-		debug(UnitTest) {
-			import tango.stdc.stringz;
-			import tango.io.Stdout;
-			import tango.util.log.ConsoleAppender;
-		}
+	import tango.stdc.string;
+	import tango.stdc.stringz : toDString = fromUtf8z, toCString = toStringz;
+	static import tango.text.Util;
+	import Integer = tango.text.convert.Integer;
+	debug(UnitTest) {
+		import tango.stdc.stringz;
+		import tango.io.Stdout;
+		debug = Log;
 	}
 	debug(Log) {
+		import tango.util.log.ConsoleAppender;
 		import tango.util.log.Log;
 	}
 	
 import dbi.mysql.MysqlDatabase;
-import dbi.mysql.imp;
-import dbi.PreparedStatement;
+version(Windows) {
+	private import dbi.mysql.imp_win;
+}
+else {
+	private import dbi.mysql.imp;
+}
+public import dbi.PreparedStatement, dbi.Metadata;
 
-class MysqlPreparedStatementProvider : IPreparedStatementProvider
-{
-	debug(Log)
-	{
-		static Logger log;
-		static this()
-		{
-			log = Log.getLogger("dbi.mysql.MysqlPreparedStatement.MysqlPreparedStatementProvider");
-		}
-	}
-	
+class MysqlPreparedStatementProvider : IPreparedStatementProvider, IMetadataProvider
+{	
 	this(MysqlDatabase db)
 	{
 		if(!db.connection) throw new Exception("Attempting to create prepared statements but not connected to database");
@@ -46,7 +35,7 @@ class MysqlPreparedStatementProvider : IPreparedStatementProvider
 	
 	private	MYSQL* mysql;
 	
-	IPreparedStatement prepare(string sql)
+	IPreparedStatement prepare(char[] sql)
 	{
 		MYSQL_STMT* stmt = mysql_stmt_init(mysql);
 		auto res = mysql_stmt_prepare(stmt, toCString(sql), sql.length);
@@ -58,6 +47,89 @@ class MysqlPreparedStatementProvider : IPreparedStatementProvider
 			return null;
 		}
 		return new MysqlPreparedStatement(stmt);
+	}
+	
+	void beginTransact()
+	{
+		const char[] sql = "START TRANSACTION";
+		mysql_real_query(mysql, sql.ptr, sql.length);
+	}
+	
+	void rollback()
+	{
+		mysql_rollback(mysql);
+	}
+	
+	void commit()
+	{
+		mysql_commit(mysql);
+	}
+	
+	bool hasTable(char[] tablename)
+	{
+		MYSQL_RES* res = mysql_list_tables(mysql, toCString(tablename));
+		if(!res) {
+			debug(Log) {
+				log.warn("mysql_list_tables returned null in method tableExists()");
+				logError;
+			}
+			return false;
+		}
+		bool exists = mysql_fetch_row(res) ? true : false;
+		mysql_free_result(res);
+		return exists;
+	}
+	
+	bool getTableInfo(char[] tablename, inout TableInfo info)
+	{
+		char[] q = "SHOW COLUMNS FROM `" ~ tablename ~ "`"; 
+		auto ret = mysql_real_query(mysql, q.ptr, q.length);
+		if(ret != 0) {
+			debug(Log) {
+				log.warn("Unable to SHOW COLUMNS for table " ~ tablename);
+				logError;
+			}
+			return false;
+		}
+		MYSQL_RES* res = mysql_store_result(mysql);
+		if(!res) {
+			debug(Log) {
+				log.warn("Unable to store result for " ~ q);
+				logError;
+			}
+			return false;
+		}
+		if(mysql_num_fields(res) < 1) {
+			debug(Log)
+			log.warn("Result stored, but query " ~ q ~ " has no fields");
+			return false;
+		}
+		info.fieldNames = null;
+		MYSQL_ROW row = mysql_fetch_row(res);
+		while(row != null) {
+			char[] dbCol = toDString(row[0]).dup;
+			info.fieldNames ~= dbCol;
+			char[] keyCol = toDString(row[3]);
+			if(keyCol == "PRI") info.primaryKeyFields ~= dbCol;
+			row = mysql_fetch_row(res);
+		}
+		mysql_free_result(res);
+		return true;
+	}
+	
+	debug(Log)
+	{
+		static Logger log;
+		static this()
+		{
+			log = Log.getLogger("dbi.mysql.MysqlPreparedStatement.MysqlPreparedStatementProvider");
+		}
+		
+		private void logError()
+		{
+			char* err = mysql_error(mysql);
+			log.trace(toDString(err));
+		}
 	}
 }
 
@@ -82,7 +154,7 @@ class MysqlPreparedStatement : IPreparedStatement
 		
 		for(uint i = 0; i < nFields; i++)
 		{
-			metadata[i].name = fields[i].name[0 .. fields[i].name_length];
+			metadata[i].name = fields[i].name[0 .. fields[i].name_length].dup;
 			metadata[i].type = fromMysqlType(fields[i].type, fields[i].flags);
 		}
 		mysql_free_result(res);
@@ -112,40 +184,38 @@ class MysqlPreparedStatement : IPreparedStatement
 		uint len = bind.length;
 		for(uint i = 0; i < len; ++i)
 		{
-			with(enum_field_types)
+			switch(paramHelper.types[i])
 			{
-			switch(paramBind[i].buffer_type)
-			{
-			case(MYSQL_TYPE_STRING):
-			case(MYSQL_TYPE_BLOB):
+			case(BindType.String):
+			case(BindType.Binary):
 				ubyte[]* arr = cast(ubyte[]*)(bind[i]);
 				paramBind[i].buffer = (*arr).ptr;
 				auto l = (*arr).length;
 				paramBind[i].buffer_length = l;
 				paramHelper.len[i] = l;
 				break;
-		/*	case(BindType.Date):
-				auto date = *cast(Date*)(paramPtr + paramCols[i].offset);
-				paramHelper.time[i].year = date.year;
-				paramHelper.time[i].month = date.month;
-				paramHelper.time[i].day = date.day;
-				paramHelper.time[i].hour = date.hour;
-				paramHelper.time[i].minute = date.min;
-				paramHelper.time[i].second = date.sec;
-				break;*/
-			case(MYSQL_TYPE_DATETIME):
+			case(BindType.Time):
+				auto time = *cast(Time*)(bind[i]);
+				auto dateTime = Clock.toDate(time); 
+				paramHelper.time[i].year = dateTime.date.year;
+				paramHelper.time[i].month = dateTime.date.month;
+				paramHelper.time[i].day = dateTime.date.day;
+				paramHelper.time[i].hour = dateTime.time.hours;
+				paramHelper.time[i].minute = dateTime.time.minutes;
+				paramHelper.time[i].second = dateTime.time.seconds;
+				break;
+			case(BindType.DateTime):
 				auto dateTime = *cast(DateTime*)(bind[i]);
-				paramHelper.time[i].year = dateTime.year;
-				paramHelper.time[i].month = dateTime.month;
-				paramHelper.time[i].day = dateTime.day;
-				paramHelper.time[i].hour = dateTime.hour;
-				paramHelper.time[i].minute = dateTime.minute;
-				paramHelper.time[i].second = dateTime.second;
+				paramHelper.time[i].year = dateTime.date.year;
+				paramHelper.time[i].month = dateTime.date.month;
+				paramHelper.time[i].day = dateTime.date.day;
+				paramHelper.time[i].hour = dateTime.time.hours;
+				paramHelper.time[i].minute = dateTime.time.minutes;
+				paramHelper.time[i].second = dateTime.time.seconds;
 				break;
 			default:
 				paramBind[i].buffer = bind[i];
 				break;
-			}
 			}
 		}
 		
@@ -213,35 +283,29 @@ class MysqlPreparedStatement : IPreparedStatement
 		
 		foreach(i, mysqlTime; resHelper.time)
 		{
-			DateTime* dateTime = cast(DateTime*)(bind[i]);
-			*dateTime = DateTime(mysqlTime.year, mysqlTime.month, mysqlTime.day);
-			(*dateTime).addHours(mysqlTime.hour);
-			(*dateTime).addMinutes(mysqlTime.minute);
-			(*dateTime).addSeconds(mysqlTime.second);
+			if(resHelper.types[i] == BindType.Time) {
+				Time* time = cast(Time*)(bind[i]);
+				DateTime dt;
+				dt.date.year = mysqlTime.year;
+				dt.date.month = mysqlTime.month;
+				dt.date.day = mysqlTime.day;
+				dt.time.hours = mysqlTime.hour;
+				dt.time.minutes = mysqlTime.minute;
+				dt.time.seconds = mysqlTime.second;
+				*time = Clock.fromDate(dt);
+			}
+			else if(resHelper.types[i] == BindType.DateTime) {
+				DateTime* dt = cast(DateTime*)(bind[i]);
+				(*dt).date.year = mysqlTime.year;
+				(*dt).date.month = mysqlTime.month;
+				(*dt).date.day = mysqlTime.day;
+				(*dt).time.hours = mysqlTime.hour;
+				(*dt).time.minutes = mysqlTime.minute;
+				(*dt).time.seconds = mysqlTime.second;
+			}
 		}
 		
-		/*	case Type.Date:
-		Date* date = cast(Date*)(bind[i]);
-		(*date).year = resHelper.time[i].year;
-		(*date).month = resHelper.time[i].month;
-		(*date).day = resHelper.time[i].day;
-		(*date).hour = resHelper.time[i].hour;
-		(*date).min = resHelper.time[i].minute;
-		(*date).sec = resHelper.time[i].second;						
-		break;*/
 		if(res == 0) {
-			/+for(uint i = 0; i < resBind.length; ++i)
-			{
-				if(resBind[i].buffer_type != enum_field_types.MYSQL_TYPE_STRING ||
-					   resBind[i].buffer_type != enum_field_types.MYSQL_TYPE_BLOB)
-				{
-					ubyte[]* arr = cast(ubyte[]*)(bind[i]);
-					//(*arr) = (*arr)[0 .. resHelper.len[i]];
-					uint l = resHelper.len[i];
-					*arr = resHelper.buffer[i][0 .. l];
-				}
-				
-			}+/
 			foreach(i, buf; resHelper.buffer)
 			{
 				ubyte[]* arr = cast(ubyte[]*)(bind[i]);
@@ -271,44 +335,6 @@ class MysqlPreparedStatement : IPreparedStatement
 				}
 				*arr = buf[0 .. l];
 			}
-		/+	for(uint i = 0; i < resBind.length; ++i)
-			{
-				if(*(resBind[i].error))
-				{
-					if(resBind[i].buffer_type != enum_field_types.MYSQL_TYPE_STRING ||
-					   resBind[i].buffer_type != enum_field_types.MYSQL_TYPE_BLOB)
-					{
-						debug(Log) {
-							log.error("Error in column that is not String of Binary type");
-							logError;
-						}
-						return false;
-					}
-					
-					
-					ubyte[]* arr = cast(ubyte[]*)(bind[i]);
-					if(!arr) {
-						debug(Log) {
-							log.error("Error retrieving String of Binary in bind parameters");
-							logError;
-						}
-						return false;
-					}
-					//(*arr).length = *(resBind[i].length);
-					//resBind[i].buffer_length = *(resBind[i].length);
-					uint l = resHelper.len[i];
-					resHelper.buffer[i].length = l;
-					resBind[i].buffer_length = l;
-					resBind[i].buffer = resHelper.buffer[i].ptr;
-					if(mysql_stmt_fetch_column(stmt, &resBind[i], i, 0) != 0) {
-						debug(Log) {
-							log.error("Error fetching String of Binary that failed due to truncation");
-							logError;
-						}
-						return false;
-					}
-				}
-			}+/
 			return true;
 		}
 		else if(res == MYSQL_NO_DATA) return false;
@@ -323,7 +349,6 @@ class MysqlPreparedStatement : IPreparedStatement
 	void reset()
 	{
 		mysql_stmt_free_result(stmt);
-		//mysql_stmt_reset(stmt);
 	}
 	
 	ulong getLastInsertID()
@@ -381,6 +406,7 @@ class MysqlPreparedStatement : IPreparedStatement
 		uint[] len;
 		MYSQL_TIME[uint] time;
 		ubyte[][uint] buffer;
+		BindType[] types;
 	}
 	
 	private static BindType fromMysqlType(enum_field_types type, uint flags)
@@ -410,7 +436,7 @@ class MysqlPreparedStatement : IPreparedStatement
             case MYSQL_TYPE_DATE:
             case MYSQL_TYPE_TIME:
             case MYSQL_TYPE_DATETIME:
-            	return Time;
+            	return DateTime;
             case MYSQL_TYPE_VAR_STRING:
             case MYSQL_TYPE_STRING:
             case MYSQL_TYPE_VARCHAR:
@@ -505,22 +531,33 @@ class MysqlPreparedStatement : IPreparedStatement
 				bind[i].buffer_type = enum_field_types.MYSQL_TYPE_BLOB;
 				bind[i].is_unsigned = false;
 				break;
-			//case(BindType.Date):
-			//case(BindType.DateTime):
 			case(BindType.Time):
 				helper.time[i] = MYSQL_TIME();
 				bind[i].buffer = &helper.time[i];
 				bind[i].buffer_type = enum_field_types.MYSQL_TYPE_DATETIME;
 				bind[i].is_unsigned = false;
 				break;
+			case(BindType.DateTime):
+				helper.time[i] = MYSQL_TIME();
+				bind[i].buffer = &helper.time[i];
+				bind[i].buffer_type = enum_field_types.MYSQL_TYPE_DATETIME;
+				bind[i].is_unsigned = false;
+				break;
+			case(BindType.Null):
+				bind[i].buffer_type = enum_field_types.MYSQL_TYPE_NULL;
+				break;
 			default:
-				assert(false, "Unhandled bind type"); //TODO more detailed information;
+				debug assert(false, "Unhandled bind type"); //TODO more detailed information;
+				bind[i].buffer_type = enum_field_types.MYSQL_TYPE_NULL;
+				break;
 			}
 			
 			bind[i].length = &helper.len[i];
 			bind[i].error = &helper.error[i];
 			bind[i].is_null = &helper.is_null[i];
 		}
+		
+		helper.types = types;
 	}
 	
 	debug(Log)
@@ -538,6 +575,7 @@ class MysqlPreparedStatement : IPreparedStatement
 		}
 	}
 }
+debug(UnitTest) {
 
 unittest
 {
@@ -557,7 +595,7 @@ unittest
 	}
 	uint id;
 	char[] name;
-	DateTime dateofbirth;
+	Time dateofbirth;
 	BindType[] resTypes;
 	resTypes ~= BindType.UInt;
 	resTypes ~= BindType.String;
@@ -570,7 +608,7 @@ unittest
 	bind[2] = &dateofbirth;
 	assert(st.execute);
 	assert(st.fetch(bind));
-	Stdout.formatln("id:{},name:{},dateofbirth:{}",id,name,dateofbirth.year);
+	Stdout.formatln("id:{},name:{},dateofbirth:{}",id,name,dateofbirth.ticks);
 	assert(!st.fetch(bind));
 	
 	auto st2 = provider.prepare("SELECT * FROM test WHERE id = \?");
@@ -584,7 +622,26 @@ unittest
 	pBind ~= &usID;
 	assert(st2.execute(pBind));
 	assert(st2.fetch(bind));
-	Stdout.formatln("id:{},name:{},dateofbirth:{}",id,name,dateofbirth.year);
+	Stdout.formatln("id:{},name:{},dateofbirth:{}",id,name,dateofbirth.ticks);
+	st2.reset;
+	
+	assert(provider.hasTable("test"));
+	TableInfo ti;
+	assert(provider.getTableInfo("test", ti));
+	assert(ti.fieldNames.length == 3);
+	assert(ti.primaryKeyFields.length == 1);
+	foreach(f; ti.fieldNames)
+	{
+		Stdout.formatln("Field Name:{}", f);
+	}
+	
+	foreach(f; ti.primaryKeyFields)
+	{
+		Stdout.formatln("Primary Key:{}", f);
+	}
+	
+	db.close;
 }
 
+}
 }

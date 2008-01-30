@@ -215,6 +215,8 @@ private class TestDatabase : Database {
 	deprecated char[] getErrorMessage () {return "";}
 }
 
+debug(UnitTest) {
+
 unittest {
 	void s1 (char[] s) {
 		tango.io.Stdout.Stdout(s).newline();
@@ -231,4 +233,5 @@ unittest {
 	char[][char[]] keywords = db.getKeywords("dbname=hi;host=local;");
 	assert (keywords["dbname"] == "hi");
 	assert (keywords["host"] == "local");
+}
 }

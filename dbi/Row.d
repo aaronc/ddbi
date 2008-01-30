@@ -4,7 +4,6 @@
  */
 module dbi.Row;
 
-private static import tango.io.Stdout;
 private import dbi.DBIException;
 
 /**
@@ -182,23 +181,17 @@ final class Row {
 	int[] fieldTypes;
 }
 
+debug(UnitTest) {
+static import tango.io.Stdout;
+
 unittest {
-	version (Phobos) {
-		void s1 (char[] s) {
-			std.stdio.writefln("%s", s);
-		}
 
-		void s2 (char[] s) {
-			std.stdio.writefln("   ...%s", s);
-		}
-	} else {
-		void s1 (char[] s) {
-			tango.io.Stdout.Stdout(s).newline();
-		}
+	void s1 (char[] s) {
+		tango.io.Stdout.Stdout(s).newline();
+	}
 
-		void s2 (char[] s) {
-			tango.io.Stdout.Stdout("   ..." ~ s).newline();
-		}
+	void s2 (char[] s) {
+		tango.io.Stdout.Stdout("   ..." ~ s).newline();
 	}
 
 	s1("dbi.Row:");
@@ -226,4 +219,5 @@ unittest {
 
 	s2("getFieldDecl");
 	assert (r1.getFieldDecl(1) == "integer");
+}
 }

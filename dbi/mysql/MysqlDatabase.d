@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Authors: The D DBI project
  * Copyright: BSD license
  */
@@ -7,13 +7,19 @@ module dbi.mysql.MysqlDatabase;
 version (dbi_mysql) {
 
 private import tango.stdc.stringz : toDString = fromUtf8z, toCString = toStringz;
-private import tango.io.Console;
+    private import tango.io.Console;
 private static import tango.text.Util;
 private static import tango.text.convert.Integer;
-debug (UnitTest) private static import tango.io.Stdout;
+debug(UnitTest) import tango.io.Stdout;
 
 private import dbi.Database, dbi.DBIException, dbi.Result, dbi.Row, dbi.Statement, dbi.Registry;
-private import dbi.mysql.imp, dbi.mysql.MysqlError, dbi.mysql.MysqlResult;
+version(Windows) {
+	private import dbi.mysql.imp_win;
+}
+else {
+	private import dbi.mysql.imp;
+}
+private import dbi.mysql.MysqlError, dbi.mysql.MysqlResult;
 
 static this() {
 	uint ver = mysql_get_client_version();
@@ -250,6 +256,7 @@ static this() {
 	registerDatabase(new MysqlRegister());
 }
 
+debug(UnitTest) {
 unittest {
 
     void s1 (char[] s) {
@@ -305,6 +312,7 @@ unittest {
 
 	s2("close");
 	db.close();+/
+}
 }
 
 }

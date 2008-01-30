@@ -231,6 +231,7 @@ final class Statement {
 	}
 }
 
+debug(UnitTest) {
 unittest {
 	version (Phobos) {
 		void s1 (char[] s) {
@@ -279,4 +280,5 @@ unittest {
 	stmt.bind("name", "John Mc'Donald");
 	assert (stmt.getBoundValue("name") == "John Mc\\'Donald");
 	assert (stmt.getSql() == resultingSql);
+}
 }
