@@ -7,6 +7,7 @@ module dbi.Database;
 private static import tango.text.Util;
 private static import tango.io.Stdout;
 private import dbi.DBIException, dbi.Result, dbi.Row, dbi.Statement;
+public import dbi.SqlGen;
 
 /**
  * The database interface that all DBDs must inherit from.
@@ -203,6 +204,17 @@ abstract class Database {
 			keywords[vals[0]] = vals[1];
 		}
 		return keywords;
+	}
+	
+    static this()
+    {
+    	sqlGen = new SqlGenerator;
+    }
+    private static SqlGenerator sqlGen;
+	
+	SqlGenerator getSqlGenerator()
+	{
+		return sqlGen;
 	}
 }
 

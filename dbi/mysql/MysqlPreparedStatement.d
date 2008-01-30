@@ -17,6 +17,7 @@ version(dbi_mysql) {
 	}
 	
 import dbi.mysql.MysqlDatabase;
+import dbi.DBIException, dbi.mysql.MysqlError;
 version(Windows) {
 	private import dbi.mysql.imp_win;
 }
@@ -29,7 +30,7 @@ class MysqlPreparedStatementProvider : IPreparedStatementProvider, IMetadataProv
 {	
 	this(MysqlDatabase db)
 	{
-		if(!db.connection) throw new Exception("Attempting to create prepared statements but not connected to database");
+		if(!db.connection) throw new DBIException("Attempting to create prepared statements but not connected to database");
 		mysql = db.connection;
 	}
 	
@@ -44,7 +45,9 @@ class MysqlPreparedStatementProvider : IPreparedStatementProvider, IMetadataProv
 				auto err = mysql_stmt_error(stmt);
 				log.error("Unable to create prepared statement: \"" ~ sql ~"\", errmsg: " ~ toDString(err));
 			}
-			return null;
+			//return null;
+			auto errno = mysql_stmt_errno(stmt);
+			throw new DBIException("Unable to prepare statement: " ~ sql, errno, specificToGeneral(errno));
 		}
 		return new MysqlPreparedStatement(stmt);
 	}
@@ -171,15 +174,18 @@ class MysqlPreparedStatement : IPreparedStatement
 		initBindings(resTypes, resBind, resHelper);
 	}
 	
-	bool execute()
+	void execute()
 	{
-		return mysql_stmt_execute(stmt) == 0 ? true : false;
+		auto res = mysql_stmt_execute(stmt);
+		if(res != 0) {
+			throw new DBIException("Error at mysql_stmt_execute.", res, specificToGeneral(res));
+		}
 	}
 	
-	bool execute(void*[] bind)
+	void execute(void*[] bind)
 	{
-		if(!bind || !paramBind) throw new Exception("Attempting to execute a statement without having set parameters types or based a valid bind array.");
-		if(bind.length != paramBind.length) throw new Exception("Incorrect number of pointers in bind array");
+		if(!bind || !paramBind) throw new DBIException("Attempting to execute a statement without having set parameters types or passed a valid bind array.");
+		if(bind.length != paramBind.length) throw new DBIException("Incorrect number of pointers in bind array");
 		
 		uint len = bind.length;
 		for(uint i = 0; i < len; ++i)
@@ -220,15 +226,19 @@ class MysqlPreparedStatement : IPreparedStatement
 		}
 		
 		auto res = mysql_stmt_bind_param(stmt, paramBind.ptr);
-		if(res != 0) return false;
+		if(res != 0) {
+			throw new DBIException("Error at mysql_stmt_bind_param.", res, specificToGeneral(res));
+		}
 		res = mysql_stmt_execute(stmt);
-		return res == 0 ? true : false;
+		if(res != 0) {
+			throw new DBIException("Error at mysql_stmt_execute.", res, specificToGeneral(res));
+		}
 	}
 	
 	bool fetch(void*[] bind)
 	{
-		if(!bind || !resBind) throw new Exception("Attempting to fetch from a statement without having set parameters types or based a valid bind array.");
-		if(bind.length != resBind.length) throw new Exception("Incorrect number of pointers in bind array");
+		if(!bind || !resBind) throw new DBIException("Attempting to fetch from a statement without having set parameters types or passed a valid bind array.");
+		if(bind.length != resBind.length) throw new DBIException("Incorrect number of pointers in bind array");
 		
 		uint len = bind.length;
 		for(uint i = 0; i < len; ++i)
@@ -606,7 +616,7 @@ unittest
 	bind[0] = &id;
 	bind[1] = &name;
 	bind[2] = &dateofbirth;
-	assert(st.execute);
+	st.execute;
 	assert(st.fetch(bind));
 	Stdout.formatln("id:{},name:{},dateofbirth:{}",id,name,dateofbirth.ticks);
 	assert(!st.fetch(bind));
@@ -620,7 +630,7 @@ unittest
 	st2.setParamTypes(paramTypes);
 	st2.setResultTypes(resTypes);
 	pBind ~= &usID;
-	assert(st2.execute(pBind));
+	st2.execute(pBind);
 	assert(st2.fetch(bind));
 	Stdout.formatln("id:{},name:{},dateofbirth:{}",id,name,dateofbirth.ticks);
 	st2.reset;

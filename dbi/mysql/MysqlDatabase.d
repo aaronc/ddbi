@@ -234,9 +234,28 @@ class MysqlDatabase : Database {
         override long getLastInsertID() {
                 return mysql_insert_id(connection);
         }
+        
+    static this()
+    {
+    	mysqlSqlGen = new MysqlSqlGenerator;
+    }
+    private static MysqlSqlGenerator mysqlSqlGen;
+        
+    override SqlGenerator getSqlGenerator()
+	{
+		return mysqlSqlGen;
+	}
 
 	package:
 	MYSQL* connection;
+}
+
+class MysqlSqlGenerator : SqlGenerator
+{
+	override char getIdentifierQuoteCharacter()
+	{
+		return '`'; 
+	}
 }
 
 private class MysqlRegister : Registerable {
@@ -266,10 +285,10 @@ unittest {
     void s2 (char[] s) {
         tango.io.Stdout.Stdout("   ..." ~ s).newline();
     }
-/+
+
 	s1("dbi.mysql.MysqlDatabase:");
 	MysqlDatabase db = new MysqlDatabase();
-	s2("connect");
+/+	s2("connect");
 	db.connect("dbname=test", "test", "test");
 
 	s2("query");
@@ -312,6 +331,9 @@ unittest {
 
 	s2("close");
 	db.close();+/
+    auto sqlgen = db.getSqlGenerator;
+    auto res = sqlgen.makeInsertSql("user", ["name", "date"]);
+	assert(res == "INSERT INTO `user` (`name`,`date`) VALUES(?,?)", res);
 }
 }
 
