@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Authors: The D DBI project
  * Copyright: BSD license
  */
@@ -8,7 +8,7 @@ version (dbi_pg) {
 
 	private import tango.stdc.stringz : toDString = fromUtf8z, toCString = toStringz;
 	debug (UnitTest) private static import tango.io.Stdout;
-}
+
 private import dbi.Database, dbi.DBIException, dbi.Result, dbi.Row, dbi.Statement;
 private import dbi.pg.imp, dbi.pg.PgError, dbi.pg.PgResult;
 
@@ -270,4 +270,6 @@ unittest {
 
 	s2("close");
 	db.close();
+}
+
 }
