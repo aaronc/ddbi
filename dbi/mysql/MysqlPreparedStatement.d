@@ -379,6 +379,7 @@ class MysqlPreparedStatement : IPreparedStatement
 	~this()
 	{
 		mysql_stmt_close(stmt);
+        stmt = null;
 	}
 	
 	private MYSQL_STMT* stmt;
