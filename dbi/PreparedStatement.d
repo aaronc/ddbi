@@ -24,7 +24,7 @@ interface IPreparedStatement
 	void setResultTypes(BindType[] resTypes);
 	void execute();
 	void execute(void*[] bind);
-	bool fetch(void*[] bind);
+	bool fetch(void*[] bind, void* delegate(size_t) allocator = null);
 	void prefetchAll();
 	void reset();
 	ulong getLastInsertID();

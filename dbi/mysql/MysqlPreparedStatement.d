@@ -235,7 +235,7 @@ class MysqlPreparedStatement : IPreparedStatement
 		}
 	}
 	
-	bool fetch(void*[] bind)
+	bool fetch(void*[] bind, void* delegate(size_t) allocator = null)
 	{
 		if(!bind || !resBind) throw new DBIException("Attempting to fetch from a statement without having set parameters types or passed a valid bind array.");
 		if(bind.length != resBind.length) throw new DBIException("Incorrect number of pointers in bind array");
@@ -254,12 +254,17 @@ class MysqlPreparedStatement : IPreparedStatement
 				resBind[i].buffer_length = 256;
 				resHelper.len[i] = 256;
 				resBind[i].buffer = (*arr).ptr;*/
-				ubyte[] buf;
-				buf.length = 255;
+				/*ubyte[] buf;
+				buf.length = 0;
 				resHelper.buffer[i] = buf;
 				resBind[i].buffer = buf.ptr;
-				resBind[i].buffer_length = 255;
-				resHelper.len[i] = 255;
+				resBind[i].buffer_length = 0;
+				resHelper.len[i] = 0;*/
+				ubyte[]* arr = cast(ubyte[]*)(bind[i]);
+				resHelper.buffer[i] = *arr;
+				resBind[i].buffer_length = arr.length;
+				resHelper.len[i] = 0;
+				resBind[i].buffer = arr.ptr;
 				break;
 			case(MYSQL_TYPE_DATETIME):
 				break;
@@ -332,7 +337,13 @@ class MysqlPreparedStatement : IPreparedStatement
 				uint l = resHelper.len[i];
 				
 				if(resBind[i].error) {
-					buf.length = l;
+					if(allocator) {
+						ubyte* ptr = cast(ubyte*)allocator(l);
+						buf = ptr[0 .. l];
+					}
+					else {
+						buf = new ubyte[l];
+					}
 					resBind[i].buffer_length = l;
 					resBind[i].buffer = buf.ptr;
 					if(mysql_stmt_fetch_column(stmt, &resBind[i], i, 0) != 0) {
