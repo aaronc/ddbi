@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Authors: The D DBI project
  * Copyright: BSD license
  */
@@ -7,14 +7,10 @@ module dbi.sqlite.SqliteDatabase;
 version (dbi_sqlite) {
 
 
-version (Phobos) {
-	private import std.string : toDString = toString, toCString = toStringz;
-	debug (UnitTest) private import std.stdio;
-} else {
-	private import tango.stdc.stringz : toDString = fromUtf8z, toCString = toUtf8z;
-	private import tango.util.log.Log;
-}
-private import dbi.Database, dbi.DBIException, dbi.Result, dbi.Row, dbi.Statement, dbi.Registry, dbi.PreparedStatemt;
+private import tango.stdc.stringz : toDString = fromStringz, toCString = toStringz;
+private import tango.util.log.Log;
+    
+private import dbi.Database, dbi.DBIException, dbi.Result, dbi.Row, dbi.Statement, dbi.Registry, dbi.PreparedStatement;
 private import dbi.sqlite.imp, dbi.sqlite.SqliteError, dbi.sqlite.SqliteResult;
 
 /**
@@ -331,12 +327,12 @@ class SqlitePreparedStatement : IPreparedStatement
 	private bool row = false;
 	private bool wasReset = false;
 	
-	int setParamTypes(BindType[] paramTypes)
+	void setParamTypes(BindType[] paramTypes)
 	{
 		this.paramTypes = paramTypes;
 	}
 	
-	int setResultTypes(BindType[] resTypes)
+	void setResultTypes(BindType[] resTypes)
 	{
 		this.resTypes = resTypes;	
 	}
@@ -529,23 +525,13 @@ static this() {
 }
 
 unittest {
-	version (Phobos) {
-		void s1 (char[] s) {
-			std.stdio.writefln("%s", s);
-		}
+    void s1 (char[] s) {
+        tango.io.Stdout.Stdout(s).newline();
+    }
 
-		void s2 (char[] s) {
-			std.stdio.writefln("   ...%s", s);
-		}
-	} else {
-		void s1 (char[] s) {
-			tango.io.Stdout.Stdout(s).newline();
-		}
-
-		void s2 (char[] s) {
-			tango.io.Stdout.Stdout("   ..." ~ s).newline();
-		}
-	}
+    void s2 (char[] s) {
+        tango.io.Stdout.Stdout("   ..." ~ s).newline();
+    }
 
 	s1("dbi.sqlite.SqliteDatabase:");
 	SqliteDatabase db = new SqliteDatabase();
