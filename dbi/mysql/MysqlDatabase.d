@@ -6,8 +6,8 @@ module dbi.mysql.MysqlDatabase;
 
 version (dbi_mysql) {
 
-private import tango.stdc.stringz : toDString = fromUtf8z, toCString = toStringz;
-    private import tango.io.Console;
+private import tango.stdc.stringz : toDString = fromStringz, toCString = toStringz;
+private import tango.io.Console;
 private static import tango.text.Util;
 private static import tango.text.convert.Integer;
 debug(UnitTest) import tango.io.Stdout;

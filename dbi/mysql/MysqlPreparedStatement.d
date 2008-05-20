@@ -3,7 +3,7 @@ module dbi.mysql.MysqlPreparedStatement;
 version(dbi_mysql) {
 
 	import tango.stdc.string;
-	import tango.stdc.stringz : toDString = fromUtf8z, toCString = toStringz;
+	import tango.stdc.stringz : toDString = fromStringz, toCString = toStringz;
 	static import tango.text.Util;
 	import Integer = tango.text.convert.Integer;
 	debug(UnitTest) {

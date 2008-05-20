@@ -1,16 +1,11 @@
-﻿/**
+/**
  * Authors: The D DBI project
  * Copyright: BSD license
  */
 module dbi.mysql.MysqlResult;
 
 version (dbi_mysql) {
-
-version (Phobos) {
-	private import std.string : asString = toString;
-} else {
-	private import tango.stdc.stringz : asString = fromUtf8z;
-}
+private import tango.stdc.stringz : asString = fromStringz;
 private import dbi.DBIException, dbi.Result, dbi.Row;
 version(Windows) {
 	private import dbi.mysql.imp_win;
