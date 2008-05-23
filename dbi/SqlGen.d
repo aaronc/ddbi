@@ -1,10 +1,43 @@
 module dbi.SqlGen;
 
+import Integer = tango.text.convert.Integer;
+
+/*
+ * Does a fixed-length 2-character ubyte to hex conversion.
+ *
+ */
+void ubyteToHexFixed(ubyte x, char* res)
+{
+	const char[] digits = "0123456789abcdef";
+	res[0] = digits[x & 0xF];
+	x >>>= 4;
+	res[1] = digits[x];
+	return res;
+}
+
 class SqlGenerator
 {
 	char getIdentifierQuoteCharacter()
 	{
 		return '"'; 
+	}
+	
+	char[] createBinaryString(ubyte[] binary)
+	{
+		char[] res;
+		auto len = binary.length;
+		res.length = len * 2 + 3;
+		res[0 .. 2] = "x'";
+		auto ptr = res.ptr + 2;
+		for(size_t i = 0; i < len; ++i)
+		{
+			//assert(false, ubyteToHexFixed(binary[i]));
+			//res[i * 2 + 2 .. i * 2 + 4] = ubyteToHexFixed(binary[i]);
+			ubyteToHexFixed(binary[i], ptr);
+			ptr += 2;
+		}
+		res[$ - 1] = '\'';
+		return res;
 	}
 	
 	char[] makeFieldList(char[][] fields)
@@ -33,6 +66,7 @@ class SqlGenHelper
 {
 	static char[] makeFieldList(char[][] items, char quote = '"')
 	{
+		
 		char[] res;
 		
 		foreach(x; items)
@@ -107,5 +141,16 @@ unittest
 			sqlgen.makeQualifiedFieldList("user", ["name", "date"]),
 			sqlgen.makeQualifiedFieldList("person", ["name", "date"])
 			) == "\"user\".\"name\",\"user\".\"date\",\"person\".\"name\",\"person\".\"date\"");
+	
+	ulong x = 0x57a60e9;
+	auto ptr = cast(ubyte*)&x;
+	auto binStr = sqlgen.createBinaryString(ptr[0 .. 8]);
+	version(LittleEndian) {
+		assert(binStr == "x'9e06a75000000000'", binStr);
+	}
+	else {
+		assert(binStr == "x'00000000057a60e9'", binStr);
+	}
+	
 }
 }

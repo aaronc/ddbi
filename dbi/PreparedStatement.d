@@ -28,7 +28,7 @@ interface IPreparedStatement
 	void prefetchAll();
 	void reset();
 	ulong getLastInsertID();
-	char[] getLastErrorMsg();
+	deprecated char[] getLastErrorMsg();
 }
 
 struct FieldInfo
@@ -97,6 +97,252 @@ BindType getBindType(T)()
 	}
 	else return BindType.Null;
 }
+
+import dbi.Database;
+import Integer = tango.text.convert.Integer;
+import Float = tango.text.convert.Float;
+/+
+class PreparedStatement //: IPreparedStatement
+{
+	this (Database database, char[] sql) {
+		this.database = database;
+		this.sql = sql;
+		auto len = sql.length;
+		for(size_t i = 0; i < len; ++i)
+		{
+			if(sql[i] == '\?')
+				paramIndices ~= i;
+		}
+	}
+
+	uint getParamCount()
+	{
+		return paramIndices.length;
+	}
+	
+	void setParamTypes(BindType[] paramTypes)
+	{
+		this.paramTypes = paramTypes;
+	}
+	
+	void setResultTypes(BindType[] resTypes)
+	{
+		this.resTypes = resTypes;
+	}
+	
+	void execute()
+	{
+		database.execute(sql);
+	}
+	
+	void execute(void*[] bind)
+	{
+		size_t idx = 0;
+		char[] execSql;
+		foreach(i, type; paramTypes)
+		{
+			execSql ~= sql[idx .. paramIndices[i]];
+			idx = paramIndices[i] + 1;
+			switch(type)
+			{
+			case Bool:
+				bool* ptr = cast(byte*)bind[i];
+				if(*ptr) execSql ~= "1";
+				else execSql ~= "0";
+				break;
+			case Byte:
+				byte* ptr = cast(byte*)bind[i];
+				execSql ~= Integer.toString(*ptr);
+				break;
+			case Short:
+				short* ptr = cast(short*)bind[i];
+				execSql ~= Integer.toString(*ptr);
+				break;
+			case Int:
+				int* ptr = cast(int*)bind[i];
+				execSql ~= Integer.toString(*ptr);
+				break;
+			case Long:
+				long* ptr = cast(long*)bind[i];
+				execSql ~= Integer.toString(*ptr);
+				break;
+			case UByte:
+				ubyte* ptr = cast(ubyte*)bind[i];
+				execSql ~= Integer.toString(*ptr);
+				break;
+			case UShort:
+				ushort* ptr = cast(ushort*)bind[i];
+				execSql ~= Integer.toString(*ptr);
+				break;
+			case UInt:
+				uint* ptr = cast(uint*)bind[i];
+				execSql ~= Integer.toString(*ptr);
+				break;
+			case ULong:
+				ulong* ptr = cast(ulong*)bind[i];
+				execSql ~= Integer.toString(*ptr);
+				break;
+			case Float:
+				float* ptr = cast(float*)bind[i];
+				execSql ~= Float.toString(*ptr);
+				break;
+			case Double:
+				double* ptr = cast(double*)bind[i];
+				execSql ~= Float.toString(*ptr);
+				break;
+			case String:
+				char[]* ptr = cast(char[]*)bind[i];
+				execSql ~= *ptr;
+				assert(false, "Sql escaping");
+				break;
+			case Binary:
+				void[]* ptr = cast(void[]**)bind[i];
+				execSql ~= *ptr;
+				assert(false, "Sql escaping");
+				break;
+			case Time:
+			case DateTime:
+			case Null:
+			default:
+			}
+		}
+		execSql ~= sql[idx .. $];
+		res = database.query(execSql);
+	}
+	
+	bool fetch(void*[] bind, void* delegate(size_t) allocator = null)
+	{
+		void bindRow(Row row) {
+			foreach(i, type; resTypes)
+			{
+				switch(type)
+				{
+				case Bool:
+				case Byte:
+					byte* ptr = cast(byte*)bind[i];
+					execSql ~= Integer.toString(*ptr);
+					break;
+				case Short:
+					short* ptr = cast(short*)bind[i];
+					execSql ~= Integer.toString(*ptr);
+					break;
+				case Int:
+					int* ptr = cast(int*)bind[i];
+					execSql ~= Integer.toString(*ptr);
+					break;
+				case Long:
+					long* ptr = cast(long*)bind[i];
+					execSql ~= Integer.toString(*ptr);
+					break;
+				case UByte:
+					ubyte* ptr = cast(ubyte*)bind[i];
+					execSql ~= Integer.toString(*ptr);
+					break;
+				case UShort:
+					ushort* ptr = cast(ushort*)bind[i];
+					execSql ~= Integer.toString(*ptr);
+					break;
+				case UInt:
+					uint* ptr = cast(uint*)bind[i];
+					execSql ~= Integer.toString(*ptr);
+					break;
+				case ULong:
+					ulong* ptr = cast(ulong*)bind[i];
+					execSql ~= Integer.toString(*ptr);
+					break;
+				case Float:
+					float* ptr = cast(float*)bind[i];
+					execSql ~= Float.toString(*ptr);
+					break;
+				case Double:
+					double* ptr = cast(double*)bind[i];
+					execSql ~= Float.toString(*ptr);
+					break;
+				case String:
+					char[]* ptr = cast(char[]*)bind[i];
+					execSql ~= *ptr;
+					assert(false, "Sql escaping");
+					break;
+				case Binary:
+					void[]* ptr = cast(void[]**)bind[i];
+					execSql ~= *ptr;
+					assert(false, "Sql escaping");
+					break;
+				case Time:
+				case DateTime:
+				case Null:
+				default:
+				}
+			}
+		}		
+		
+		if(prefetchedRows.length) {
+			if(prefetchedRowIdx < prefetchedRows.length) {
+				bindRow(prefetchedRows[prefetchedRowIdx]);
+				++prefetchedRowIdx;
+				return true;
+			}
+			else {
+				prefetchedRows = null;
+				return false;
+			}
+		}
+		else if(!res) return false;
+		
+		auto row = res.fetchRow;
+		if(!row) {
+			res = null;
+			return false;
+		}
+		
+		bindRow(row);
+		
+		return true;
+	}
+	
+	void prefetchAll()
+	{
+		prefetchedRows = res.fetchAll;
+		prefetchedRowIdx = 0;
+	}
+	
+	void reset()
+	{
+		if(res) {
+			res.finish;
+			res = null;
+		}
+		prefetchedRows = null;
+	}
+	
+	ulong getLastInsertID()
+	{
+		return database.getLastInsertID;
+	}
+	
+	char[] getLastErrorMsg()
+	{
+		return database.getErrorMessage;
+	}
+	
+	private:
+		Database database;
+		Result res;
+		Rows[] prefetchedRows;
+		size_t prefetchedRowIdx;
+		char[] sql;
+		size_t[] paramIndices;
+		BindType[] paramTypes;
+		BindType[] resTypes;
+}
+
+
+debug(UnitTest) {
+unittest {
+	auto st = PreparedStatement(null, "SELECT * FROM test WHERE id = ? and name = ?");
+	assert(st.getParamCount == 2);
+}
+}+/
 /+
 class Statement : IPreparedStatement {
 	/**

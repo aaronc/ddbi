@@ -1,11 +1,13 @@
 module testddbi;
 
 import tango.util.log.Log,
-       tango.util.log.Config;
+       tango.util.log.Configurator;
 
-import dbi.Registry, 
-       dbi.Database, 
-       dbi.Statement;
+import dbi.SqlGen,
+	   dbi.Registry, 
+       dbi.Database,
+       dbi.Statement,
+       dbi.PreparedStatement;
 
 version (dbi_sqlite) {
     //This import is to fire the static constructor that registers Sqlite with the Registry
