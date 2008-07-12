@@ -8,14 +8,6 @@ public import tango.group.time;
 
 enum BindType : ubyte { Null, Bool, Byte, Short, Int, Long, UByte, UShort, UInt, ULong, Float, Double, String, Binary, Time, DateTime };
 
-interface IPreparedStatementProvider
-{
-	IPreparedStatement prepare(char[] sql);
-	void beginTransact();
-	void rollback();
-	void commit();
-}
-
 interface IPreparedStatement
 {
 	uint getParamCount();
@@ -28,7 +20,6 @@ interface IPreparedStatement
 	void prefetchAll();
 	void reset();
 	ulong getLastInsertID();
-	deprecated char[] getLastErrorMsg();
 }
 
 struct FieldInfo

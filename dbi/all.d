@@ -11,7 +11,4 @@ version (build) {
 public import	dbi.Database,
 		dbi.DBIException,
 		dbi.ErrorCode,
-		dbi.Result,
-		dbi.Row,
-		dbi.Statement,
 		dbi.Registry;

@@ -6,8 +6,8 @@ module dbi.Database;
 
 private static import tango.text.Util;
 private static import tango.io.Stdout;
-private import dbi.DBIException, dbi.Result, dbi.Row, dbi.Statement;
-public import dbi.SqlGen;
+private import dbi.DBIException;
+public import dbi.SqlGen, dbi.PreparedStatement, dbi.Metadata;
 
 /**
  * The database interface that all DBDs must inherit from.
@@ -51,19 +51,12 @@ abstract class Database {
 	 * Close the current connection to the database.
 	 */
 	abstract void close ();
-
-	/**
-	 * Prepare a SQL statement for execution.
-	 *
-	 * Params:
-	 *	sql = The SQL statement to execute.
-	 *
-	 * Returns:
-	 *	The prepared statement.
-	 */
-	final Statement prepare (char[] sql) {
-		return new Statement(this, sql);
-	}
+	
+	IPreparedStatement prepare(char[] sql);
+	IPreparedStatement virtualPrepare(char[] sql);
+	void beginTransact();
+	void rollback();
+	void commit();
 
 	/**
 	 * Escape a _string using the database's native method, if possible.
@@ -98,89 +91,6 @@ abstract class Database {
 		result.length = count;
 		return result;
 	}
-
-	/**
-	 * Execute a SQL statement that returns no results.
-	 *
-	 * Params:
-	 *	sql = The SQL statement to _execute.
-	 */
-	abstract void execute (char[] sql);
-
-	/**
-	 * Query the database.
-	 *
-	 * Params:
-	 *	sql = The SQL statement to execute.
-	 *
-	 * Returns:
-	 *	A Result object with the queried information.
-	 */
-	abstract Result query (char[] sql);
-
-	/**
-	 * Query the database and return only the first row.
-	 *
-	 * Params:
-	 *	sql = The SQL statement to execute.
-	 *
-	 * Returns:
-	 *	A Row object with the queried information or null for an empty set.
-	 */
-	final Row queryFetchOne (char[] sql) {
-		Result res = query(sql);
-		Row row = res.fetchRow();
-		res.finish();
-		return row;
-	}
-
-	/**
-	 * Query the database and return an array of all the rows.
-	 *
-	 * Params:
-	 *	sql = The SQL statement to execute
-	 *
-	 * Returns:
-	 *	An array of Row objects with the queried information.
-	 */
-	final Row[] queryFetchAll (char[] sql) {
-		Result res = query(sql);
-		Row[] rows = res.fetchAll();
-		res.finish();
-		return rows;
-	}
-
-	/**
-	 * Get the error code.
-	 *
-	 * Deprecated:
-	 *	This functionality now exists in DBIException.  This will be
-	 *	removed in version 0.3.0.
-	 *
-	 * Returns:
-	 *	The database specific error code.
-	 */
-	deprecated abstract int getErrorCode ();
-
-	/**
-	 * Get the error message.
-	 *
-	 * Deprecated:
-	 *	This functionality now exists in DBIException.  This will be
-	 *	removed in version 0.3.0.
-	 *
-	 * Returns:
-	 *	The database specific error message.
-	 */
-	deprecated abstract char[] getErrorMessage ();
- 
-	/**
-	 * Get the integer id of the last row to be inserted.
-	 *
-	 * Returns:
-	 *	The id of the last row inserted into the database.
-	 */
-        abstract long getLastInsertID ();
   
 	/**
 	 * Split a _string into keywords and values.
@@ -221,10 +131,6 @@ abstract class Database {
 private class TestDatabase : Database {
 	void connect (char[] params, char[] username = null, char[] password = null) {}
 	void close () {}
-	void execute (char[] sql) {}
-	Result query (char[] sql) {return null;}
-	deprecated int getErrorCode () {return 0;}
-	deprecated char[] getErrorMessage () {return "";}
 }
 
 debug(UnitTest) {

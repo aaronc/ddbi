@@ -47,13 +47,13 @@ static this() {
  * See_Also:
  *	Database is the interface that this provides an implementation of.
  */
-class MysqlDatabase : Database {
+class MysqlDatabase : Database, IMetadataProvider {
 	public:
 	/**
 	 * Create a new instance of MysqlDatabase, but don't connect.
 	 */
 	this () {
-		connection = mysql_init(null);
+		mysql = mysql_init(null);
 	}
 
 	/**
@@ -122,10 +122,10 @@ class MysqlDatabase : Database {
             dbname = params;
         }
 
-		mysql_real_connect(connection, toCString(host), toCString(username), toCString(password), toCString(dbname), port, toCString(sock), 0);
-		if (uint error = mysql_errno(connection)) {
+		mysql_real_connect(mysql, toCString(host), toCString(username), toCString(password), toCString(dbname), port, toCString(sock), 0);
+		if (uint error = mysql_errno(mysql)) {
 		        Cout("connect(): ");
-		        Cout(toDString(mysql_error(connection)));
+		        Cout(toDString(mysql_error(mysql)));
 		        Cout("\n").flush;			
 			throw new DBIException("Unable to connect to the MySQL database.", error, specificToGeneral(error));
 		}
@@ -138,102 +138,121 @@ class MysqlDatabase : Database {
 	 *	DBIException if there was an error disconnecting.
 	 */
 	override void close () {
-		if (connection !is null) {
-			mysql_close(connection);
-			if (uint error = mysql_errno(connection)) {
+		if (mysql !is null) {
+			mysql_close(mysql);
+			if (uint error = mysql_errno(mysql)) {
    		                Cout("close(): ");
-		                Cout(toDString(mysql_error(connection)));
+		                Cout(toDString(mysql_error(mysql)));
 		                Cout("\n").flush;			
 				throw new DBIException("Unable to close the MySQL database.", error, specificToGeneral(error));
 			}
-			connection = null;
+			mysql = null;
 		}
 	}
-
-	/**
-	 * Execute a SQL statement that returns no results.
-	 *
-	 * Params:
-	 *	sql = The SQL statement to _execute.
-	 *
-	 * Throws:
-	 *	DBIException if the SQL code couldn't be executed.
-	 */
-	override void execute (char[] sql) {
-		int error = mysql_real_query(connection, toCString(sql), sql.length);
-		if (error) {
-		        Cout("execute(): ");
-		        Cout(toDString(mysql_error(connection)));
-		        Cout("\n").flush;			
-		        throw new DBIException("Unable to execute a command on the MySQL database.", sql, error, specificToGeneral(error));
+        
+    IPreparedStatement prepare(char[] sql)
+	{
+		MYSQL_STMT* stmt = mysql_stmt_init(mysql);
+		auto res = mysql_stmt_prepare(stmt, toCString(sql), sql.length);
+		if(res != 0) {
+			debug(Log) {
+				auto err = mysql_stmt_error(stmt);
+				log.error("Unable to create prepared statement: \"" ~ sql ~"\", errmsg: " ~ toDString(err));
+			}
+			//return null;
+			auto errno = mysql_stmt_errno(stmt);
+			throw new DBIException("Unable to prepare statement: " ~ sql, errno, specificToGeneral(errno));
+		}
+		return new MysqlPreparedStatement(stmt);
+	}
+    
+    IPreparedStatement virtualPrepare(char[] sql)
+    {
+    	return prepare(sql);
+    }
+	
+	void beginTransact()
+	{
+		const char[] sql = "START TRANSACTION";
+		mysql_real_query(mysql, sql.ptr, sql.length);
+	}
+	
+	void rollback()
+	{
+		mysql_rollback(mysql);
+	}
+	
+	void commit()
+	{
+		mysql_commit(mysql);
+	}
+	
+	bool hasTable(char[] tablename)
+	{
+		MYSQL_RES* res = mysql_list_tables(mysql, toCString(tablename));
+		if(!res) {
+			debug(Log) {
+				log.warn("mysql_list_tables returned null in method tableExists()");
+				logError;
+			}
+			return false;
+		}
+		bool exists = mysql_fetch_row(res) ? true : false;
+		mysql_free_result(res);
+		return exists;
+	}
+	
+	bool getTableInfo(char[] tablename, inout TableInfo info)
+	{
+		char[] q = "SHOW COLUMNS FROM `" ~ tablename ~ "`"; 
+		auto ret = mysql_real_query(mysql, q.ptr, q.length);
+		if(ret != 0) {
+			debug(Log) {
+				log.warn("Unable to SHOW COLUMNS for table " ~ tablename);
+				logError;
+			}
+			return false;
+		}
+		MYSQL_RES* res = mysql_store_result(mysql);
+		if(!res) {
+			debug(Log) {
+				log.warn("Unable to store result for " ~ q);
+				logError;
+			}
+			return false;
+		}
+		if(mysql_num_fields(res) < 1) {
+			debug(Log)
+			log.warn("Result stored, but query " ~ q ~ " has no fields");
+			return false;
+		}
+		info.fieldNames = null;
+		MYSQL_ROW row = mysql_fetch_row(res);
+		while(row != null) {
+			char[] dbCol = toDString(row[0]).dup;
+			info.fieldNames ~= dbCol;
+			char[] keyCol = toDString(row[3]);
+			if(keyCol == "PRI") info.primaryKeyFields ~= dbCol;
+			row = mysql_fetch_row(res);
+		}
+		mysql_free_result(res);
+		return true;
+	}
+	
+	debug(Log)
+	{
+		static Logger log;
+		static this()
+		{
+			log = Log.getLogger("dbi.mysql.MysqlPreparedStatement.MysqlPreparedStatementProvider");
+		}
+		
+		private void logError()
+		{
+			char* err = mysql_error(mysql);
+			log.trace(toDString(err));
 		}
 	}
-
-	/**
-	 * Query the database.
-	 *
-	 * Bugs:
-	 *	This does not currently check for errors.
-	 *
-	 * Params:
-	 *	sql = The SQL statement to execute.
-	 *
-	 * Returns:
-	 *	A Result object with the queried information.
-	 */
-	override MysqlResult query (char[] sql) {
-		mysql_real_query(connection, toCString(sql), sql.length);
-		MYSQL_RES* results = mysql_store_result(connection);
-		if (results is null) {
-		        Cout("query(): ");
- 		        Cout(toDString(mysql_error(connection)));
-		        Cout("\n").flush;
-			throw new DBIException("Unable to query the MySQL database.", sql);
-		}
-		assert (results !is null);
-		return new MysqlResult(results);
-	}
-
-	/**
-	 * Get the error code.
-	 *
-	 * Deprecated:
-	 *	This functionality now exists in DBIException.  This will be
-	 *	removed in version 0.3.0.
-	 *
-	 * Returns:
-	 *	The database specific error code.
-	 */
-	deprecated override int getErrorCode () {
-	        Cout("GetErrorCode: ");
-     	        Cout(toDString(mysql_error(connection)));
-	        Cout("\n").flush;
-		return cast(int)mysql_errno(connection);
-	}
-
-	/**
-	 * Get the error message.
-	 *
-	 * Deprecated:
-	 *	This functionality now exists in DBIException.  This will be
-	 *	removed in version 0.3.0.
-	 *
-	 * Returns:
-	 *	The database specific error message.
-	 */
-	deprecated override char[] getErrorMessage () {
-		return toDString(mysql_error(connection));
-	}
-
-	/**
-	 * Get the integer id of the last row to be inserted.
-	 *
-	 * Returns:
-	 *	The id of the last row inserted into the database.
-	 */
-        override long getLastInsertID() {
-                return mysql_insert_id(connection);
-        }
         
     static this()
     {
@@ -247,7 +266,7 @@ class MysqlDatabase : Database {
 	}
 
 	package:
-	MYSQL* connection;
+	MYSQL* mysql;
 }
 
 class MysqlSqlGenerator : SqlGenerator
