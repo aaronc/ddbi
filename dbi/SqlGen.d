@@ -2,19 +2,11 @@ module dbi.SqlGen;
 
 import Integer = tango.text.convert.Integer;
 
-/*
- * Does a fixed-length 2-character ubyte to hex conversion.
- *
+/**
+ * Helper methods for generating database-specific SQL (without necessarily
+ * knowing the specifics of that database's ways of quoting and escaping).
+ * 
  */
-void ubyteToHexFixed(ubyte x, char* res)
-{
-	const char[] digits = "0123456789abcdef";
-	res[0] = digits[x & 0xF];
-	x >>>= 4;
-	res[1] = digits[x];
-	return res;
-}
-
 class SqlGenerator
 {
 	char getIdentifierQuoteCharacter()
@@ -22,21 +14,41 @@ class SqlGenerator
 		return '"'; 
 	}
 	
+	char[] getHexPrefix()
+	{
+		return "X'";
+	}
+	
+	char[] getHexSuffix()
+	{
+		return "'";
+	}
+	
 	char[] createBinaryString(ubyte[] binary)
 	{
+		const char[] hexDigits = "0123456789abcdef";
+		
 		char[] res;
+		
 		auto len = binary.length;
-		res.length = len * 2 + 3;
-		res[0 .. 2] = "x'";
-		auto ptr = res.ptr + 2;
+		auto prefix = getHexPrefix; auto pLen = prefix.length;
+		auto suffix = getHexSuffix; auto sLen = suffix.length;
+		
+		res.length = len * 2 + pLen + sLen;
+		res[0 .. pLen] = prefix;
+		
+		auto ptr = res.ptr + pLen;
 		for(size_t i = 0; i < len; ++i)
 		{
-			//assert(false, ubyteToHexFixed(binary[i]));
-			//res[i * 2 + 2 .. i * 2 + 4] = ubyteToHexFixed(binary[i]);
-			ubyteToHexFixed(binary[i], ptr);
-			ptr += 2;
+			ubyte x = binary[i];
+			*ptr = hexDigits[x & 0xF];
+			++ptr;
+			*ptr = hexDigits[x >>> 4];
+			++ptr;
 		}
-		res[$ - 1] = '\'';
+		
+		res[$ - sLen .. $] = suffix;
+		
 		return res;
 	}
 	
@@ -142,14 +154,14 @@ unittest
 			sqlgen.makeQualifiedFieldList("person", ["name", "date"])
 			) == "\"user\".\"name\",\"user\".\"date\",\"person\".\"name\",\"person\".\"date\"");
 	
-	ulong x = 0x57a60e9;
+	ulong x = 0x57a60e9fe4321b0;
 	auto ptr = cast(ubyte*)&x;
 	auto binStr = sqlgen.createBinaryString(ptr[0 .. 8]);
 	version(LittleEndian) {
-		assert(binStr == "x'9e06a75000000000'", binStr);
+		assert(binStr == "x'0b1234ef9e06a750'", binStr);
 	}
 	else {
-		assert(binStr == "x'00000000057a60e9'", binStr);
+		assert(binStr == "x'057a60e9fe4321b0'", binStr);
 	}
 	
 }

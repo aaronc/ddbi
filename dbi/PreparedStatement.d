@@ -101,7 +101,7 @@ BindType getBindType(T)()
 import dbi.Database;
 import Integer = tango.text.convert.Integer;
 import Float = tango.text.convert.Float;
-/+
+
 class PreparedStatement //: IPreparedStatement
 {
 	this (Database database, char[] sql) {
@@ -137,6 +137,8 @@ class PreparedStatement //: IPreparedStatement
 	
 	void execute(void*[] bind)
 	{
+		auto sqlGen = database.sqlGen;
+		
 		size_t idx = 0;
 		char[] execSql;
 		foreach(i, type; paramTypes)
@@ -193,17 +195,18 @@ class PreparedStatement //: IPreparedStatement
 			case String:
 				char[]* ptr = cast(char[]*)bind[i];
 				execSql ~= *ptr;
-				assert(false, "Sql escaping");
+				assert(false, "String escaping");
 				break;
 			case Binary:
-				void[]* ptr = cast(void[]**)bind[i];
-				execSql ~= *ptr;
-				assert(false, "Sql escaping");
+				ubyte[]* ptr = cast(void[]**)bind[i];
+				execSql ~= sqlGen.createBinaryString(*ptr);
 				break;
 			case Time:
 			case DateTime:
 			case Null:
 			default:
+				assert(false, "Not implemented");
+				break;
 			}
 		}
 		execSql ~= sql[idx .. $];
@@ -220,27 +223,21 @@ class PreparedStatement //: IPreparedStatement
 				case Bool:
 				case Byte:
 					byte* ptr = cast(byte*)bind[i];
-					execSql ~= Integer.toString(*ptr);
 					break;
 				case Short:
 					short* ptr = cast(short*)bind[i];
-					execSql ~= Integer.toString(*ptr);
 					break;
 				case Int:
 					int* ptr = cast(int*)bind[i];
-					execSql ~= Integer.toString(*ptr);
 					break;
 				case Long:
 					long* ptr = cast(long*)bind[i];
-					execSql ~= Integer.toString(*ptr);
 					break;
 				case UByte:
 					ubyte* ptr = cast(ubyte*)bind[i];
-					execSql ~= Integer.toString(*ptr);
 					break;
 				case UShort:
 					ushort* ptr = cast(ushort*)bind[i];
-					execSql ~= Integer.toString(*ptr);
 					break;
 				case UInt:
 					uint* ptr = cast(uint*)bind[i];
@@ -248,30 +245,25 @@ class PreparedStatement //: IPreparedStatement
 					break;
 				case ULong:
 					ulong* ptr = cast(ulong*)bind[i];
-					execSql ~= Integer.toString(*ptr);
 					break;
 				case Float:
 					float* ptr = cast(float*)bind[i];
-					execSql ~= Float.toString(*ptr);
 					break;
 				case Double:
 					double* ptr = cast(double*)bind[i];
-					execSql ~= Float.toString(*ptr);
 					break;
 				case String:
 					char[]* ptr = cast(char[]*)bind[i];
-					execSql ~= *ptr;
-					assert(false, "Sql escaping");
 					break;
 				case Binary:
 					void[]* ptr = cast(void[]**)bind[i];
-					execSql ~= *ptr;
-					assert(false, "Sql escaping");
 					break;
 				case Time:
 				case DateTime:
 				case Null:
 				default:
+					assert(false, "Not implemented");
+					break;
 				}
 			}
 		}		
@@ -342,7 +334,7 @@ unittest {
 	auto st = PreparedStatement(null, "SELECT * FROM test WHERE id = ? and name = ?");
 	assert(st.getParamCount == 2);
 }
-}+/
+}
 /+
 class Statement : IPreparedStatement {
 	/**
