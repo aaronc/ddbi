@@ -4,6 +4,9 @@ import dbi.Statement, dbi.DBIException;
 import tango.stdc.stringz : toDString = fromStringz, toCString = toStringz;
 import tango.core.Traits;
 
+import DT = tango.time.Time, tango.time.Clock;
+import dbi.DateTime;
+
 import dbi.sqlite.imp;
 
 class SqliteStatement : IStatement
@@ -102,7 +105,7 @@ class SqliteStatement : IStatement
 		}
 		else static if(is(T == char[]))
 		{
-			static if(P) sqlite3_bind_blob(stmt, index + 1, val.ptr, val.length, null);
+			static if(P) sqlite3_bind_text(stmt, index + 1, val.ptr, val.length, null);
 			else {
 				auto res = sqlite3_column_text(stmt, index);
 				auto len = sqlite3_column_bytes(stmt, index);
@@ -111,9 +114,44 @@ class SqliteStatement : IStatement
 		}
 		else static if(is(T == void[]) || is(T == ubyte[]))
 		{
-			auto res = sqlite3_column_blob(stmt, index);
-			auto len = sqlite3_column_bytes(stmt, index);
-			*val = res[0 .. len];
+			static if(P) sqlite3_bind_blob(stmt, index + 1, val.ptr, val.length, null);
+			else {
+				auto res = sqlite3_column_blob(stmt, index);
+				auto len = sqlite3_column_bytes(stmt, index);
+				*val = res[0 .. len];
+			}
+		}
+		else static if(is(T == DT.DateTime) || is(T == DT.Time))
+		{
+			static if(P) {
+				auto txt = new char[19];
+				
+				static if(is(T == DT.DateTime)) {
+					txt = printDateTime(*val, txt);
+				}
+				else static if(is(T == DT.Time)) {
+					auto dt = Clock.toDate(*val);
+					txt = printDateTime(dt, txt);
+				}
+				else static assert(false);
+				
+				sqlite3_bind_text(stmt, index + 1, txt.ptr, txt.length, null); //TODO add destructor for txt
+			}
+			else {
+				auto res = sqlite3_column_text(stmt, index);
+				auto len = sqlite3_column_bytes(stmt, index);
+				auto src = res[0 .. len];
+				
+				static if(is(T == DT.DateTime)) {
+					 parseDateTimeFixed(res[0 .. len], *(cast(DT.DateTime*)ptr));
+				}
+				else static if(is(T == DT.Time)) {
+					DateTime dt;
+					parseDateTimeFixed(res[0 .. len], dt);
+					*(cast(Time*)ptr) = Clock.fromDate(dt);
+				}
+				else static assert(false);
+			}
 		}
 		else static assert(false, "Unsupported Sqlite bind type " ~ T.stringof);
 	}
@@ -169,12 +207,10 @@ class SqliteStatement : IStatement
 				bindT!(void[], P)(stmt, ptr, index);
 				break;
 			case Time:
-				assert(false, "Unhandled bind type Time");
-				//bindT!(Time, P)(stmt, ptr, index);
+				bindT!(DT.Time, P)(stmt, ptr, index);
 				break;
 			case DateTime:
-				assert(false, "Unhandled bind type DateTime");
-				//bindT!(DateTime, P)(stmt, ptr, index);
+				bindT!(DT.DateTime, P)(stmt, ptr, index);
 				break;
 			case Null:
 				bindNull!(P)(stmt, index);
