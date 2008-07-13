@@ -45,40 +45,6 @@ abstract class Database {
 	abstract void beginTransact();
 	abstract void rollback();
 	abstract void commit();
-
-	/**
-	 * Escape a _string using the database's native method, if possible.
-	 *
-	 * Params:
-	 *	string = The _string to escape,
-	 *
-	 * Returns:
-	 *	The escaped _string.
-	 */
-	char[] escape (char[] string)
-	{
-		char[] result;
-		size_t count = 0;
-
-		// Maximum length needed if every char is to be quoted
-		result.length = string.length * 2;
-
-		for (size_t i = 0; i < string.length; i++) {
-			switch (string[i]) {
-				case '"':
-				case '\'':
-				case '\\':
-					result[count++] = '\\';
-					break;
-				default:
-					break;
-			}
-			result[count++] = string[i];
-		}
-
-		result.length = count;
-		return result;
-	}
   
 	/**
 	 * Split a _string into keywords and values.

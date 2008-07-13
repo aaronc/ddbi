@@ -146,6 +146,7 @@ class MysqlDatabase : Database, IMetadataProvider {
 			}
 			mysql = null;
 		}
+		mysqlSqlGen = null;
 	}
 	
 	void execute(char[] sql)
@@ -279,27 +280,44 @@ class MysqlDatabase : Database, IMetadataProvider {
 			log.trace(toDString(err));
 		}
 	}
-        
-    static this()
-    {
-    	mysqlSqlGen = new MysqlSqlGenerator;
-    }
-    private static MysqlSqlGenerator mysqlSqlGen;
-        
+               
     override SqlGenerator getSqlGenerator()
 	{
+    	if(mysqlSqlGen is null)
+    		mysqlSqlGen = new MysqlSqlGenerator(mysql);
 		return mysqlSqlGen;
 	}
 
 	package:
-	MYSQL* mysql;
+		MYSQL* mysql;
+	
+	private:
+    	MysqlSqlGenerator mysqlSqlGen;
 }
 
 class MysqlSqlGenerator : SqlGenerator
 {
+	this(MYSQL* mysql)
+	{
+		this.mysql = mysql;
+	}
+	
+	private MYSQL* mysql;
+	
 	override char getIdentifierQuoteCharacter()
 	{
 		return '`'; 
+	}
+	
+	override char[] escape(char[] src, char[] dest = null)
+	{
+		if(!dest.length || dest.length < string.length * 2 + 1)
+			// Maximum length needed if every char is to be quoted + null terminator
+			dest.length = string.length * 2 + 1;
+		
+		auto len = mysql_real_escape_string(mysql, dest.ptr, src.ptr, src.length);
+		
+		return dest[0 .. len];
 	}
 }
 

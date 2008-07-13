@@ -2,7 +2,7 @@ module dbi.SqlGen;
 
 import Integer = tango.text.convert.Integer;
 import tango.time.Time;
-import DT = dbi.DateTime;
+import DT = dbi.util.DateTime;
 
 /**
  * Helper methods for generating database-specific SQL (without necessarily
@@ -92,6 +92,41 @@ class SqlGenerator
 	char[] printTime(DateTime dt, char[] res)
 	{
 		return DT.printTime(dt, res);
+	}
+	
+	/**
+	 * Escape a _string using the database's native method, if possible.
+	 *
+	 * Params:
+	 *	src = The _string to escape,
+	 *  dest = A destination buffer - length should be src.length * 2 + 1
+	 *  (allows for the possibility that every character must be quoted + a null terminator).
+	 *
+	 * Returns:
+	 *	The escaped _string.
+	 */
+	char[] escape(char[] src, char[] dest = null)
+	{
+		if(!dest.length || dest.length < src.length * 2)
+			// Maximum length needed if every char is to be quoted
+			dest.length = src.length * 2;
+		
+		size_t count = 0;
+
+		for (size_t i = 0; i < src.length; i++) {
+			switch (src[i]) {
+				case '"':
+				case '\'':
+				case '\\':
+					dest[count++] = '\\';
+					break;
+				default:
+					break;
+			}
+			dest[count++] = src[i];
+		}
+
+		return dest[0 .. count];
 	}
 }
 

@@ -5,7 +5,7 @@ import tango.stdc.stringz : toDString = fromStringz, toCString = toStringz;
 import tango.core.Traits;
 
 import DT = tango.time.Time, tango.time.Clock;
-import dbi.DateTime;
+import dbi.util.DateTime;
 
 import dbi.sqlite.imp;
 

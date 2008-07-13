@@ -38,7 +38,7 @@ class DisposableStringWriter_(bool AllowCustomAlloc = false) : IDisposableString
 	
 	protected char[] buffer;
 	protected size_t used = 0;
-	protected void forwardReserve(size_t x)
+	void forwardReserve(size_t x)
 	{
 		auto targetSize = used + x;
 		if(targetSize >= buffer.length) {
@@ -49,6 +49,17 @@ class DisposableStringWriter_(bool AllowCustomAlloc = false) : IDisposableString
 			release(buffer.ptr);
 			buffer = temp;
 		}
+	}
+	
+	void forwardAdvance(size_t x)
+	{
+		if(buffer.length < used + x) forwardReserve(x);
+		used += x;
+	}
+	
+	char[] getOpenBuffer()
+	{
+		return buffer[used .. $];
 	}
 	
 	/** 

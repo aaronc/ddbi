@@ -124,8 +124,12 @@ void virtualBind(char[] sql, size_t[] paramIndices, BindType[] paramTypes, void*
 				break;
 			case String:
 				char[]* ptr = cast(char[]*)ptrs[i];
-				execSql ~= stringQuoteChar ~ simpleEscape(*ptr) ~ stringQuoteChar;
-				//assert(false, "String escaping");
+				execSql ~= stringQuoteChar;
+				execSql.forwardReserve(ptr.length * 2 + 1); 
+				auto buf = execSql.getOpenBuffer;
+				auto res = sqlGen.escape(*ptr, buf);
+				execSql.forwardAdvance(res.length);
+				execSql ~= stringQuoteChar;
 				break;
 			case Binary:
 				ubyte[]* ptr = cast(ubyte[]*)ptrs[i];
@@ -156,49 +160,29 @@ void virtualBind(char[] sql, size_t[] paramIndices, BindType[] paramTypes, void*
 	execSql ~= sql[idx .. $];
 }
 
-char[] simpleEscape(char[] string)
-{
-	char[] result;
-	size_t count = 0;
-
-	// Maximum length needed if every char is to be quoted
-	result.length = string.length * 2;
-
-	for (size_t i = 0; i < string.length; i++) {
-		switch (string[i]) {
-			case '"':
-			case '\'':
-			case '\\':
-				result[count++] = '\\';
-				break;
-			default:
-				break;
-		}
-		result[count++] = string[i];
-	}
-
-	result.length = count;
-	return result;
-}
-
 debug(UnitTest)
 {
-import dbi.DateTime;	
+import dbi.util.DateTime;	
 
 unittest
 {
-	auto sql = "select * from user where name = ? and birthday = ?";
+	auto sql = "select * from user where name = ? and birthday = ? and someBinary = ?";
 	auto pIndices = getParamIndices(sql);
-	assert(pIndices.length == 2);
+	assert(pIndices.length == 3);
 	
 	char[] name = "sean";
 	DateTime bday;
 	parseDateTime("1987-03-19 15:30:37", bday);
+	uint val = 0x4a31f67;
+	ubyte[] someBinary = (cast(ubyte*)&val)[0 .. uint.sizeof];
 	
 	auto execSql = new DisposableStringWriter(5);
 	
-	virtualBind(sql, pIndices, [BindType.String, BindType.DateTime], [cast(void*)&name, cast(void*)&bday], new SqlGenerator, execSql);
-	assert(execSql.get == "select * from user where name = 'sean' and birthday = '1987-03-19 15:30:37'", execSql.get);
+	virtualBind(sql, pIndices,
+		[BindType.String, BindType.DateTime, BindType.Binary],
+		[cast(void*)&name, cast(void*)&bday, cast(void*)&someBinary],
+		new SqlGenerator, execSql);
+	assert(execSql.get == "select * from user where name = 'sean' and birthday = '1987-03-19 15:30:37' and someBinary = X'76f13a40'", execSql.get);
 	
 	execSql.free;
 }

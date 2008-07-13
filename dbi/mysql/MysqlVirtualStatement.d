@@ -15,7 +15,7 @@ import tango.core.Traits;
 
 import dbi.VirtualBind, dbi.Database, dbi.DBIException;
 import dbi.mysql.MysqlMetadata, dbi.mysql.MysqlError;
-import dbi.DateTime;
+import dbi.util.DateTime;
 
 import dbi.util.StringWriter;
 

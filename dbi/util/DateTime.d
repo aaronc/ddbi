@@ -1,4 +1,4 @@
-module dbi.DateTime;
+module dbi.util.DateTime;
 
 import tango.time.Time;
 private import ISO8601 = tango.time.ISO8601;
