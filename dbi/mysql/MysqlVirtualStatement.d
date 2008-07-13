@@ -279,7 +279,6 @@ class MysqlVirtualStatement : VirtualStatement
 	{
 		assert(false);
 		
-		
 		if(!res) return false;
 		
 		MYSQL_ROW row = mysql_fetch_row(res);
