@@ -194,7 +194,7 @@ class MysqlVirtualStatement : VirtualStatement
 		        	break;
 		        case MYSQL_TYPE_TIMESTAMP:
 		        case MYSQL_TYPE_DATETIME:
-		        	parseDateTimeFixed(res, dt);
+		        	parseDateTime(res, dt);
 		        	break;
 		        case MYSQL_TYPE_NEWDATE:
 		        	break;

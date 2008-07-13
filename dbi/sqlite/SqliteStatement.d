@@ -143,11 +143,11 @@ class SqliteStatement : IStatement
 				auto src = res[0 .. len];
 				
 				static if(is(T == DT.DateTime)) {
-					 parseDateTimeFixed(res[0 .. len], *(cast(DT.DateTime*)ptr));
+					 parseDateTime(res[0 .. len], *(cast(DT.DateTime*)ptr));
 				}
 				else static if(is(T == DT.Time)) {
 					DateTime dt;
-					parseDateTimeFixed(res[0 .. len], dt);
+					parseDateTime(res[0 .. len], dt);
 					*(cast(Time*)ptr) = Clock.fromDate(dt);
 				}
 				else static assert(false);
