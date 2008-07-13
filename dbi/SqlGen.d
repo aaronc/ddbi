@@ -1,6 +1,7 @@
 module dbi.SqlGen;
 
 import Integer = tango.text.convert.Integer;
+import DT = dbi.DateTime;
 
 /**
  * Helper methods for generating database-specific SQL (without necessarily
@@ -70,6 +71,21 @@ class SqlGenerator
 	char[] makeUpdateSql(char[] whereClause, char[] tablename, char[][] fields)
 	{
 		return SqlGenHelper.makeUpdateSql(whereClause, tablename, fields, getIdentifierQuoteCharacter);
+	}
+	
+	char[] printDateTime(DT.DateTime dt, char[] res)
+	{
+		return DT.printDateTime(dt, res);
+	}
+	
+	char[] printDate(DT.DateTime dt, char[] res)
+	{
+		return DT.printDate(dt, res);
+	}
+	
+	char[] printTime(DT.DateTime dt, char[] res)
+	{
+		return DT.printTime(dt, res);
 	}
 }
 

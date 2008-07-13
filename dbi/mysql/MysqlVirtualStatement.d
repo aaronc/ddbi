@@ -8,6 +8,7 @@ else {
 }
 
 import tango.stdc.stringz : toDString = fromStringz, toCString = toStringz;
+import tango.time.Time, tango.time.Clock, tango.time.ISO8601;
 import ConvertInteger = tango.text.convert.Integer;
 import ConvertFloat = tango.text.convert.Float;
 import tango.core.Traits;
@@ -227,12 +228,12 @@ class MysqlVirtualStatement : VirtualStatement
 				break;
 			case Time:
 			case DateTime:
-				assert(false, "Not implemented");
+				assert(false, "TODO: Not implemented");
 				break;
 			case Null:
 				break;
 			default:
-				assert(false, "Not implemented");
+				assert(false, "Unsupported bind type");
 				break;
 			}
 		}

@@ -4,6 +4,7 @@ import dbi.Database;
 
 import ConvertInteger = tango.text.convert.Integer;
 import ConvertFloat = tango.text.convert.Float;
+import T = tango.time.Time, tango.time.Clock;
 
 abstract class VirtualStatement : IStatement {
 	this (char[] sql, SqlGenerator sqlGen) {
@@ -124,7 +125,18 @@ char[] virtualBind(char[] sql, size_t[] paramIndices, BindType[] paramTypes, voi
 				execSql ~= sqlGen.createBinaryString(*ptr);
 				break;
 			case Time:
+				T.Time* ptr = cast(T.Time*)ptrs[i];
+				auto dt = Clock.toDate(*ptr);
+				auto res = new char[19];
+				sqlGen.printDateTime(dt, res);
+				execSql ~= res;
+				break;
 			case DateTime:
+				T.DateTime* ptr = cast(T.DateTime*)ptrs[i];
+				auto res = new char[19];
+				sqlGen.printDateTime(*ptr, res);
+				execSql ~= res;
+				break;
 			case Null:
 			default:
 				assert(false, "Not implemented");
