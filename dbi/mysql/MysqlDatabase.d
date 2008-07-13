@@ -21,7 +21,7 @@ version(Windows) {
 else {
 	private import dbi.mysql.imp;
 }
-private import dbi.mysql.MysqlError, dbi.mysql.MysqlPreparedStatement;
+private import dbi.mysql.MysqlError, dbi.mysql.MysqlPreparedStatement, dbi.mysql.MysqlVirtualStatement;
 import tango.text.Util;
 
 static this() {
@@ -181,9 +181,8 @@ class MysqlDatabase : Database, IMetadataProvider {
 			
 	IStatement virtualPrepare(char[] sql)
     {
-		assert(false);
-    	//return new MysqlVirtualStatement(mysql, sql);
-		return null;
+		assert(false, "Not implemented");
+    	return new MysqlVirtualStatement(sql, getSqlGenerator, mysql);
     }
 	
 	void beginTransact()
