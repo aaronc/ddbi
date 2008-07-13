@@ -6,6 +6,8 @@ import ConvertInteger = tango.text.convert.Integer;
 import ConvertFloat = tango.text.convert.Float;
 import T = tango.time.Time, tango.time.Clock;
 
+import dbi.util.StringWriter;
+
 abstract class VirtualStatement : IStatement {
 	this (char[] sql, SqlGenerator sqlGen) {
 		this.sqlGen = sqlGen;
