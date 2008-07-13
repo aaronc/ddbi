@@ -7,7 +7,7 @@ module dbi.Database;
 private static import tango.text.Util;
 private static import tango.io.Stdout;
 private import dbi.DBIException;
-public import dbi.SqlGen, dbi.PreparedStatement, dbi.Metadata;
+public import dbi.SqlGen, dbi.Statement, dbi.Metadata;
 
 /**
  * The database interface that all DBDs must inherit from.
@@ -22,21 +22,6 @@ public import dbi.SqlGen, dbi.PreparedStatement, dbi.Metadata;
  */
 abstract class Database {
 	/**
-	 * Connect to a database.
-	 *
-	 * Note that each DBD treats the parameters a slightly different way, so
-	 * this is currently the only core function that cannot have its code
-	 * reused for another DBD.
-	 *
-	 * Params:
-	 *	params = A string describing the connection parameters.
-	 *             documentation for the DBD before
-	 *	username = The _username to _connect with.  Some DBDs ignore this.
-	 *	password = The _password to _connect with.  Some DBDs ignore this.
-	 */
-	abstract void connect (char[] params, char[] username = null, char[] password = null);
-
-	/**
 	 * A destructor that attempts to force the the release of of all
 	 * database connections and similar things.
 	 *
@@ -50,13 +35,16 @@ abstract class Database {
 	/**
 	 * Close the current connection to the database.
 	 */
-	abstract void close ();
+	abstract void close();
 	
-	IPreparedStatement prepare(char[] sql);
-	IPreparedStatement virtualPrepare(char[] sql);
-	void beginTransact();
-	void rollback();
-	void commit();
+	abstract void execute(char[] sql);
+	abstract void execute(char[] sql, BindType[] bindTypes, void*[] ptrs);
+	
+	abstract IStatement prepare(char[] sql);
+	abstract IStatement virtualPrepare(char[] sql);
+	abstract void beginTransact();
+	abstract void rollback();
+	abstract void commit();
 
 	/**
 	 * Escape a _string using the database's native method, if possible.
@@ -104,9 +92,9 @@ abstract class Database {
 	 * Throws:
 	 *	DBIException if string is malformed.
 	 */
-	final protected char[][char[]] getKeywords (char[] string) {
+	final protected char[][char[]] getKeywords (char[] string, char[] split = ";") {
 		char[][char[]] keywords;
-		foreach (char[] group; tango.text.Util.delimit(string, ";")) {
+		foreach (char[] group; tango.text.Util.delimit(string, split)) {
 			if (group == "") {
 				continue;
 			}

@@ -4,14 +4,20 @@
  */
 module dbi.sqlite.SqliteDatabase;
 
+version = dbi_sqlite;
 version (dbi_sqlite) {
 
 
 private import tango.stdc.stringz : toDString = fromStringz, toCString = toStringz;
 private import tango.util.log.Log;
     
-private import dbi.Database, dbi.DBIException, dbi.Result, dbi.Row, dbi.Statement, dbi.Registry, dbi.PreparedStatement;
-private import dbi.sqlite.imp, dbi.sqlite.SqliteError, dbi.sqlite.SqliteResult;
+public import dbi.Database;
+import dbi.DBIException, dbi.Statement, dbi.Registry, dbi.Statement;
+import dbi.sqlite.imp, dbi.sqlite.SqliteError;
+
+import dbi.sqlite.SqliteStatement; 
+
+import Integer = tango.text.convert.Integer;
 
 /**
  * An implementation of Database for use with SQLite databases.
@@ -46,9 +52,7 @@ class SqliteDatabase : Database {
 	 * Open a SQLite database for use.
 	 *
 	 * Params:
-	 *	params = The name of the SQLite database to open.
-	 *	username = Unused.
-	 *	password = Unused.
+	 *	dbfile = The name of the SQLite database to open.
 	 *
 	 * Throws:
 	 *	DBIException if there was an error accessing the database.
@@ -56,13 +60,13 @@ class SqliteDatabase : Database {
 	 * Examples:
 	 *	---
 	 *	SqliteDatabase db = new SqliteDatabase();
-	 *	db.connect("_test.db", null, null);
+	 *	db.connect("_test.db");
 	 *	---
 	 */
-	override void connect (char[] params, char[] username = null, char[] password = null) {
-		logger.trace("connecting: " ~ params);
-		if ((errorCode = sqlite3_open(toCString(params), &database)) != SQLITE_OK) {
-			throw new DBIException("Could not open or create " ~ params, errorCode, specificToGeneral(errorCode));
+	void connect (char[] dbfile) {
+		logger.trace("connecting: " ~ dbfile);
+		if ((errorCode = sqlite3_open(toCString(dbfile), &database)) != SQLITE_OK) {
+			throw new DBIException("Could not open or create " ~ dbfile, errorCode, specificToGeneral(errorCode));
 		}
 	}
 
@@ -73,11 +77,24 @@ class SqliteDatabase : Database {
 		logger.trace("closing database now");
 		if (database !is null) {
 			if ((errorCode = sqlite3_close(database)) != SQLITE_OK) {
-				throw new DBIException(asString(sqlite3_errmsg(database)), errorCode, specificToGeneral(errorCode));
+				throw new DBIException(toDString(sqlite3_errmsg(database)), errorCode, specificToGeneral(errorCode));
 			}
 			database = null;
 		}
 	}
+	
+	IStatement prepare(char[] sql)
+	{
+		logger.trace("querying: " ~ sql);
+		char** errorMessage;
+		sqlite3_stmt* stmt;
+		if ((errorCode = sqlite3_prepare_v2(database, toCString(sql), sql.length, &stmt, errorMessage)) != SQLITE_OK) {
+			throw new DBIException(toDString(sqlite3_errmsg(database)), sql, errorCode, specificToGeneral(errorCode));
+		}
+		return new SqliteStatement(database, stmt);
+	}
+			
+	IStatement virtualPrepare(char[] sql) { return prepare(sql); }
 
 	/**
 	 * Execute a SQL statement that returns no results.
@@ -95,65 +112,29 @@ class SqliteDatabase : Database {
 			throw new DBIException(toDString(sqlite3_errmsg(database)), sql, errorCode, specificToGeneral(errorCode));
 		}
 	}
-
-	/**
-	 * Query the database.
-	 *
-	 * Params:
-	 *	sql = The SQL statement to execute.
-	 *
-	 * Returns:
-	 *	A Result object with the queried information.
-	 *
-	 * Throws:
-	 *	DBIException if the SQL code couldn't be executed.
-	 */
-	override SqliteResult query (char[] sql) {
+	
+	void execute(char[] sql, BindType[] bindTypes, void*[] ptrs)
+	{
 		logger.trace("querying: " ~ sql);
 		char** errorMessage;
 		sqlite3_stmt* stmt;
-		if ((errorCode = sqlite3_prepare(database, toCString(sql), sql.length, &stmt, errorMessage)) != SQLITE_OK) {
+		if ((errorCode = sqlite3_prepare_v2(database, toCString(sql), sql.length, &stmt, errorMessage)) != SQLITE_OK) {
 			throw new DBIException(toDString(sqlite3_errmsg(database)), sql, errorCode, specificToGeneral(errorCode));
 		}
-		return new SqliteResult(stmt);
-	}
-
-	/**
-	 * Get the error code.
-	 *
-	 * Deprecated:
-	 *	This functionality now exists in DBIException.  This will be
-	 *	removed in version 0.3.0.
-	 *
-	 * Returns:
-	 *	The database specific error code.
-	 */
-	deprecated override int getErrorCode () {
-		return sqlite3_errcode(database);
-	}
-
-	/**
-	 * Get the error message.
-	 *
-	 * Deprecated:
-	 *	This functionality now exists in DBIException.  This will be
-	 *	removed in version 0.3.0.
-	 *
-	 * Returns:
-	 *	The database specific error message.
-	 */
-	deprecated override char[] getErrorMessage () {
-		return toDString(sqlite3_errmsg(database));
-	}
-
-	/**
-	 * Get the integer id of the last row to be inserted.
-	 *
-	 * Returns:
-	 *	The id of the last row inserted into the database.
-	 */
-	override long getLastInsertID() {
-		return sqlite3_last_insert_rowid(database);
+		
+		auto len = bindTypes.length;
+		if(ptrs.length != len) throw new DBIException;
+		
+		for(size_t i = 0; i < len; ++i)
+		{
+			SqliteStatement.bind!(true)(stmt, bindTypes[i], ptrs[i], i);
+		}
+		
+		auto res = sqlite3_step(stmt);
+		if(res != SQLITE_ROW || res != SQLITE_DONE)
+			throw new DBIException;
+		
+		sqlite3_finalize(stmt);
 	}
 
 	/*
@@ -171,7 +152,7 @@ class SqliteDatabase : Database {
 		return sqlite3_changes(database);
 	}
 
-	/**
+/+	/**
 	 * Get a list of all the table names.
 	 *
 	 * Returns:
@@ -238,14 +219,18 @@ class SqliteDatabase : Database {
 	 */
 	bool hasIndex (char[] name) {
 		return hasItem("index", name);
-	}
+	}+/
+	
+	void beginTransact() {}
+	void rollback() {}
+	void commit() {}
 
 	private:
 	sqlite3* database;
-	bool isOpen = false;
+//	bool isOpen = false;
 	int errorCode;
 
-	/**
+/+	/**
 	 *
 	 */
 	char[][] getItemNames(char[] type) {
@@ -266,9 +251,11 @@ class SqliteDatabase : Database {
 			return true;
 		}
 		return false;
-	}
+	}+/
 	
-	IPreparedStatement createStatement(char[] statement)
+	
+	
+	/+IStatement createStatement(char[] statement)
 	{
 		sqlite3_stmt* stmt;
 		char* pzTail;
@@ -279,7 +266,7 @@ class SqliteDatabase : Database {
 			return null;
 		}
 		return new SqlitePreparedStatement(stmt, database);
-	}
+	}+/
 }
 
 private class SqliteRegister : Registerable {
@@ -315,7 +302,7 @@ unittest {
 	db.connect("test.db");
 
 	s2("query");
-	Result res = db.query("SELECT * FROM test");
+/+	Result res = db.query("SELECT * FROM test");
 	assert (res !is null);
 
 	s2("fetchRow");
@@ -364,7 +351,7 @@ unittest {
 	assert (db.hasTable("doesnotexist") == false);
 	assert (db.hasIndex("doesnotexist") == false);
 	assert (db.hasView("doesnotexist") == false);
-
++/
 	s2("close");
 	db.close();
 }

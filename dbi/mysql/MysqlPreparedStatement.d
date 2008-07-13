@@ -16,7 +16,6 @@ version(dbi_mysql) {
 		import tango.util.log.Log;
 	}
 	
-import dbi.mysql.MysqlDatabase;
 import dbi.DBIException, dbi.mysql.MysqlError;
 version(Windows) {
 	private import dbi.mysql.imp_win;
@@ -24,22 +23,9 @@ version(Windows) {
 else {
 	private import dbi.mysql.imp;
 }
-public import dbi.PreparedStatement, dbi.Metadata;
+public import dbi.Statement;
 
-class MysqlPreparedStatementProvider : IPreparedStatementProvider, IMetadataProvider
-{	
-	this(MysqlDatabase db)
-	{
-		if(!db.connection) throw new DBIException("Attempting to create prepared statements but not connected to database");
-		mysql = db.connection;
-	}
-	
-	private	MYSQL* mysql;
-	
-	
-}
-
-class MysqlPreparedStatement : IPreparedStatement
+class MysqlPreparedStatement : IStatement
 {
 	uint getParamCount()
 	{
@@ -285,7 +271,7 @@ class MysqlPreparedStatement : IPreparedStatement
 		return toDString(mysql_stmt_error(stmt));
 	}
 	
-	private this(MYSQL_STMT* stmt)
+	package this(MYSQL_STMT* stmt)
 	{
 		this.stmt = stmt;
 	}
@@ -502,16 +488,17 @@ class MysqlPreparedStatement : IPreparedStatement
 		}
 	}
 }
-debug(UnitTest) {
 
+debug(UnitTest) {
+	
+import dbi.mysql.MysqlDatabase;
+	
 unittest
 {
 	Log.getRootLogger.addAppender(new ConsoleAppender);
 	
-	MysqlDatabase db = new MysqlDatabase();
-	db.connect("dbname=test", "test", "test");
-	auto provider = new MysqlPreparedStatementProvider(db);
-	auto st = provider.prepare("SELECT * FROM test WHERE 1");
+	auto db = new MysqlDatabase("localhost", null, "test", "username=test&password=test");
+	auto st = db.prepare("SELECT * FROM test WHERE 1");
 	assert(st);
 	assert(st.getParamCount == 0);
 	st.execute();
@@ -538,7 +525,7 @@ unittest
 	Stdout.formatln("id:{},name:{},dateofbirth:{}",id,name,dateofbirth.ticks);
 	assert(!st.fetch(bind));
 	
-	auto st2 = provider.prepare("SELECT * FROM test WHERE id = \?");
+	auto st2 = db.prepare("SELECT * FROM test WHERE id = \?");
 	assert(st2);
 	BindType[] paramTypes;
 	void*[] pBind;
@@ -552,9 +539,9 @@ unittest
 	Stdout.formatln("id:{},name:{},dateofbirth:{}",id,name,dateofbirth.ticks);
 	st2.reset;
 	
-	assert(provider.hasTable("test"));
+	assert(db.hasTable("test"));
 	TableInfo ti;
-	assert(provider.getTableInfo("test", ti));
+	assert(db.getTableInfo("test", ti));
 	assert(ti.fieldNames.length == 3);
 	assert(ti.primaryKeyFields.length == 1);
 	foreach(f; ti.fieldNames)
@@ -568,6 +555,8 @@ unittest
 	}
 	
 	db.close;
+	
+	assert(false);
 }
 
 }

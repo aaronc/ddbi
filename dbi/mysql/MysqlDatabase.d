@@ -12,14 +12,17 @@ private static import tango.text.Util;
 private static import tango.text.convert.Integer;
 debug(UnitTest) import tango.io.Stdout;
 
-private import dbi.Database, dbi.DBIException, dbi.Result, dbi.Row, dbi.Statement, dbi.Registry;
+public import dbi.Database;
+private import dbi.DBIException, dbi.Statement, dbi.Registry;
+private import dbi.VirtualBind;
 version(Windows) {
 	private import dbi.mysql.imp_win;
 }
 else {
 	private import dbi.mysql.imp;
 }
-private import dbi.mysql.MysqlError, dbi.mysql.MysqlResult;
+private import dbi.mysql.MysqlError, dbi.mysql.MysqlPreparedStatement;
+import tango.text.Util;
 
 static this() {
 	uint ver = mysql_get_client_version();
@@ -62,26 +65,25 @@ class MysqlDatabase : Database, IMetadataProvider {
 	 * See_Also:
 	 *	connect
 	 */
-	this (char[] params, char[] username = null, char[] password = null) {
+	this (char[] host, char[] port, char[] dbname, char[] params) {
 		this();
-		connect(params, username, password);
+		connect(host, port, dbname, params);
 	}
 
 	/**
 	 * Connect to a database on a MySQL server.
 	 *
 	 * Params:
-	 *	params = A string in the form "keyword1=value1;keyword2=value2;etc."
-	 *	username = The _username to _connect with.
-	 *	password = The _password to _connect with.
+	 *  host = The host name of the database to _connect to.
+	 *  port = The port number to _connect to or null to use the default host. 
+	 *  dbname = The name of the database to use.
+	 *	params = A string in the form "keyword1=value1&keyword2=value2;etc."
+	 *	
 	 *
 	 * Keywords:
-	 *	dbname = The name of the database to use.
-	 *
-	 *	host = The host name of the database to _connect to.
-	 *
-	 *	port = The port number to _connect to.
-	 *
+
+	 *  username = The _username to _connect with.
+	 *	password = The _password to _connect with.
 	 *	sock = The socket to _connect to.
 	 *
 	 * Throws:
@@ -92,37 +94,31 @@ class MysqlDatabase : Database, IMetadataProvider {
 	 * Examples:
 	 *	---
 	 *	MysqlDatabase db = new MysqlDatabase();
-	 *	db.connect("host=localhost;dbname=test", "username", "password");
+	 *	db.connect("localhost", null, "test", "username=bob&password=12345");
 	 *	---
-	 */
-	override void connect (char[] params, char[] username = null, char[] password = null) {
-		char[] host = "localhost";
-		char[] dbname = "test";
+	 */	
+	void connect(char[] host, char[] port, char[] dbname, char[] params)
+	{
 		char[] sock = null;
-		uint port = 0;
+		char[] username = null;
+		char[] password = null;
+		uint portNo = 0;
+		if(port.length) portNo = cast(uint)tango.text.convert.Integer.parse(port);
 
 		void parseKeywords () {
-			char[][char[]] keywords = getKeywords(params);
-			if ("host" in keywords) {
-				host = keywords["host"];
+			char[][char[]] keywords = getKeywords(params, "&");
+			if ("username" in keywords) {
+				username = keywords["username"];
 			}
-			if ("dbname" in keywords) {
-				dbname = keywords["dbname"];
+			if ("password" in keywords) {
+				password = keywords["password"];
 			}
 			if ("sock" in keywords) {
 				sock = keywords["sock"];
 			}
-			if ("port" in keywords) {
-                port = cast(uint)tango.text.convert.Integer.parse(keywords["port"]);
-			}
 		}
-        if (tango.text.Util.contains(params, '=')) {
-            parseKeywords();
-        } else {
-            dbname = params;
-        }
 
-		mysql_real_connect(mysql, toCString(host), toCString(username), toCString(password), toCString(dbname), port, toCString(sock), 0);
+		mysql_real_connect(mysql, toCString(host), toCString(username), toCString(password), toCString(dbname), portNo, toCString(sock), 0);
 		if (uint error = mysql_errno(mysql)) {
 		        Cout("connect(): ");
 		        Cout(toDString(mysql_error(mysql)));
@@ -149,8 +145,25 @@ class MysqlDatabase : Database, IMetadataProvider {
 			mysql = null;
 		}
 	}
+	
+	void execute(char[] sql)
+	{
+		int error = mysql_real_query(mysql, toCString(sql), sql.length);
+		if (error) {
+		        Cout("execute(): ");
+		        Cout(toDString(mysql_error(mysql)));
+		        Cout("\n").flush;			
+		        throw new DBIException("Unable to execute a command on the MySQL database.", sql, error, specificToGeneral(error));
+		}
+	}
+	
+	void execute(char[] sql, BindType[] paramTypes, void*[] ptrs)
+	{
+		auto execSql = virtualBind(sql, paramTypes, ptrs, this.getSqlGenerator);
+		execute(execSql);
+	}
         
-    IPreparedStatement prepare(char[] sql)
+    IStatement prepare(char[] sql)
 	{
 		MYSQL_STMT* stmt = mysql_stmt_init(mysql);
 		auto res = mysql_stmt_prepare(stmt, toCString(sql), sql.length);
@@ -165,10 +178,12 @@ class MysqlDatabase : Database, IMetadataProvider {
 		}
 		return new MysqlPreparedStatement(stmt);
 	}
-    
-    IPreparedStatement virtualPrepare(char[] sql)
+			
+	IStatement virtualPrepare(char[] sql)
     {
-    	return prepare(sql);
+		assert(false);
+    	//return new MysqlVirtualStatement(mysql, sql);
+		return null;
     }
 	
 	void beginTransact()
@@ -185,6 +200,14 @@ class MysqlDatabase : Database, IMetadataProvider {
 	void commit()
 	{
 		mysql_commit(mysql);
+	}
+	
+	char[] escape(char[] str)
+	{
+		assert(false, "Not implemented");
+		//char* res = new char[str.length];
+		char* res;
+		mysql_real_escape_string(mysql, res, str.ptr, str.length);
 	}
 	
 	bool hasTable(char[] tablename)
@@ -283,9 +306,36 @@ private class MysqlRegister : Registerable {
 		return "mysql";
 	}
 	
+	/**
+	 * Supports urls of the form mysql://[hostname][:port]/[dbname][?param1][=value1][&param2][=value2]...
+	 * 
+	 * Note: Does not support failoverhost's as in the MySQL JDBC spec.  Not all parameters
+	 * are supported - see the connect method for supported parameters.
+	 *
+	 */
 	public Database getInstance(char[] url) {
-		//parse the URL here
-		return new MysqlDatabase();
+		char[] host = "127.0.0.1";
+		char[] port, dbname, params;
+
+		auto fields = delimit(url, "/");
+		
+		if(fields.length) {
+			auto fields1 = delimit(fields[0], ":");
+			
+			if(fields1.length) {
+				if(fields1[0].length) host = fields1[0];
+				if(fields1.length > 1 && fields1[1].length) port = fields1[1];
+			}
+			
+			if(fields.length > 1) {
+				auto fields2 = delimit(fields[1], "?");
+				if(fields2.length) { 
+					dbname = fields2[0];
+					if(fields2.length > 1) params = fields2[1];
+				}
+			}
+		}
+		return new MysqlDatabase(host, port, dbname, params);
 	}
 }
 

@@ -6,8 +6,7 @@ import tango.util.log.Log,
 import dbi.SqlGen,
 	   dbi.Registry, 
        dbi.Database,
-       dbi.Statement,
-       dbi.PreparedStatement;
+       dbi.Statement;
 
 version (dbi_sqlite) {
     //This import is to fire the static constructor that registers Sqlite with the Registry

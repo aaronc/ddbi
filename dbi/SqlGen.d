@@ -158,10 +158,10 @@ unittest
 	auto ptr = cast(ubyte*)&x;
 	auto binStr = sqlgen.createBinaryString(ptr[0 .. 8]);
 	version(LittleEndian) {
-		assert(binStr == "x'0b1234ef9e06a750'", binStr);
+		assert(binStr == "X'0b1234ef9e06a750'", binStr);
 	}
 	else {
-		assert(binStr == "x'057a60e9fe4321b0'", binStr);
+		assert(binStr == "X'057a60e9fe4321b0'", binStr);
 	}
 	
 }
