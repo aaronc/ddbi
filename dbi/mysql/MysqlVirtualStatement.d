@@ -8,6 +8,10 @@ else {
 }
 
 import tango.stdc.stringz : toDString = fromStringz, toCString = toStringz;
+import ConvertInteger = tango.text.convert.Integer;
+import ConvertFloat = tango.text.convert.Float;
+import tango.core.Traits;
+
 import dbi.VirtualBind, dbi.Database, dbi.DBIException;
 import dbi.mysql.MysqlMetadata, dbi.mysql.MysqlError;
 
@@ -56,7 +60,185 @@ class MysqlVirtualStatement : VirtualStatement
 		}
 	}
 	
-	bool fetch(void*[] bind, void* delegate(size_t) allocator = null)
+	static void bindResT(T)(char[] res, enum_field_types type, void* ptr)
+	{
+		static if(isIntegerType!(T) || isRealType!(T) || is(T == bool))
+		{
+			T* val = cast(T*)ptr;
+			with(enum_field_types) {
+				switch(type)
+				{
+				case MYSQL_TYPE_BIT:
+				case MYSQL_TYPE_TINY:
+		        case MYSQL_TYPE_SHORT:
+		        case MYSQL_TYPE_LONG:
+		        case MYSQL_TYPE_INT24:
+		        case MYSQL_TYPE_LONGLONG:
+		        case MYSQL_TYPE_YEAR:
+		        case MYSQL_TYPE_ENUM:
+		        	*val = cast(T)ConvertInteger.parse(res);
+		        	break;
+		        case MYSQL_TYPE_NEWDECIMAL:
+				case MYSQL_TYPE_DECIMAL:
+		        case MYSQL_TYPE_FLOAT:
+		        case MYSQL_TYPE_DOUBLE:
+		        	*val = cast(T)ConvertFloat.parse(res);
+		        	break;
+		        case MYSQL_TYPE_VAR_STRING:
+		        case MYSQL_TYPE_STRING:
+		        case MYSQL_TYPE_VARCHAR:
+		        	static if(isIntegerType!(T))
+		        		*val = cast(T)ConvertInteger.parse(res);
+		        	else static if(isRealType!(T))
+		        		*val = cast(T)ConvertFloat.parse(res);
+		        	else static if(is(T == bool)) {
+		        		if(res == "true") *val = true;
+		        		else if(res == "false") *val = false;
+		        		else *val = cast(T)ConvertInteger.parse(res);
+		        	}
+		        	else static assert(false);
+		        	break;
+		        case MYSQL_TYPE_NULL:
+		        	*val = T.init;
+		        	break;		
+		        case MYSQL_TYPE_TINY_BLOB:
+		        case MYSQL_TYPE_MEDIUM_BLOB:
+		        case MYSQL_TYPE_LONG_BLOB:
+		        case MYSQL_TYPE_BLOB:
+		        	debug assert(false, "Not implemented");
+		           	break;
+		        case MYSQL_TYPE_TIMESTAMP:
+		        case MYSQL_TYPE_DATE:
+		        case MYSQL_TYPE_TIME:
+		        case MYSQL_TYPE_DATETIME:
+		        case MYSQL_TYPE_NEWDATE:
+		        case MYSQL_TYPE_SET:
+				case MYSQL_TYPE_GEOMETRY:
+				default:
+					debug assert(false, "Unsupported type");
+					*val = T.init;
+		        	break;		
+				}
+			}
+		}
+		else static if(is(T == char[]))
+		{
+			T* val = cast(T*)ptr;
+			*val = res;
+		}
+		else static if(is(T == void[]) || is(T == ubyte[]))
+		{
+			ubyte[]* val = cast(ubyte[]*)ptr;
+			with(enum_field_types) {
+				switch(type)
+				{
+				case MYSQL_TYPE_BIT:
+				case MYSQL_TYPE_TINY:
+		        case MYSQL_TYPE_SHORT:
+		        case MYSQL_TYPE_LONG:
+		        case MYSQL_TYPE_INT24:
+		        case MYSQL_TYPE_LONGLONG:
+		        case MYSQL_TYPE_YEAR:
+		        	debug assert(false, "Unsupported type");
+					*val = null;
+		        	break;
+		        case MYSQL_TYPE_NEWDECIMAL:
+				case MYSQL_TYPE_DECIMAL:
+		        case MYSQL_TYPE_FLOAT:
+		        case MYSQL_TYPE_DOUBLE:
+		        	debug assert(false, "Unsupported type");
+		        	*val = null;
+		        	break;
+		        case MYSQL_TYPE_ENUM:
+		        case MYSQL_TYPE_VAR_STRING:
+		        case MYSQL_TYPE_STRING:
+		        case MYSQL_TYPE_VARCHAR:
+		        	*val = cast(ubyte[])res;
+		        	break;
+		        case MYSQL_TYPE_NULL:
+		        	*val = null;
+		        	break;		
+		        case MYSQL_TYPE_TINY_BLOB:
+		        case MYSQL_TYPE_MEDIUM_BLOB:
+		        case MYSQL_TYPE_LONG_BLOB:
+		        case MYSQL_TYPE_BLOB:
+		        	strToBinary(res, *val);
+		           	break;
+		        case MYSQL_TYPE_TIMESTAMP:
+		        case MYSQL_TYPE_DATE:
+		        case MYSQL_TYPE_TIME:
+		        case MYSQL_TYPE_DATETIME:
+		        case MYSQL_TYPE_NEWDATE:
+		        case MYSQL_TYPE_SET:
+				case MYSQL_TYPE_GEOMETRY:
+				default:
+					debug assert(false, "Unsupported type");
+					*val = null;
+		        	break;
+				}
+			}
+		}
+		else static assert(false, "Unsupported MySql bind type " ~ T.stringof);
+	}
+	
+	static void bindRes(char[] res, enum_field_types type, void* ptr, BindType bindType)
+	{
+		with(BindType)
+		{
+			switch(bindType)
+			{
+			case Bool:
+				break;
+			case Byte:
+				bindResT!(byte)(res, type, ptr);
+				break;
+			case Short:
+				bindResT!(short)(res, type, ptr);
+				break;
+			case Int:
+				bindResT!(int)(res, type, ptr);
+				break;
+			case Long:
+				bindResT!(long)(res, type, ptr);
+				break;
+			case UByte:
+				bindResT!(ubyte)(res, type, ptr);
+				break;
+			case UShort:
+				bindResT!(ushort)(res, type, ptr);
+				break;
+			case UInt:
+				bindResT!(uint)(res, type, ptr);
+				break;
+			case ULong:
+				bindResT!(ulong)(res, type, ptr);
+				break;
+			case Float:
+				bindResT!(float)(res, type, ptr);
+				break;
+			case Double:
+				bindResT!(double)(res, type, ptr);
+				break;
+			case String:
+				bindResT!(char[])(res, type, ptr);
+				break;
+			case Binary:
+				bindResT!(void[])(res, type, ptr);
+				break;
+			case Time:
+			case DateTime:
+				assert(false, "Not implemented");
+				break;
+			case Null:
+				break;
+			default:
+				assert(false, "Not implemented");
+				break;
+			}
+		}
+	}
+	
+	bool fetch(void*[] ptrs, void* delegate(size_t) allocator = null)
 	{
 		assert(false);
 		
@@ -72,61 +254,13 @@ class MysqlVirtualStatement : VirtualStatement
 			throw new DBIException;
 		}
 		
-		assert(false, "Not implemented");
-		for(uint index = 0; index < fieldCount; index++) {
-		}
+		auto len = fieldCount;
+		if(fieldCount != resTypes.length)
+			throw new DBIException();
 		
-		foreach(i, type; resTypes)
+		for(uint i = 0; i < len; ++i)
 		{
-			with(BindType)
-			{
-				switch(type)
-				{
-				case Bool:
-				case Byte:
-					byte* ptr = cast(byte*)bind[i];
-					break;
-				case Short:
-					short* ptr = cast(short*)bind[i];
-					break;
-				case Int:
-					int* ptr = cast(int*)bind[i];
-					break;
-				case Long:
-					long* ptr = cast(long*)bind[i];
-					break;
-				case UByte:
-					ubyte* ptr = cast(ubyte*)bind[i];
-					break;
-				case UShort:
-					ushort* ptr = cast(ushort*)bind[i];
-					break;
-				case UInt:
-					uint* ptr = cast(uint*)bind[i];
-					break;
-				case ULong:
-					ulong* ptr = cast(ulong*)bind[i];
-					break;
-				case Float:
-					float* ptr = cast(float*)bind[i];
-					break;
-				case Double:
-					double* ptr = cast(double*)bind[i];
-					break;
-				case String:
-					char[]* ptr = cast(char[]*)bind[i];
-					break;
-				case Binary:
-					void[]* ptr = cast(void[]*)bind[i];
-					break;
-				case Time:
-				case DateTime:
-				case Null:
-				default:
-					assert(false, "Not implemented");
-					break;
-				}
-			}
+			bindRes(row[i][0 .. lengths[i]], fields[i].type, ptrs[i], resTypes[i]);
 		}
 		
 		return true;
@@ -154,4 +288,15 @@ class MysqlVirtualStatement : VirtualStatement
 		MYSQL_RES* res;
 		MYSQL_FIELD* fields;
 		uint fieldCount;
+}
+
+void strToBinary(char[] str, ref ubyte[] bin)
+{
+	auto resLen = str.length / 2;
+	debug assert((cast(double)resLen) == str.length / 2);
+	bin.length = resLen;
+	for(size_t i = 0; i < resLen; ++i)
+	{
+		bin[i] = ConvertInteger.parse(str[i * 2 .. i * 2 + 1], 16);
+	}
 }
