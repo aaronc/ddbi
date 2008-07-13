@@ -24,6 +24,8 @@ else {
 private import dbi.mysql.MysqlError, dbi.mysql.MysqlPreparedStatement, dbi.mysql.MysqlVirtualStatement;
 import tango.text.Util;
 
+import dbi.util.StringWriter;
+
 static this() {
 	uint ver = mysql_get_client_version();
 	if(ver < 50000) {
@@ -148,7 +150,7 @@ class MysqlDatabase : Database, IMetadataProvider {
 	
 	void execute(char[] sql)
 	{
-		int error = mysql_real_query(mysql, toCString(sql), sql.length);
+		int error = mysql_real_query(mysql, sql.ptr, sql.length);
 		if (error) {
 		        Cout("execute(): ");
 		        Cout(toDString(mysql_error(mysql)));
@@ -159,14 +161,17 @@ class MysqlDatabase : Database, IMetadataProvider {
 	
 	void execute(char[] sql, BindType[] paramTypes, void*[] ptrs)
 	{
-		auto execSql = virtualBind(sql, paramTypes, ptrs, this.getSqlGenerator);
-		execute(execSql);
+		auto execSql = new DisposableStringWriter(sql.length * 2);
+		virtualBind(sql, paramTypes, ptrs, this.getSqlGenerator, execSql);
+		execute(execSql.get);
+		execSql.free;
+		delete execSql;
 	}
         
     IStatement prepare(char[] sql)
 	{
 		MYSQL_STMT* stmt = mysql_stmt_init(mysql);
-		auto res = mysql_stmt_prepare(stmt, toCString(sql), sql.length);
+		auto res = mysql_stmt_prepare(stmt, sql.ptr, sql.length);
 		if(res != 0) {
 			debug(Log) {
 				auto err = mysql_stmt_error(stmt);
@@ -181,7 +186,6 @@ class MysqlDatabase : Database, IMetadataProvider {
 			
 	IStatement virtualPrepare(char[] sql)
     {
-		assert(false, "Not implemented");
     	return new MysqlVirtualStatement(sql, getSqlGenerator, mysql);
     }
 	

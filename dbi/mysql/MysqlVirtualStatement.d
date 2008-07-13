@@ -17,6 +17,8 @@ import dbi.VirtualBind, dbi.Database, dbi.DBIException;
 import dbi.mysql.MysqlMetadata, dbi.mysql.MysqlError;
 import dbi.DateTime;
 
+import dbi.util.StringWriter;
+
 class MysqlVirtualStatement : VirtualStatement
 {
 	package this(char[] sql, SqlGenerator sqlGen, MYSQL* mysql)
@@ -45,12 +47,13 @@ class MysqlVirtualStatement : VirtualStatement
 	void execute(void*[] bind)
 	{
 		auto execSql = virtualBind_(bind);
-		exec(execSql);
+		exec(execSql.get);
+		scope(exit) execSql.free;
 	}
 	
-	private void exec(char[] execSql)
+	private void exec(char[] sql)
 	{
-		int error = mysql_real_query(mysql, toCString(execSql), execSql.length);
+		int error = mysql_real_query(mysql, sql.ptr, sql.length);
 		if (error) {
 		        throw new DBIException("Unable to execute a command on the MySQL database.", sql, error, specificToGeneral(error));
 		}

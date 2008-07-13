@@ -13,6 +13,7 @@ abstract class VirtualStatement : IStatement {
 		this.sqlGen = sqlGen;
 		this.sql = sql;
 		this.paramIndices = getParamIndices(sql);
+		this.execSql = new DisposableStringWriter(sql.length * 2);
 	}
 
 	uint getParamCount()
@@ -30,12 +31,14 @@ abstract class VirtualStatement : IStatement {
 		this.resTypes = resTypes;
 	}
 	
-	protected char[] virtualBind_(void*[] ptrs)
+	protected IDisposableString virtualBind_(void*[] ptrs)
 	{
-		return virtualBind(sql, paramIndices, paramTypes, ptrs, sqlGen);
+		virtualBind(sql, paramIndices, paramTypes, ptrs, sqlGen, execSql);
+		return execSql;
 	}
 	
 	protected:
+		DisposableStringWriter execSql;
 		SqlGenerator sqlGen;
 		char[] sql;
 		size_t[] paramIndices;
@@ -54,16 +57,18 @@ size_t[] getParamIndices(char[] sql) {
 	return paramIndices;
 }
 
-char[] virtualBind(char[] sql, BindType[] paramTypes, void*[] ptrs, SqlGenerator sqlGen)
+void virtualBind(char[] sql, BindType[] paramTypes, void*[] ptrs, SqlGenerator sqlGen, DisposableStringWriter execSql)
 {
 	auto paramIndices = getParamIndices(sql);
-	return virtualBind(sql, paramIndices, paramTypes, ptrs, sqlGen);
+	return virtualBind(sql, paramIndices, paramTypes, ptrs, sqlGen, execSql);
 }
 
-char[] virtualBind(char[] sql, size_t[] paramIndices, BindType[] paramTypes, void*[] ptrs, SqlGenerator sqlGen)
+void virtualBind(char[] sql, size_t[] paramIndices, BindType[] paramTypes, void*[] ptrs, SqlGenerator sqlGen, DisposableStringWriter execSql)
 {
+	execSql.reset;
+	
 	size_t idx = 0;
-	char[] execSql;
+	char stringQuoteChar = sqlGen.getStringQuoteCharacter;
 	foreach(i, type; paramTypes)
 	{
 		execSql ~= sql[idx .. paramIndices[i]];
@@ -119,8 +124,8 @@ char[] virtualBind(char[] sql, size_t[] paramIndices, BindType[] paramTypes, voi
 				break;
 			case String:
 				char[]* ptr = cast(char[]*)ptrs[i];
-				execSql ~= *ptr;
-				assert(false, "String escaping");
+				execSql ~= stringQuoteChar ~ simpleEscape(*ptr) ~ stringQuoteChar;
+				//assert(false, "String escaping");
 				break;
 			case Binary:
 				ubyte[]* ptr = cast(ubyte[]*)ptrs[i];
@@ -129,15 +134,17 @@ char[] virtualBind(char[] sql, size_t[] paramIndices, BindType[] paramTypes, voi
 			case Time:
 				T.Time* ptr = cast(T.Time*)ptrs[i];
 				auto dt = Clock.toDate(*ptr);
-				auto res = new char[19];
+				execSql ~= stringQuoteChar;
+				auto res = execSql.getWriteBuffer(19);
 				sqlGen.printDateTime(dt, res);
-				execSql ~= res;
+				execSql ~= stringQuoteChar;
 				break;
 			case DateTime:
 				T.DateTime* ptr = cast(T.DateTime*)ptrs[i];
-				auto res = new char[19];
+				execSql ~= stringQuoteChar;
+				auto res = execSql.getWriteBuffer(19);
 				sqlGen.printDateTime(*ptr, res);
-				execSql ~= res;
+				execSql ~= stringQuoteChar;
 				break;
 			case Null:
 			default:
@@ -147,12 +154,52 @@ char[] virtualBind(char[] sql, size_t[] paramIndices, BindType[] paramTypes, voi
 		}
 	}
 	execSql ~= sql[idx .. $];
-	return execSql;
+}
+
+char[] simpleEscape(char[] string)
+{
+	char[] result;
+	size_t count = 0;
+
+	// Maximum length needed if every char is to be quoted
+	result.length = string.length * 2;
+
+	for (size_t i = 0; i < string.length; i++) {
+		switch (string[i]) {
+			case '"':
+			case '\'':
+			case '\\':
+				result[count++] = '\\';
+				break;
+			default:
+				break;
+		}
+		result[count++] = string[i];
+	}
+
+	result.length = count;
+	return result;
 }
 
 debug(UnitTest)
 {
+import dbi.DateTime;	
+
 unittest
 {
+	auto sql = "select * from user where name = ? and birthday = ?";
+	auto pIndices = getParamIndices(sql);
+	assert(pIndices.length == 2);
+	
+	char[] name = "sean";
+	DateTime bday;
+	parseDateTime("1987-03-19 15:30:37", bday);
+	
+	auto execSql = new DisposableStringWriter(5);
+	
+	virtualBind(sql, pIndices, [BindType.String, BindType.DateTime], [cast(void*)&name, cast(void*)&bday], new SqlGenerator, execSql);
+	assert(execSql.get == "select * from user where name = 'sean' and birthday = '1987-03-19 15:30:37'", execSql.get);
+	
+	execSql.free;
 }
 }

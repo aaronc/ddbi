@@ -7,7 +7,7 @@ import dbi.SqlGen,
 	   dbi.Registry, 
        dbi.Database,
        dbi.Statement;
-/+
+
 version (dbi_sqlite) {
     //This import is to fire the static constructor that registers Sqlite with the Registry
 	private import dbi.sqlite.SqliteDatabase;
@@ -17,7 +17,7 @@ version (dbi_sqlite) {
 version (dbi_mysql) {
     //This import is to fire the static constructor that registers Sqlite with the Registry
 	private import dbi.mysql.MysqlDatabase;
-}+/
+}
 
 import dbi.VirtualBind;
 

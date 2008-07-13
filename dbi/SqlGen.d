@@ -16,6 +16,11 @@ class SqlGenerator
 		return '"'; 
 	}
 	
+	char getStringQuoteCharacter()
+	{
+		return '\'';
+	}
+	
 	char[] getHexPrefix()
 	{
 		return "X'";
