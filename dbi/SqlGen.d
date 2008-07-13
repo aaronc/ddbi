@@ -1,6 +1,7 @@
 module dbi.SqlGen;
 
 import Integer = tango.text.convert.Integer;
+import tango.time.Time;
 import DT = dbi.DateTime;
 
 /**
@@ -73,17 +74,17 @@ class SqlGenerator
 		return SqlGenHelper.makeUpdateSql(whereClause, tablename, fields, getIdentifierQuoteCharacter);
 	}
 	
-	char[] printDateTime(DT.DateTime dt, char[] res)
+	char[] printDateTime(DateTime dt, char[] res)
 	{
 		return DT.printDateTime(dt, res);
 	}
 	
-	char[] printDate(DT.DateTime dt, char[] res)
+	char[] printDate(DateTime dt, char[] res)
 	{
 		return DT.printDate(dt, res);
 	}
 	
-	char[] printTime(DT.DateTime dt, char[] res)
+	char[] printTime(DateTime dt, char[] res)
 	{
 		return DT.printTime(dt, res);
 	}
@@ -180,5 +181,23 @@ unittest
 		assert(binStr == "X'057a60e9fe4321b0'", binStr);
 	}
 	
+	//DateTime
+	
+	DT.DateTime dt;
+	dt.date.year = 2008;
+	dt.date.month = 1;
+	dt.date.day = 15;
+
+	res = new char[19];
+	
+	res = sqlgen.printDateTime(dt, res);
+	assert(res == "2008-01-15 00:00:00", res);
+	
+	dt.time.hours = 3;
+	dt.time.minutes = 15;
+	dt.time.seconds = 47;
+	
+	res = sqlgen.printDateTime(dt, res);
+	assert(res == "2008-01-15 03:15:47", res);
 }
 }

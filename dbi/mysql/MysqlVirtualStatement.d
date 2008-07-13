@@ -8,13 +8,14 @@ else {
 }
 
 import tango.stdc.stringz : toDString = fromStringz, toCString = toStringz;
-import tango.time.Time, tango.time.Clock, tango.time.ISO8601;
+import DT = tango.time.Time, tango.time.Clock;
 import ConvertInteger = tango.text.convert.Integer;
 import ConvertFloat = tango.text.convert.Float;
 import tango.core.Traits;
 
 import dbi.VirtualBind, dbi.Database, dbi.DBIException;
 import dbi.mysql.MysqlMetadata, dbi.mysql.MysqlError;
+import dbi.DateTime;
 
 class MysqlVirtualStatement : VirtualStatement
 {
@@ -179,6 +180,36 @@ class MysqlVirtualStatement : VirtualStatement
 				}
 			}
 		}
+		else static if(is(T == DT.DateTime) || is(T == DT.Time))
+		{
+			DT.DateTime dt;
+			with(enum_field_types) {
+				switch(type)
+				{
+		        case MYSQL_TYPE_DATE:
+		        	parseDateFixed(res, dt.date);
+					break;
+		        case MYSQL_TYPE_TIME:
+		        	parseTimeFixed(res, dt.time);
+		        	break;
+		        case MYSQL_TYPE_TIMESTAMP:
+		        case MYSQL_TYPE_DATETIME:
+		        	parseDateTimeFixed(res, dt);
+		        	break;
+		        case MYSQL_TYPE_NEWDATE:
+		        	break;
+				default:
+					debug assert(false, "Unsupported type");
+		        	break;
+				}
+			}
+			static if(is(T == DT.DateTime))
+				*(cast(DT.DateTime*)ptr) = dt;
+			else static if(is(T == DT.Time)) {
+				*(cast(DT.Time*)ptr) = Clock.fromDate(dt);
+			}
+			else static assert(false);
+		}
 		else static assert(false, "Unsupported MySql bind type " ~ T.stringof);
 	}
 	
@@ -227,8 +258,10 @@ class MysqlVirtualStatement : VirtualStatement
 				bindResT!(void[])(res, type, ptr);
 				break;
 			case Time:
+				bindResT!(DT.Time)(res, type, ptr);
+				break;
 			case DateTime:
-				assert(false, "TODO: Not implemented");
+				bindResT!(DT.DateTime)(res, type, ptr);
 				break;
 			case Null:
 				break;

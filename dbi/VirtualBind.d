@@ -147,3 +147,10 @@ char[] virtualBind(char[] sql, size_t[] paramIndices, BindType[] paramTypes, voi
 	execSql ~= sql[idx .. $];
 	return execSql;
 }
+
+debug(UnitTest)
+{
+unittest
+{
+}
+}
