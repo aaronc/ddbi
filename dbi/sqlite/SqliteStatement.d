@@ -71,10 +71,8 @@ class SqliteStatement : IStatement
 	
 	bool fetch(void*[] ptrs, void* delegate(size_t) allocator = null)
 	{
-		if(lastRes != SQLITE_ROW) {
-			debug Stdout.formatln("lastRes = {}", lastRes);
+		if(lastRes != SQLITE_ROW)
 			return false;
-		}
 		
 		auto len = resTypes.length;
 		if(ptrs.length != len)

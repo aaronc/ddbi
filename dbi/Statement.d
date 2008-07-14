@@ -18,8 +18,9 @@ interface IStatement
 	void execute(void*[] bind);
 	bool fetch(void*[] bind, void* delegate(size_t) allocator = null);
 	void prefetchAll();
-	void reset();
 	ulong getLastInsertID();
+	void reset();
+	void close();
 }
 
 struct FieldInfo

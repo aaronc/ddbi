@@ -475,10 +475,10 @@ debug(UnitTest) {
 			auto db = new MysqlDatabase("localhost", null, "test", "username=test&password=test");
 			//auto db = getDatabaseForURL("mysql://localhost/test?username=test&password=test");
 			
-			auto test = new MysqlTest(db);
+			auto test = new MysqlTest(db, false);
 			test.run;
 			
-			auto testVirtual = new MysqlTest(db);
+			auto testVirtual = new MysqlTest(db, true);
 			testVirtual.run;
 			
 			assert(db.hasTable("test"));

@@ -273,12 +273,17 @@ class MysqlPreparedStatement : IStatement
 		this.stmt = stmt;
 	}
 	
+	void close()
+	{
+		if (stmt !is null) {
+	        mysql_stmt_close(stmt);
+	        stmt = null;
+	    }
+	}
+	
 	~this()
 	{
-        if (stmt !is null) {
-            mysql_stmt_close(stmt);
-            stmt = null;
-        }
+        close;
 	}
 	
 	private MYSQL_STMT* stmt;

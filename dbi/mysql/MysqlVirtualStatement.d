@@ -55,7 +55,7 @@ class MysqlVirtualStatement : VirtualStatement
 	{
 		int error = mysql_real_query(mysql, sql.ptr, sql.length);
 		if (error) {
-		        throw new DBIException("Unable to execute a command on the MySQL database.", sql, error, specificToGeneral(error));
+		        throw new DBIException("mysql_real_query error: " ~ toDString(mysql_error(mysql)), sql, error, specificToGeneral(error));
 		}
 		
 		res = mysql_store_result(mysql);
@@ -277,8 +277,6 @@ class MysqlVirtualStatement : VirtualStatement
 	
 	bool fetch(void*[] ptrs, void* delegate(size_t) allocator = null)
 	{
-		assert(false);
-		
 		if(!res) return false;
 		
 		MYSQL_ROW row = mysql_fetch_row(res);
@@ -286,13 +284,16 @@ class MysqlVirtualStatement : VirtualStatement
 		if (row is null) {
 			return false;
 		}
+		
 		if(lengths is null) {
-			throw new DBIException;
+			return false;
+			//TODO throw new DBIException;
 		}
 		
 		auto len = fieldCount;
 		if(fieldCount != resTypes.length)
-			throw new DBIException();
+			return false;
+			//TODO throw new DBIException();
 		
 		for(uint i = 0; i < len; ++i)
 		{
@@ -304,6 +305,11 @@ class MysqlVirtualStatement : VirtualStatement
 	
 	void prefetchAll() { }
 	
+	ulong getLastInsertID()
+	{
+		 return mysql_insert_id(mysql);
+	}
+	
 	void reset()
 	{
 		if (res !is null) {
@@ -314,9 +320,9 @@ class MysqlVirtualStatement : VirtualStatement
 		}
 	}
 	
-	ulong getLastInsertID()
+	void close()
 	{
-		 return mysql_insert_id(mysql);
+		
 	}
 	
 	private:
