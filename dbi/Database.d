@@ -146,7 +146,7 @@ debug(UnitTest) {
 		{
 			auto sqlGen = db.getSqlGenerator;
 			auto sql = sqlGen.makeInsertSql("test", ["name", "dateofbirth"]);
-			auto st = db.prepare(sql);
+			auto st = prepare(sql);
 			
 			Stdout.formatln("Prepared:test1 - {}", sql);
 			
@@ -172,7 +172,7 @@ debug(UnitTest) {
 		
 		void test2()
 		{
-			auto st2 = db.prepare("SELECT * FROM test WHERE 1");
+			auto st2 = prepare("SELECT * FROM test WHERE 1");
 					
 			assert(st2);
 			assert(st2.getParamCount == 0);
@@ -193,7 +193,7 @@ debug(UnitTest) {
 		
 		void test3()
 		{
-			auto st3 = db.prepare("SELECT * FROM test WHERE id = \?");
+			auto st3 = prepare("SELECT * FROM test WHERE id = \?");
 			
 			assert(st3);
 			

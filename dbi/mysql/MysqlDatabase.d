@@ -466,35 +466,6 @@ debug(UnitTest) {
 		}
 	}
 	
-	void test(MysqlDatabase db)
-	{
-		auto tst = new MysqlTest(db);
-		tst.run;
-		
-		/+setup(db);
-		
-		tst.test1(db);+/
-		
-		
-		
-		assert(db.hasTable("test"));
-		TableInfo ti;
-		assert(db.getTableInfo("test", ti));
-		assert(ti.fieldNames.length == 4);
-		assert(ti.primaryKeyFields.length == 1);
-		foreach(f; ti.fieldNames)
-		{
-			Stdout.formatln("Field Name:{}", f);
-		}
-		
-		foreach(f; ti.primaryKeyFields)
-		{
-			Stdout.formatln("Primary Key:{}", f);
-		}
-		
-		//teardown(db);
-	}
-	
 	unittest
 	{
 		try
@@ -504,7 +475,26 @@ debug(UnitTest) {
 			auto db = new MysqlDatabase("localhost", null, "test", "username=test&password=test");
 			//auto db = getDatabaseForURL("mysql://localhost/test?username=test&password=test");
 			
-			test(db);
+			auto test = new MysqlTest(db);
+			test.run;
+			
+			auto testVirtual = new MysqlTest(db);
+			testVirtual.run;
+			
+			assert(db.hasTable("test"));
+			TableInfo ti;
+			assert(db.getTableInfo("test", ti));
+			assert(ti.fieldNames.length == 4);
+			assert(ti.primaryKeyFields.length == 1);
+			foreach(f; ti.fieldNames)
+			{
+				Stdout.formatln("Field Name:{}", f);
+			}
+			
+			foreach(f; ti.primaryKeyFields)
+			{
+				Stdout.formatln("Primary Key:{}", f);
+			}
 			
 			db.close;
 		}
