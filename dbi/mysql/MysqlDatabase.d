@@ -432,147 +432,50 @@ debug(UnitTest) {
 	import dbi.util.DateTime;
 	import dbi.ErrorCode;
 
-	void setup(MysqlDatabase db)
+	class MysqlTest : DBTest
 	{
-		char[] drop_test = "DROP TABLE IF EXISTS `test`.`test`;";
-		
-		Stdout.formatln("executing: {}", drop_test);
-		
-		db.execute(drop_test);
-		
-		char[] create_test = "CREATE TABLE  `test`.`test` ( "
-			"`id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, "
-			"`name` varchar(45) NOT NULL, "
-			"`binary` tinyblob NULL, "
-			"`dateofbirth` datetime default NULL, "
-			"PRIMARY KEY  (`id`) "
-		") DEFAULT CHARSET=utf8; ";
-		
-		Stdout.formatln("executing: {}", create_test);
-		
-		db.execute(create_test);
-	}
-	
-	void teardown(MysqlDatabase db)
-	{
-		
-	}
-	
-	class Test
-	{
-		this(bool virtual = false)
+		this(Database db, bool virtual = false)
 		{
-			this.virtual = virtual;
-			
-			bind.length = 3;
-			bind[0] = &id;
-			bind[1] = &name;
-			bind[2] = &dateofbirth;
+			super(db, virtual);
 		}
 		
-		BindType[] resTypes =
-		[
-		 	BindType.UInt,
-		 	BindType.String,
-		 	BindType.Time
-		];
-		
-		Database db;
-		
-		uint id;
-		char[] name;
-		Time dateofbirth;
-		bool virtual;
-		
-		void*[] bind;
-		
-		IStatement prepare(char[] sql)
+		void setup()
 		{
-			if(!virtual)
-				return db.prepare(sql);
-			else
-				return db.virtualPrepare(sql);
+			char[] drop_test = "DROP TABLE IF EXISTS `test`.`test`;";
+			
+			Stdout.formatln("executing: {}", drop_test);
+			
+			db.execute(drop_test);
+			
+			char[] create_test = "CREATE TABLE  `test`.`test` ( "
+				"`id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, "
+				"`name` varchar(45) NOT NULL, "
+				"`binary` tinyblob NULL, "
+				"`dateofbirth` datetime default NULL, "
+				"PRIMARY KEY  (`id`) "
+			") DEFAULT CHARSET=utf8; ";
+			
+			Stdout.formatln("executing: {}", create_test);
+			
+			db.execute(create_test);
 		}
 		
-		void test1(Database db)
+		void teardown()
 		{
-			auto sqlGen = db.getSqlGenerator;
-			auto sql = sqlGen.makeInsertSql("test", ["name", "dateofbirth"]);
-			auto st = db.prepare(sql);
 			
-			Stdout.formatln("Prepared:test1 - {}", sql);
-			
-			name = "test";
-			DateTime dt;
-			dt.date.year = 2008;
-			dt.date.month = 1;
-			dt.date.day = 1;
-			dateofbirth = Clock.fromDate(dt);
-
-			BindType[] pTypes = [BindType.String, BindType.Time];
-			
-			void*[] pBind;
-			pBind ~= &name;
-			pBind ~= &dateofbirth;
-			
-			st.setParamTypes(pTypes);
-			Stdout.formatln("setParamTypes:test1");
-			
-			st.execute(pBind);
-			Stdout.formatln("Completed:test1");			
-		}
-		
-		void test_st2(IStatement st2)
-		{
-			assert(st2);
-			assert(st2.getParamCount == 0);
-			st2.execute();
-			auto metadata = st2.getResultMetadata();
-			foreach(f; metadata)
-			{
-				Stdout.formatln("Name:{}, Type:{}", f.name, f.type);
-			}
-			
-			st2.setResultTypes(resTypes);
-			
-			st2.execute;
-			assert(st2.fetch(bind));
-			Stdout.formatln("id:{},name:{},dateofbirth:{}",id,name,dateofbirth.ticks);
-			assert(!st2.fetch(bind));
-		}
-		
-		void test_st3(IStatement st3)
-		{
-			assert(st3);
-			
-			BindType[] paramTypes = [BindType.UShort];
-			
-			void*[] pBind;
-			ushort usID = 1;
-			st3.setParamTypes(paramTypes);
-			st3.setResultTypes(resTypes);
-			pBind ~= &usID;
-			st3.execute(pBind);
-			assert(st3.fetch(bind));
-			Stdout.formatln("id:{},name:{},dateofbirth:{}",id,name,dateofbirth.ticks);
-			st3.reset;
 		}
 	}
-	
 	
 	void test(MysqlDatabase db)
 	{
-		auto tst = new Test;
+		auto tst = new MysqlTest(db);
+		tst.run;
 		
-		setup(db);
+		/+setup(db);
 		
-		tst.test1(db);
+		tst.test1(db);+/
 		
-		auto st2 = db.prepare("SELECT * FROM test WHERE 1");
-		tst.test_st2(st2);
 		
-		auto st3 = db.prepare("SELECT * FROM test WHERE id = \?");
-		tst.test_st3(st3);
 		
 		assert(db.hasTable("test"));
 		TableInfo ti;
@@ -589,7 +492,7 @@ debug(UnitTest) {
 			Stdout.formatln("Primary Key:{}", f);
 		}
 		
-		teardown(db);
+		//teardown(db);
 	}
 	
 	unittest
