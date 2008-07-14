@@ -27,6 +27,7 @@ void main(char[][] args) {
 
 	if (args.length > 1) {
 		auto db = getDatabaseForURL(args[1]);
+		db.test;
 		
 	} else {
 		logger.error("usage: testddbi DBURL");

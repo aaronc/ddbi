@@ -82,6 +82,25 @@ abstract class Database {
 	{
 		return sqlGen;
 	}
+	
+	debug(DBITest) {
+		abstract void doTests();
+		
+		void test()
+		{
+			try
+			{
+				//Log.getRootLogger.addAppender(new ConsoleAppender);
+				
+				doTests;
+			}
+			catch(DBIException ex)
+			{
+				Stdout.formatln("Caught DBIException: {}, DBI Code:{}, DB Code:{}, Sql: {}", ex.toString, DBIErrorCode.toString(ex.getErrorCode), ex.getSpecificCode, ex.getSql);
+				throw ex;
+			}
+		}
+	}
 }
 
 private class TestDatabase : Database {
@@ -89,8 +108,10 @@ private class TestDatabase : Database {
 	void close () {}
 }
 
-debug(UnitTest) {
+debug(DBITest) {
 
+	import DBIErrorCode = dbi.ErrorCode;
+	
 	abstract class DBTest
 	{
 		this(Database db, bool virtual = false)
@@ -145,7 +166,7 @@ debug(UnitTest) {
 		void test1()
 		{
 			auto sqlGen = db.getSqlGenerator;
-			auto sql = sqlGen.makeInsertSql("test", ["name", "dateofbirth"]);
+			auto sql = sqlGen.makeInsertSql("dbi_test", ["name", "dateofbirth"]);
 			auto st = prepare(sql);
 			
 			Stdout.formatln("Prepared:test1 - {}", sql);
@@ -174,7 +195,7 @@ debug(UnitTest) {
 		{
 			auto sqlGen = db.getSqlGenerator;
 			auto list = sqlGen.makeFieldList(["id", "name", "dateofbirth"]);
-			auto sql = "SELECT " ~ list ~ " FROM test";
+			auto sql = "SELECT " ~ list ~ " FROM dbi_test";
 			
 			auto st2 = prepare(sql);
 					
@@ -200,7 +221,7 @@ debug(UnitTest) {
 		{
 			auto sqlGen = db.getSqlGenerator;
 			auto list = sqlGen.makeFieldList(["id", "name", "dateofbirth"]);
-			auto sql = "SELECT " ~ list ~ " FROM test WHERE id = ?";
+			auto sql = "SELECT " ~ list ~ " FROM dbi_test WHERE id = ?";
 			
 			auto st3 = prepare(sql);
 			

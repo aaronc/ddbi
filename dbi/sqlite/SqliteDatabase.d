@@ -76,8 +76,10 @@ class SqliteDatabase : Database {
 	override void close () {
 		logger.trace("closing database now");
 		if (database !is null) {
-			foreach(st; sts)
-				st.close;
+			while(lastSt) {
+				lastSt.close;
+				lastSt = lastSt.lastSt;
+			}
 			
 			if ((errorCode = sqlite3_close(database)) != SQLITE_OK) {
 				throw new DBIException(toDString(sqlite3_errmsg(database)), errorCode, specificToGeneral(errorCode));
@@ -94,12 +96,12 @@ class SqliteDatabase : Database {
 		if ((errorCode = sqlite3_prepare_v2(database, toCString(sql), sql.length, &stmt, errorMessage)) != SQLITE_OK) {
 			throw new DBIException("sqlite3_prepare_v2 error: " ~ toDString(sqlite3_errmsg(database)), sql, errorCode, specificToGeneral(errorCode));
 		}
-		auto st = new SqliteStatement(database, stmt, sql);
-		sts ~= st;
-		return st;
+		
+		lastSt = new SqliteStatement(database, stmt, sql, lastSt);
+		return lastSt;
 	}
 	
-	private SqliteStatement sts[];
+	private SqliteStatement lastSt = null;
 			
 	IStatement virtualPrepare(char[] sql) { return prepare(sql); }
 
@@ -231,6 +233,14 @@ class SqliteDatabase : Database {
 	void beginTransact() {}
 	void rollback() {}
 	void commit() {}
+	
+	debug(DBITest) {
+		override void doTests()
+		{
+			auto test = new SqliteTest(this);
+			test.run;
+		}
+	}
 
 	private:
 	sqlite3* database;
@@ -259,21 +269,6 @@ class SqliteDatabase : Database {
 		}
 		return false;
 	}+/
-	
-	
-	
-	/+IStatement createStatement(char[] statement)
-	{
-		sqlite3_stmt* stmt;
-		char* pzTail;
-		int res;
-		if((res = sqlite3_prepare_v2(database, toCString(statement), statement.length, &stmt, &pzTail)) != SQLITE_OK) {
-			char* errmsg = sqlite3_errmsg(db_);
-			logger.error("sqlite3_prepare_v2 for statement: \"" ~ statement ~ "\" returned: " ~ Integer.toUtf8(res) ~ ", errmsg: " ~ toDString(errmsg));
-			return null;
-		}
-		return new SqlitePreparedStatement(stmt, database);
-	}+/
 }
 
 private class SqliteRegister : Registerable {
@@ -294,10 +289,8 @@ private class SqliteRegister : Registerable {
 	}
 }
 
-debug(UnitTest) {
+debug(DBITest) {
 	
-	import dbi.ErrorCode;
-
 	class SqliteTest : DBTest
 	{
 		this(Database db, bool virtual = false)
@@ -307,13 +300,13 @@ debug(UnitTest) {
 		
 		void setup()
 		{
-			char[] drop_test = `DROP TABLE IF EXISTS "test"`;
+			char[] drop_test = `DROP TABLE IF EXISTS "dbi_test"`;
 			
 			Stdout.formatln("executing: {}", drop_test);
 			
 			db.execute(drop_test);
 			
-			char[] create_test = `CREATE TABLE  "test" ( `
+			char[] create_test = `CREATE TABLE  "dbi_test" ( `
 				`"id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, `
 				`"name" TEXT NOT NULL, `
 				`"binary" BLOB DEFAULT  NULL, `
@@ -347,19 +340,7 @@ unittest {
 
 	s2("query");
 
-	try
-	{
-		auto test = new SqliteTest(db);
-		test.run;
-	}
-	catch(DBIException ex)
-	{
-		Stdout.formatln("Caught DBIException: {}, DBI Code:{}, DB Code:{}, Sql: {}", ex.toString, toString(ex.getErrorCode), ex.getSpecificCode, ex.getSql);
-		throw ex;
-	}
-	
-	auto test = new SqliteTest(db);
-	test.run;
+	db.test;
 	
 /+	Result res = db.query("SELECT * FROM test");
 	assert (res !is null);

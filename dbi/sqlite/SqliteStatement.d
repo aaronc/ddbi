@@ -248,11 +248,12 @@ class SqliteStatement : IStatement
 		else return cast(ulong)id;
 	}
 	
-	package this(sqlite3* sqlite, sqlite3_stmt* stmt, char[] sql)
+	package this(sqlite3* sqlite, sqlite3_stmt* stmt, char[] sql, SqliteStatement lastSt)
 	{
 		this.sqlite = sqlite;
 		this.stmt = stmt;
 		this.sql = sql;
+		this.lastSt = lastSt;
 	}
 	
 	void close()
@@ -273,7 +274,8 @@ class SqliteStatement : IStatement
 	
 	private sqlite3* sqlite;
 	private sqlite3_stmt* stmt;
-	private char[] sql; 
+	private char[] sql;
+	package SqliteStatement lastSt; // Used as a linked list ensuring that all statements are closed when the connection is closed
 	
 	private BindType[] paramTypes;
 	private BindType[] resTypes;

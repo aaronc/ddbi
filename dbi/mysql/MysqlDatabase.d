@@ -4,7 +4,6 @@
  */
 module dbi.mysql.MysqlDatabase;
 
-version=dbi_mysql;
 version (dbi_mysql) {
 
 private import tango.stdc.stringz : toDString = fromStringz, toCString = toStringz;
@@ -293,6 +292,20 @@ class MysqlDatabase : Database, IMetadataProvider {
     		mysqlSqlGen = new MysqlSqlGenerator(mysql);
 		return mysqlSqlGen;
 	}
+    
+    debug(DBITest) {
+    	override void doTests()
+		{
+			auto test = new MysqlTest(this, false);
+			test.run;
+			
+			auto testVirtual = new MysqlTest(this, true);
+			testVirtual.run;
+			
+			auto mdTest = new MetadataTest(this);
+			mdTest.run;
+		}
+	}
 
 	package:
 		MYSQL* mysql;
@@ -356,7 +369,7 @@ private class MysqlRegister : Registerable {
 }
 
 static this() {
-	Cout("Attempting to register MysqlDatabase in Registry").newline;
+	debug(UnitTest) Cout("Attempting to register MysqlDatabase in Registry").newline;
 	registerDatabase(new MysqlRegister());
 }
 
@@ -423,7 +436,7 @@ unittest {
 
 }
 
-debug(UnitTest) {
+debug(DBITest) {
 	
 	import tango.util.log.ConsoleAppender;
 	import tango.util.log.Log;
@@ -441,13 +454,13 @@ debug(UnitTest) {
 		
 		void setup()
 		{
-			char[] drop_test = "DROP TABLE IF EXISTS `test`.`test`;";
+			char[] drop_test = "DROP TABLE IF EXISTS `dbi_test`;";
 			
 			Stdout.formatln("executing: {}", drop_test);
 			
 			db.execute(drop_test);
 			
-			char[] create_test = "CREATE TABLE  `test`.`test` ( "
+			char[] create_test = "CREATE TABLE  `dbi_test` ( "
 				"`id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, "
 				"`name` varchar(45) NOT NULL, "
 				"`binary` tinyblob NULL, "
@@ -473,28 +486,8 @@ debug(UnitTest) {
 			Log.getRootLogger.addAppender(new ConsoleAppender);
 			
 			auto db = new MysqlDatabase("localhost", null, "test", "username=test&password=test");
-			//auto db = getDatabaseForURL("mysql://localhost/test?username=test&password=test");
 			
-			auto test = new MysqlTest(db, false);
-			test.run;
-			
-			auto testVirtual = new MysqlTest(db, true);
-			testVirtual.run;
-			
-			assert(db.hasTable("test"));
-			TableInfo ti;
-			assert(db.getTableInfo("test", ti));
-			assert(ti.fieldNames.length == 4);
-			assert(ti.primaryKeyFields.length == 1);
-			foreach(f; ti.fieldNames)
-			{
-				Stdout.formatln("Field Name:{}", f);
-			}
-			
-			foreach(f; ti.primaryKeyFields)
-			{
-				Stdout.formatln("Primary Key:{}", f);
-			}
+			db.test();
 			
 			db.close;
 		}
