@@ -7,7 +7,10 @@ import tango.core.Traits;
 import DT = tango.time.Time, tango.time.Clock;
 import dbi.util.DateTime;
 
+import dbi.sqlite.SqliteError;
 import dbi.sqlite.imp;
+
+debug import tango.io.Stdout;
 
 class SqliteStatement : IStatement
 {
@@ -47,14 +50,16 @@ class SqliteStatement : IStatement
 	{
 		lastRes = sqlite3_step(stmt);
 		wasReset = false;
-		if(lastRes != SQLITE_ROW || lastRes != SQLITE_DONE)
-			throw new DBIException;
+		if(lastRes != SQLITE_ROW && lastRes != SQLITE_DONE)
+			throw new DBIException("sqlite3_step error: " ~ toDString(sqlite3_errmsg(sqlite)),
+				sql, lastRes, specificToGeneral(lastRes));
 	}
 	
 	void execute(void*[] ptrs)
 	{
 		auto len = paramTypes.length;
-		if(ptrs.length != len) throw new DBIException;
+		if(ptrs.length != len)
+			throw new DBIException("ptrs array is not the same size as paramTypes array in SqliteStatement.execute", sql);
 		
 		for(size_t i = 0; i < len; ++i)
 		{
@@ -66,11 +71,14 @@ class SqliteStatement : IStatement
 	
 	bool fetch(void*[] ptrs, void* delegate(size_t) allocator = null)
 	{
-		if(lastRes != SQLITE_ROW)
+		if(lastRes != SQLITE_ROW) {
+			debug Stdout.formatln("lastRes = {}", lastRes);
 			return false;
+		}
 		
 		auto len = resTypes.length;
-		if(ptrs.length != len) throw new DBIException;
+		if(ptrs.length != len)
+			throw new DBIException("ptrs array is not the same size as resTypes array in SqliteStatement.fetch", sql);
 		
 		for(size_t i = 0; i < len; ++i)
 		{
@@ -242,13 +250,14 @@ class SqliteStatement : IStatement
 		else return cast(ulong)id;
 	}
 	
-	package this(sqlite3* sqlite, sqlite3_stmt* stmt)
+	package this(sqlite3* sqlite, sqlite3_stmt* stmt, char[] sql)
 	{
 		this.sqlite = sqlite;
 		this.stmt = stmt;
+		this.sql = sql;
 	}
 	
-	~this()
+	void close()
 	{
 		if (stmt !is null) {
 			sqlite3_finalize(stmt);
@@ -256,10 +265,18 @@ class SqliteStatement : IStatement
 		}
 	}
 	
+	~this()
+	{
+		close;
+	}
+	
 	private int lastRes;
 	private bool wasReset = false;
+	
 	private sqlite3* sqlite;
 	private sqlite3_stmt* stmt;
+	private char[] sql; 
+	
 	private BindType[] paramTypes;
 	private BindType[] resTypes;
 	

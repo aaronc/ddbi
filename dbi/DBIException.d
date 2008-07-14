@@ -64,19 +64,28 @@ class DBIException : Exception {
 		super(msg);
 	}
 	
+	this(char[] msg, char[] sql)
+	{
+		this.sql = sql;
+		
+		this(msg);
+	}
+	
 	this(char[] msg, long specificCode, ErrorCode dbiCode)
 	{
-		super(msg);
 		this.specificCode = specificCode;
 		this.dbiCode = dbiCode;
+		
+		this(msg);
 	}
 	
 	this(char[] msg, char[] sql, long specificCode, ErrorCode dbiCode)
 	{
-		super(msg);
 		this.sql = sql;
 		this.specificCode = specificCode;
 		this.dbiCode = dbiCode;
+		
+		this(msg);
 	}
 
 	/**
@@ -107,6 +116,10 @@ class DBIException : Exception {
 	 */
 	char[] getSql () {
 		return sql;
+	}
+	
+	char[] toString() {
+		return super.toString;
 	}
 
 	private:

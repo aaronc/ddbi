@@ -9,7 +9,7 @@ private static import tango.io.Stdout;
 private import dbi.DBIException;
 public import dbi.SqlGen, dbi.Statement, dbi.Metadata;
 
-debug(UnitTest) import tango.io.Stdout;
+debug(UnitTest) public import tango.io.Stdout;
 
 /**
  * The database interface that all DBDs must inherit from.
@@ -172,11 +172,17 @@ debug(UnitTest) {
 		
 		void test2()
 		{
-			auto st2 = prepare("SELECT * FROM test WHERE 1");
+			auto sqlGen = db.getSqlGenerator;
+			auto list = sqlGen.makeFieldList(["id", "name", "dateofbirth"]);
+			auto sql = "SELECT " ~ list ~ " FROM test";
+			
+			auto st2 = prepare(sql);
 					
 			assert(st2);
 			assert(st2.getParamCount == 0);
+			
 			st2.execute();
+			
 			auto metadata = st2.getResultMetadata();
 			foreach(f; metadata)
 			{
@@ -185,7 +191,6 @@ debug(UnitTest) {
 			
 			st2.setResultTypes(resTypes);
 			
-			st2.execute;
 			assert(st2.fetch(bind));
 			Stdout.formatln("id:{},name:{},dateofbirth:{}",id,name,dateofbirth.ticks);
 			assert(!st2.fetch(bind));
@@ -193,7 +198,11 @@ debug(UnitTest) {
 		
 		void test3()
 		{
-			auto st3 = prepare("SELECT * FROM test WHERE id = \?");
+			auto sqlGen = db.getSqlGenerator;
+			auto list = sqlGen.makeFieldList(["id", "name", "dateofbirth"]);
+			auto sql = "SELECT " ~ list ~ " FROM test WHERE id = ?";
+			
+			auto st3 = prepare(sql);
 			
 			assert(st3);
 			

@@ -76,6 +76,9 @@ class SqliteDatabase : Database {
 	override void close () {
 		logger.trace("closing database now");
 		if (database !is null) {
+			foreach(st; sts)
+				st.close;
+			
 			if ((errorCode = sqlite3_close(database)) != SQLITE_OK) {
 				throw new DBIException(toDString(sqlite3_errmsg(database)), errorCode, specificToGeneral(errorCode));
 			}
@@ -89,10 +92,14 @@ class SqliteDatabase : Database {
 		char** errorMessage;
 		sqlite3_stmt* stmt;
 		if ((errorCode = sqlite3_prepare_v2(database, toCString(sql), sql.length, &stmt, errorMessage)) != SQLITE_OK) {
-			throw new DBIException(toDString(sqlite3_errmsg(database)), sql, errorCode, specificToGeneral(errorCode));
+			throw new DBIException("sqlite3_prepare_v2 error: " ~ toDString(sqlite3_errmsg(database)), sql, errorCode, specificToGeneral(errorCode));
 		}
-		return new SqliteStatement(database, stmt);
+		auto st = new SqliteStatement(database, stmt, sql);
+		sts ~= st;
+		return st;
 	}
+	
+	private SqliteStatement sts[];
 			
 	IStatement virtualPrepare(char[] sql) { return prepare(sql); }
 
@@ -287,6 +294,43 @@ private class SqliteRegister : Registerable {
 	}
 }
 
+debug(UnitTest) {
+	
+	import dbi.ErrorCode;
+
+	class SqliteTest : DBTest
+	{
+		this(Database db, bool virtual = false)
+		{
+			super(db, virtual);
+		}
+		
+		void setup()
+		{
+			char[] drop_test = `DROP TABLE IF EXISTS "test"`;
+			
+			Stdout.formatln("executing: {}", drop_test);
+			
+			db.execute(drop_test);
+			
+			char[] create_test = `CREATE TABLE  "test" ( `
+				`"id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, `
+				`"name" TEXT NOT NULL, `
+				`"binary" BLOB DEFAULT  NULL, `
+				`"dateofbirth" TEXT DEFAULT NULL`
+			`)`;
+			
+			Stdout.formatln("executing: {}", create_test);
+			
+			db.execute(create_test);
+		}
+		
+		void teardown()
+		{
+			
+		}
+	}
+	
 unittest {
     void s1 (char[] s) {
         tango.io.Stdout.Stdout(s).newline();
@@ -302,6 +346,21 @@ unittest {
 	db.connect("test.db");
 
 	s2("query");
+
+	try
+	{
+		auto test = new SqliteTest(db);
+		test.run;
+	}
+	catch(DBIException ex)
+	{
+		Stdout.formatln("Caught DBIException: {}, DBI Code:{}, DB Code:{}, Sql: {}", ex.toString, toString(ex.getErrorCode), ex.getSpecificCode, ex.getSql);
+		throw ex;
+	}
+	
+	auto test = new SqliteTest(db);
+	test.run;
+	
 /+	Result res = db.query("SELECT * FROM test");
 	assert (res !is null);
 
@@ -354,6 +413,7 @@ unittest {
 +/
 	s2("close");
 	db.close();
+}
 }
 
 }
