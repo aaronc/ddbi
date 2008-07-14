@@ -109,12 +109,14 @@ class MysqlPreparedStatement : IStatement
 			}
 		}
 		
-		auto res = mysql_stmt_bind_param(stmt, paramBind.ptr);
+		int res = mysql_stmt_bind_param(stmt, paramBind.ptr);
 		if(res != 0) {
 			throw new DBIException("Error at mysql_stmt_bind_param.", res, specificToGeneral(res));
 		}
 		res = mysql_stmt_execute(stmt);
 		if(res != 0) {
+			debug Stdout.formatln("mysql_stmt_errno:{}", mysql_stmt_errno(stmt));
+			debug Stdout.formatln("mysql_stmt_error:{}", toDString(mysql_stmt_error(stmt)));
 			throw new DBIException("Error at mysql_stmt_execute.", res, specificToGeneral(res));
 		}
 	}
@@ -430,16 +432,17 @@ class MysqlPreparedStatement : IStatement
 		}
 	}
 }
-
+/+
 debug(UnitTest) {
 	
-import dbi.mysql.MysqlDatabase;
-	
+import dbi.Registry;
+
 unittest
 {
 	Log.getRootLogger.addAppender(new ConsoleAppender);
 	
-	auto db = new MysqlDatabase("localhost", null, "test", "username=test&password=test");
+	//auto db = new MysqlDatabase("localhost", null, "test", "username=test&password=test");
+	auto db = getDatabaseForURL("mysql://localhost/test?username=test&password=test");
 	auto st = db.prepare("SELECT * FROM test WHERE 1");
 	assert(st);
 	assert(st.getParamCount == 0);
@@ -502,4 +505,5 @@ unittest
 }
 
 }
++/
 }

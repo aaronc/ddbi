@@ -30,7 +30,7 @@ class DBIException : Exception {
 	 * Throws:
 	 *	DBIException on invalid arguments.
 	 */
-	this (char[] msg, ...) {
+	/+this (char[] msg, ...) {
 		super("DBIException: " ~ msg);
 		for (size_t i = 0; i < _arguments.length; i++) {
 			if (_arguments[i] == typeid(char[])) {
@@ -57,6 +57,26 @@ class DBIException : Exception {
 			  throw new DBIException("Invalid argument of type \"" ~ _arguments[i].toString() ~ "\" passed to the DBIException constructor.");
 			}
 		}
+	}+/
+	
+	this(char[] msg)
+	{
+		super(msg);
+	}
+	
+	this(char[] msg, long specificCode, ErrorCode dbiCode)
+	{
+		super(msg);
+		this.specificCode = specificCode;
+		this.dbiCode = dbiCode;
+	}
+	
+	this(char[] msg, char[] sql, long specificCode, ErrorCode dbiCode)
+	{
+		super(msg);
+		this.sql = sql;
+		this.specificCode = specificCode;
+		this.dbiCode = dbiCode;
 	}
 
 	/**

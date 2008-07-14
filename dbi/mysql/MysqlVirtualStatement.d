@@ -13,7 +13,7 @@ import ConvertInteger = tango.text.convert.Integer;
 import ConvertFloat = tango.text.convert.Float;
 import tango.core.Traits;
 
-import dbi.VirtualBind, dbi.Database, dbi.DBIException;
+import dbi.VirtualStatement, dbi.Database, dbi.DBIException;
 import dbi.mysql.MysqlMetadata, dbi.mysql.MysqlError;
 import dbi.util.DateTime;
 

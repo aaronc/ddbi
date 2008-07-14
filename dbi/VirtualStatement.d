@@ -1,4 +1,4 @@
-module dbi.VirtualBind;
+module dbi.VirtualStatement;
 
 import dbi.Database;
 

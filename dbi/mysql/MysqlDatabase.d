@@ -4,6 +4,7 @@
  */
 module dbi.mysql.MysqlDatabase;
 
+version=dbi_mysql;
 version (dbi_mysql) {
 
 private import tango.stdc.stringz : toDString = fromStringz, toCString = toStringz;
@@ -14,7 +15,7 @@ debug(UnitTest) import tango.io.Stdout;
 
 public import dbi.Database;
 private import dbi.DBIException, dbi.Statement, dbi.Registry;
-private import dbi.VirtualBind;
+private import dbi.VirtualStatement;
 version(Windows) {
 	private import dbi.mysql.imp_win;
 }
@@ -111,14 +112,19 @@ class MysqlDatabase : Database, IMetadataProvider {
 			char[][char[]] keywords = getKeywords(params, "&");
 			if ("username" in keywords) {
 				username = keywords["username"];
+				Stdout.formatln("Username={}", username);
 			}
 			if ("password" in keywords) {
 				password = keywords["password"];
+				Stdout.formatln("Password={}", password);
 			}
 			if ("sock" in keywords) {
 				sock = keywords["sock"];
+				Stdout.formatln("Username={}", username);
 			}
 		}
+		
+		parseKeywords;
 
 		mysql_real_connect(mysql, toCString(host), toCString(username), toCString(password), toCString(dbname), portNo, toCString(sock), 0);
 		if (uint error = mysql_errno(mysql)) {
@@ -308,17 +314,6 @@ class MysqlSqlGenerator : SqlGenerator
 	{
 		return '`'; 
 	}
-	
-	override char[] escape(char[] src, char[] dest = null)
-	{
-		if(!dest.length || dest.length < string.length * 2 + 1)
-			// Maximum length needed if every char is to be quoted + null terminator
-			dest.length = string.length * 2 + 1;
-		
-		auto len = mysql_real_escape_string(mysql, dest.ptr, src.ptr, src.length);
-		
-		return dest[0 .. len];
-	}
 }
 
 private class MysqlRegister : Registerable {
@@ -425,6 +420,197 @@ unittest {
     auto res = sqlgen.makeInsertSql("user", ["name", "date"]);
 	assert(res == "INSERT INTO `user` (`name`,`date`) VALUES(?,?)", res);
 }
+
+}
+
+debug(UnitTest) {
+	
+	import tango.util.log.ConsoleAppender;
+	import tango.util.log.Log;
+	import tango.time.Clock;
+	
+	import dbi.util.DateTime;
+	import dbi.ErrorCode;
+
+	void setup(MysqlDatabase db)
+	{
+		char[] drop_test = "DROP TABLE IF EXISTS `test`.`test`;";
+		
+		Stdout.formatln("executing: {}", drop_test);
+		
+		db.execute(drop_test);
+		
+		char[] create_test = "CREATE TABLE  `test`.`test` ( "
+			"`id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, "
+			"`name` varchar(45) NOT NULL, "
+			"`binary` tinyblob NULL, "
+			"`dateofbirth` datetime default NULL, "
+			"PRIMARY KEY  (`id`) "
+		") DEFAULT CHARSET=utf8; ";
+		
+		Stdout.formatln("executing: {}", create_test);
+		
+		db.execute(create_test);
+	}
+	
+	void teardown(MysqlDatabase db)
+	{
+		
+	}
+	
+	class Test
+	{
+		this(bool virtual = false)
+		{
+			this.virtual = virtual;
+			
+			bind.length = 3;
+			bind[0] = &id;
+			bind[1] = &name;
+			bind[2] = &dateofbirth;
+		}
+		
+		BindType[] resTypes =
+		[
+		 	BindType.UInt,
+		 	BindType.String,
+		 	BindType.Time
+		];
+		
+		Database db;
+		
+		uint id;
+		char[] name;
+		Time dateofbirth;
+		bool virtual;
+		
+		void*[] bind;
+		
+		IStatement prepare(char[] sql)
+		{
+			if(!virtual)
+				return db.prepare(sql);
+			else
+				return db.virtualPrepare(sql);
+		}
+		
+		void test1(Database db)
+		{
+			auto sqlGen = db.getSqlGenerator;
+			auto sql = sqlGen.makeInsertSql("test", ["name", "dateofbirth"]);
+			auto st = db.prepare(sql);
+			
+			Stdout.formatln("Prepared:test1 - {}", sql);
+			
+			name = "test";
+			DateTime dt;
+			dt.date.year = 2008;
+			dt.date.month = 1;
+			dt.date.day = 1;
+			dateofbirth = Clock.fromDate(dt);
+
+			BindType[] pTypes = [BindType.String, BindType.Time];
+			
+			void*[] pBind;
+			pBind ~= &name;
+			pBind ~= &dateofbirth;
+			
+			st.setParamTypes(pTypes);
+			Stdout.formatln("setParamTypes:test1");
+			
+			st.execute(pBind);
+			Stdout.formatln("Completed:test1");			
+		}
+		
+		void test_st2(IStatement st2)
+		{
+			assert(st2);
+			assert(st2.getParamCount == 0);
+			st2.execute();
+			auto metadata = st2.getResultMetadata();
+			foreach(f; metadata)
+			{
+				Stdout.formatln("Name:{}, Type:{}", f.name, f.type);
+			}
+			
+			st2.setResultTypes(resTypes);
+			
+			st2.execute;
+			assert(st2.fetch(bind));
+			Stdout.formatln("id:{},name:{},dateofbirth:{}",id,name,dateofbirth.ticks);
+			assert(!st2.fetch(bind));
+		}
+		
+		void test_st3(IStatement st3)
+		{
+			assert(st3);
+			
+			BindType[] paramTypes = [BindType.UShort];
+			
+			void*[] pBind;
+			ushort usID = 1;
+			st3.setParamTypes(paramTypes);
+			st3.setResultTypes(resTypes);
+			pBind ~= &usID;
+			st3.execute(pBind);
+			assert(st3.fetch(bind));
+			Stdout.formatln("id:{},name:{},dateofbirth:{}",id,name,dateofbirth.ticks);
+			st3.reset;
+		}
+	}
+	
+	
+	void test(MysqlDatabase db)
+	{
+		auto tst = new Test;
+		
+		setup(db);
+		
+		tst.test1(db);
+		
+		auto st2 = db.prepare("SELECT * FROM test WHERE 1");
+		tst.test_st2(st2);
+		
+		auto st3 = db.prepare("SELECT * FROM test WHERE id = \?");
+		tst.test_st3(st3);
+		
+		assert(db.hasTable("test"));
+		TableInfo ti;
+		assert(db.getTableInfo("test", ti));
+		assert(ti.fieldNames.length == 4);
+		assert(ti.primaryKeyFields.length == 1);
+		foreach(f; ti.fieldNames)
+		{
+			Stdout.formatln("Field Name:{}", f);
+		}
+		
+		foreach(f; ti.primaryKeyFields)
+		{
+			Stdout.formatln("Primary Key:{}", f);
+		}
+		
+		teardown(db);
+	}
+	
+	unittest
+	{
+		try
+		{
+			Log.getRootLogger.addAppender(new ConsoleAppender);
+			
+			auto db = new MysqlDatabase("localhost", null, "test", "username=test&password=test");
+			//auto db = getDatabaseForURL("mysql://localhost/test?username=test&password=test");
+			
+			test(db);
+			
+			db.close;
+		}
+		catch(DBIException ex)
+		{
+			Stdout.formatln("Caught DBIException: {}, DBI Code:{}, DB Code:{}, Sql: {}", ex.toString, toString(ex.getErrorCode), ex.getSpecificCode, ex.getSql);
+			throw ex;
+		}
+	}
 }
 
 }

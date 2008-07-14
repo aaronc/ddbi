@@ -9,6 +9,8 @@ private static import tango.io.Stdout;
 private import dbi.DBIException;
 public import dbi.SqlGen, dbi.Statement, dbi.Metadata;
 
+debug(UnitTest) import tango.io.Stdout;
+
 /**
  * The database interface that all DBDs must inherit from.
  *
