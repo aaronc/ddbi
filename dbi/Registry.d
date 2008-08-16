@@ -4,7 +4,7 @@
  */
 module dbi.Registry;
 
-private import dbi.Database;
+import dbi.Database, dbi.DBIException;
 
 private import tango.text.Util;
 private import tango.util.log.Log;
@@ -55,6 +55,16 @@ public static Database getDatabaseForURL(char[] dbUrl) {
 	char[] origURL = dbUrl.dup;
 	logger.trace("getDatabaseForURL: " ~ dbUrl);
 	char[][] fields = delimit(dbUrl, ":");
+	if(fields.length < 2)
+		throw new DBIException("Unable to find : in database URL");
+	
 	char[] prefix = fields[0];
-	return dbs[prefix].getInstance(dbUrl[prefix.length+3 .. $]);
+	
+	auto pDB = prefix in dbs;
+	if(!pDB)
+		throw new DBIException("Unable to find handler for database type " ~ prefix);
+	
+	if(dbUrl.length < prefix.length+3)
+		throw new DBIException("Invalid database URL " ~ dbUrl);
+	return pDB.getInstance(dbUrl[prefix.length+3 .. $]);
 }

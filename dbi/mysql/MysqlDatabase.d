@@ -396,6 +396,11 @@ class MysqlSqlGenerator : SqlGenerator
 }
 
 private class MysqlRegister : Registerable {
+
+	static this() {
+		debug(UnitTest) Cout("Attempting to register MysqlDatabase in Registry").newline;
+		registerDatabase(new MysqlRegister());
+	}
 	
 	public char[] getPrefix() {
 		return "mysql";
@@ -434,10 +439,7 @@ private class MysqlRegister : Registerable {
 	}
 }
 
-static this() {
-	debug(UnitTest) Cout("Attempting to register MysqlDatabase in Registry").newline;
-	registerDatabase(new MysqlRegister());
-}
+
 
 debug(UnitTest) {
 unittest {

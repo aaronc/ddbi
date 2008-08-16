@@ -8,7 +8,16 @@ version (build) {
 	pragma (ignore);
 }
 
-public import	dbi.Database,
+version (dbi_sqlite) {
+	import dbi.sqlite.SqliteDatabase;
+}
+
+version(dbi_mysql) {
+	import dbi.mysql.MysqlDatabase;
+}
+
+public import dbi.Database,
 		dbi.DBIException,
 		dbi.ErrorCode,
 		dbi.Registry;
+

@@ -4,7 +4,6 @@
  */
 module dbi.sqlite.SqliteDatabase;
 
-version = dbi_sqlite;
 version (dbi_sqlite) {
 
 
@@ -335,6 +334,11 @@ private class SqliteSqlGenerator : SqlGenerator
 
 private class SqliteRegister : Registerable {
 	
+	static this() {
+		debug(DBITest) Stdout("Attempting to register SqliteDatabase in Registry").newline;
+		registerDatabase(new SqliteRegister());
+	}
+	
 	private Logger logger;
 	
 	this() {
@@ -352,7 +356,9 @@ private class SqliteRegister : Registerable {
 }
 
 debug(DBITest) {
-	
+
+import tango.io.Stdout;
+
 unittest {
     void s1 (char[] s) {
         tango.io.Stdout.Stdout(s).newline();
