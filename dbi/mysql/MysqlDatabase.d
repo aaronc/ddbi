@@ -52,7 +52,7 @@ static this() {
  * See_Also:
  *	Database is the interface that this provides an implementation of.
  */
-class MysqlDatabase : Database, IMetadataProvider {
+class MysqlDatabase : Database {
 	public:
 	/**
 	 * Create a new instance of MysqlDatabase, but don't connect.
@@ -318,10 +318,6 @@ class MysqlDatabase : Database, IMetadataProvider {
 			/+Stdout.formatln("Testing Mysql Virtual Statements");
 			auto testVirtual = new DBTest(this, true);
 			testVirtual.run;+/
-			
-			Stdout.formatln("Testing Mysql Metadata");
-			auto mdTest = new MetadataTest(this);
-			mdTest.run;
 		}
 	}
 

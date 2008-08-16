@@ -257,8 +257,6 @@ class SqliteDatabase : Database {
 	ColumnInfo[] getTableInfo(char[] tablename)
 	{	
 		auto res = query("PRAGMA table_info('" ~ tablename ~ "')");
-		foreach(info; res.metadata) Stdout(info.name)("\t");
-		Stdout.newline;
 		
 		ColumnInfo[] info;
 		auto row = res.fetch;
@@ -271,12 +269,6 @@ class SqliteDatabase : Database {
 			if(row.values[3] != "0") col.notNull = true;
 			if(row.values[5] == "1") col.primaryKey = true;
 				
-			foreach(val; row.values) {
-				Stdout(val)(" |\t");
-				
-			}
-			Stdout.newline;
-			
 			info ~= col;
 			
 			row = res.fetch;
