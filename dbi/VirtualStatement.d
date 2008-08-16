@@ -181,8 +181,8 @@ unittest
 	virtualBind(sql, pIndices,
 		[BindType.String, BindType.DateTime, BindType.Binary],
 		[cast(void*)&name, cast(void*)&bday, cast(void*)&someBinary],
-		new SqlGenerator, execSql);
-	assert(execSql.get == "select * from user where name = 'sean' and birthday = '1987-03-19 15:30:37' and someBinary = X'76f13a40'", execSql.get);
+		new TestSqlGen, execSql);
+	assert(execSql.get == "select * from user where name = 'sean' and birthday = '1987-03-19 15:30:37' and someBinary = x'76f13a40'", execSql.get);
 	
 	execSql.free;
 }

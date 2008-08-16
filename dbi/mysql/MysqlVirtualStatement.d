@@ -12,6 +12,7 @@ import DT = tango.time.Time, tango.time.Clock;
 import ConvertInteger = tango.text.convert.Integer;
 import ConvertFloat = tango.text.convert.Float;
 import tango.core.Traits;
+debug import tango.io.Stdout;
 
 import dbi.VirtualStatement, dbi.Database, dbi.DBIException;
 import dbi.mysql.MysqlMetadata, dbi.mysql.MysqlError;
@@ -47,6 +48,7 @@ class MysqlVirtualStatement : VirtualStatement
 	void execute(void*[] bind)
 	{
 		auto execSql = virtualBind_(bind);
+		debug Stdout.formatln("Virtual Bind SQL: {}", execSql.get);
 		exec(execSql.get);
 		scope(exit) execSql.free;
 	}
@@ -167,7 +169,8 @@ class MysqlVirtualStatement : VirtualStatement
 		        case MYSQL_TYPE_MEDIUM_BLOB:
 		        case MYSQL_TYPE_LONG_BLOB:
 		        case MYSQL_TYPE_BLOB:
-		        	strToBinary(res, *val);
+		        	//strToBinary(res, *val);
+		        	*val = cast(ubyte[])res;
 		           	break;
 		        case MYSQL_TYPE_TIMESTAMP:
 		        case MYSQL_TYPE_DATE:
@@ -334,6 +337,8 @@ class MysqlVirtualStatement : VirtualStatement
 
 void strToBinary(char[] str, ref ubyte[] bin)
 {
+	//debug Stdout.formatln("Converting binary string:{}", str);
+	
 	auto resLen = str.length / 2;
 	debug assert((cast(double)resLen) == str.length / 2);
 	bin.length = resLen;

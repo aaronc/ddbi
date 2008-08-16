@@ -6,10 +6,10 @@ module dbi.mysql.MysqlDatabase;
 
 version (dbi_mysql) {
 
-private import tango.stdc.stringz : toDString = fromStringz, toCString = toStringz;
-private import tango.io.Console;
-private static import tango.text.Util;
-private static import tango.text.convert.Integer;
+import tango.stdc.stringz : toDString = fromStringz, toCString = toStringz;
+import tango.io.Console;
+static import tango.text.Util;
+import Integer = tango.text.convert.Integer;
 debug(UnitTest) import tango.io.Stdout;
 
 public import dbi.Database;
@@ -105,7 +105,7 @@ class MysqlDatabase : Database, IMetadataProvider {
 		char[] username = null;
 		char[] password = null;
 		uint portNo = 0;
-		if(port.length) portNo = cast(uint)tango.text.convert.Integer.parse(port);
+		if(port.length) portNo = cast(uint)Integer.parse(port);
 
 		void parseKeywords () {
 			char[][char[]] keywords = getKeywords(params, "&");
@@ -271,12 +271,22 @@ class MysqlDatabase : Database, IMetadataProvider {
 		return true;
 	}
 	
+	/+char[] toNativeType(BindType type, ulong limit)
+	{
+		switch(BindType type)
+		{
+		case BindType.Null:
+		default:
+			return null;
+		}
+	}+/
+	
 	debug(Log)
 	{
 		static Logger log;
 		static this()
 		{
-			log = Log.getLogger("dbi.mysql.MysqlPreparedStatement.MysqlPreparedStatementProvider");
+			log = Log.lookup("dbi.mysql.MysqlPreparedStatement.MysqlPreparedStatementProvider");
 		}
 		
 		private void logError()
@@ -296,12 +306,17 @@ class MysqlDatabase : Database, IMetadataProvider {
     debug(DBITest) {
     	override void doTests()
 		{
+    		Stdout.formatln("Beginning Mysql Tests");
+    		
+    		Stdout.formatln("Testing Mysql Prepared Statements");
 			auto test = new MysqlTest(this, false);
 			test.run;
 			
+			/+Stdout.formatln("Testing Mysql Virtual Statements");
 			auto testVirtual = new MysqlTest(this, true);
-			testVirtual.run;
+			testVirtual.run;+/
 			
+			Stdout.formatln("Testing Mysql Metadata");
 			auto mdTest = new MetadataTest(this);
 			mdTest.run;
 		}
@@ -326,6 +341,53 @@ class MysqlSqlGenerator : SqlGenerator
 	override char getIdentifierQuoteCharacter()
 	{
 		return '`'; 
+	}
+	
+	char[] toNativeType(ColumnInfo info)
+	{
+		char[] getTextBlobPrefix(uint limit)
+		{
+			if(limit <= ubyte.max) return "TINY";
+			else if(limit <= ushort.max) return "";
+			else if(limit <= 0x1000000) return "MEDIUM";
+			else if(limit <= uint.max) return "LONG";
+		}
+		
+		with(BindType)
+		{
+			switch(info.type)
+			{
+			case Bool: return "TINYINT(1)"; 
+			case Byte: return "TINYINT";
+			case UByte: return "TINYINT UNSIGNED";
+			case Short: return "SMALLINT";
+			case UShort: return "SMALLINT UNSIGNED";
+			case Int: return "INT";
+			case UInt: return "INT UNSIGNED";
+			case Long: return "BIGINT";
+			case ULong: return "UNSIGNED BIGINT";
+			case Float: return "FLOAT";
+			case Double: return "DOUBLE";
+			case String: 
+				if(info.limit <= 255) return "VARCHAR(" ~ Integer.toString(info.limit) ~ ")";
+				else return getTextBlobPrefix(info.limit) ~ "TEXT";
+			case Binary:
+				/+if(info.limit <= 255) return "VARBINARY(" ~ Integer.toString(info.limit) ~ ")";
+				else return getTextBlobPrefix(info.limit) ~ "BLOB";+/
+				return getTextBlobPrefix(info.limit) ~ "BLOB";
+				break;
+			case Time:
+			case DateTime:
+				return "DATETIME";
+				break;
+			case Null:
+				debug assert(false, "Unhandled column type"); //TODO more detailed information;
+				break;
+			default:
+				debug assert(false, "Unhandled column type"); //TODO more detailed information;
+				break;
+			}
+		}
 	}
 }
 
@@ -438,8 +500,7 @@ unittest {
 
 debug(DBITest) {
 	
-	import tango.util.log.ConsoleAppender;
-	import tango.util.log.Log;
+	import tango.util.log.Config;
 	import tango.time.Clock;
 	
 	import dbi.util.DateTime;
@@ -463,14 +524,27 @@ debug(DBITest) {
 			char[] create_test = "CREATE TABLE  `dbi_test` ( "
 				"`id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, "
 				"`name` varchar(45) NOT NULL, "
-				"`binary` tinyblob NULL, "
-				"`dateofbirth` datetime default NULL, "
+				"`binary` tinyblob DEFAULT NULL, "
+				"`dateofbirth` datetime DEFAULT NULL, "
+				"`i` int(10) DEFAULT NULL, "
+				"`f` DOUBLE DEFAULT NULL, "
 				"PRIMARY KEY  (`id`) "
 			") DEFAULT CHARSET=utf8; ";
 			
 			Stdout.formatln("executing: {}", create_test);
 			
 			db.execute(create_test);
+			
+			ColumnInfo[] columns = [
+ 			   ColumnInfo("id", BindType.UInt, true, true, true),
+ 			   ColumnInfo("name", BindType.UInt, true, false, false, 45),
+ 			   ColumnInfo("binary", BindType.Binary, false, false, false, 255),
+ 			   ColumnInfo("dateofbirth", BindType.DateTime),
+ 			   ColumnInfo("i", BindType.Int),
+ 			   ColumnInfo("f", BindType.Double)
+ 			];
+			
+			Stdout.formatln("created Create Sql: {}", db.sqlGen.makeCreateSql("create_test", columns));
 		}
 		
 		void teardown()
@@ -483,8 +557,6 @@ debug(DBITest) {
 	{
 		try
 		{
-			Log.getRootLogger.addAppender(new ConsoleAppender);
-			
 			auto db = new MysqlDatabase("localhost", null, "test", "username=test&password=test");
 			
 			db.test();

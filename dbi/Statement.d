@@ -6,7 +6,7 @@ module dbi.Statement;
 
 public import tango.group.time;
 
-enum BindType : ubyte { Null, Bool, Byte, Short, Int, Long, UByte, UShort, UInt, ULong, Float, Double, String, Binary, Time, DateTime };
+public import dbi.BindType;
 
 interface IStatement
 {

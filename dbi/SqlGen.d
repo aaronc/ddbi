@@ -1,19 +1,34 @@
 module dbi.SqlGen;
 
+import DT = dbi.util.DateTime;import DT = dbi.util.DateTime;
 import Integer = tango.text.convert.Integer;
 import tango.time.Time;
-import DT = dbi.util.DateTime;
+import tango.core.Traits;
+
+public import dbi.BindType;
 
 /**
  * Helper methods for generating database-specific SQL (without necessarily
  * knowing the specifics of that database's ways of quoting and escaping).
  * 
  */
-class SqlGenerator
+abstract class SqlGenerator
 {
 	char getIdentifierQuoteCharacter()
 	{
 		return '"'; 
+	}
+	
+	char[] quoteColumnName(char[] colname)
+	{
+		auto quote = getIdentifierQuoteCharacter;
+		return quote ~ colname ~ quote;
+	}
+	
+	char[] quoteTableName(char[] tablename)
+	{
+		auto quote = getIdentifierQuoteCharacter;
+		return quote ~ tablename ~ quote;
 	}
 	
 	char getStringQuoteCharacter()
@@ -23,7 +38,7 @@ class SqlGenerator
 	
 	char[] getHexPrefix()
 	{
-		return "X'";
+		return "x'";
 	}
 	
 	char[] getHexSuffix()
@@ -48,8 +63,10 @@ class SqlGenerator
 		for(size_t i = 0; i < len; ++i)
 		{
 			ubyte x = binary[i];
+			//*ptr = hexDigits[x >>> 4];
 			*ptr = hexDigits[x & 0xF];
 			++ptr;
+			//*ptr = hexDigits[x & 0xF];
 			*ptr = hexDigits[x >>> 4];
 			++ptr;
 		}
@@ -78,6 +95,54 @@ class SqlGenerator
 	{
 		return SqlGenHelper.makeUpdateSql(whereClause, tablename, fields, getIdentifierQuoteCharacter);
 	}
+	
+	
+	abstract char[] toNativeType(ColumnInfo info);
+	
+	char[] makeCreateSql(char[] tablename, ColumnInfo[] columnInfo, char[] options = null)
+	{
+		char[] res = "CREATE TABLE ";
+		res ~= quoteTableName(tablename) ~ " (";
+		auto len = columnInfo.length;
+		for(size_t i = 0; i < len; ++i)
+		{
+			res ~= makeColumnDef(columnInfo[i]);
+			if(i != len - 1) res ~= ", ";
+		}
+		res ~= ")";
+		
+		if(options.length) res ~= " " ~ options;
+		
+		return res;
+	}
+	
+	char[] makeColumnDef(ColumnInfo info)
+	{
+		char[] res = quoteColumnName(info.name) ~ " " ~ toNativeType(info);
+		
+		if(info.notNull)	res ~= " NOT NULL"; else res ~= " NULL";
+		if(info.primaryKey) res ~= " PRIMARY KEY";
+		if(info.autoIncrement) res ~= " AUTO_INCREMENT";
+		
+		return res;
+	}
+	
+	//char[] makeDeleteSql(char[] tablename, char[] whereClause);
+	
+	/+
+	
+	
+		
+	
+	
+	void makeAddColumnSql(char[] tablename, ColumnInfo column)
+	{
+		return "ALTER TABLE " ~ quoteTableName(tablename) ~ " ADD COLUMN " ~ makeColumnDef(column);
+	}
+	
+	
+	
+	+/
 	
 	char[] printDateTime(DateTime dt, char[] res)
 	{
@@ -128,6 +193,16 @@ class SqlGenerator
 
 		return dest[0 .. count];
 	}
+}
+
+struct ColumnInfo
+{
+	char[] name;
+	BindType type;
+	bool notNull;
+	bool autoIncrement;
+	bool primaryKey;
+	ulong limit;
 }
 
 
@@ -193,11 +268,69 @@ class SqlGenHelper
 	}
 }
 
+abstract class Serializer
+{
+	void add(T)(char[] fieldname, T value)
+	{
+		static if(is(T == bool))
+		{
+			
+		}
+		else static if(is(T == char[]))
+		{
+			
+		}
+		else static if(isIntegerType!(T))
+		{
+			
+		}
+		else static if(isRealType!(T))
+		{
+			
+		}
+		else static if(is(T == void[]) || is(T == ubyte[]))
+		{
+			
+		}
+		else static if(is(T == Time))
+		{
+			
+		}
+		else static if(is(T == DateTime))
+		{
+			
+		}
+		/+
+		else static if(is(T == Date))
+		{
+			
+		}
+		else static if(is(T == TimeOfDay))
+		{
+			
+		}		
+		+/
+		else static assert(false, "Unsupported serialization type " ~ T.stringof);
+	}
+	
+	abstract protected void addValue(char[] fieldname, char[] value);
+	
+	abstract bool execute();  
+}
+
 debug(UnitTest) {
 
+class TestSqlGen : SqlGenerator
+{
+	char[] toNativeType(ColumnInfo info)
+	{
+		return null;
+	}
+}
+	
 unittest
 {
-	auto sqlgen = new SqlGenerator;
+	auto sqlgen = new TestSqlGen;
 	assert(sqlgen.makeFieldList(["name", "date"]) == "\"name\",\"date\"");
 	assert(sqlgen.makeQualifiedFieldList("user", ["name", "date"]) == "\"user\".\"name\",\"user\".\"date\"");
 	auto res = sqlgen.makeInsertSql("user", ["name", "date"]);
@@ -215,10 +348,10 @@ unittest
 	auto ptr = cast(ubyte*)&x;
 	auto binStr = sqlgen.createBinaryString(ptr[0 .. 8]);
 	version(LittleEndian) {
-		assert(binStr == "X'0b1234ef9e06a750'", binStr);
+		assert(binStr == "x'0b1234ef9e06a750'", binStr);
 	}
 	else {
-		assert(binStr == "X'057a60e9fe4321b0'", binStr);
+		assert(binStr == "x'057a60e9fe4321b0'", binStr);
 	}
 	
 	//DateTime

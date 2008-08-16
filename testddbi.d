@@ -1,7 +1,7 @@
 module testddbi;
 
 import tango.util.log.Log,
-       tango.util.log.Configurator;
+       tango.util.log.Config;
 
 import dbi.SqlGen,
 	   dbi.Registry, 

@@ -34,7 +34,7 @@ class SqliteDatabase : Database {
 	 * Create a new instance of SqliteDatabase, but don't open a database.
 	 */
 	this () {
-		logger = Log.getLogger("dbi.sqlite.Database");
+		logger = Log.lookup("dbi.sqlite.Database");
 	}
 
 	/**
@@ -44,7 +44,7 @@ class SqliteDatabase : Database {
 	 *	connect
 	 */
 	this (char[] dbFile) {
-		logger = Log.getLogger("dbi.sqlite.Database");
+		logger = Log.lookup("dbi.sqlite.Database");
 		connect(dbFile);
 	}
 
@@ -237,11 +237,20 @@ class SqliteDatabase : Database {
 	debug(DBITest) {
 		override void doTests()
 		{
+			Stdout.formatln("Beginning Sqlite Tests");
+			
 			auto test = new SqliteTest(this);
 			test.run;
+			
+			Stdout.formatln("Completed Sqlite Tests");
 		}
 	}
 
+	override SqlGenerator getSqlGenerator()
+	{
+    	return SqliteSqlGenerator.inst;
+	}
+	
 	private:
 	sqlite3* database;
 //	bool isOpen = false;
@@ -269,6 +278,48 @@ class SqliteDatabase : Database {
 		}
 		return false;
 	}+/
+}
+
+private class SqliteSqlGenerator : SqlGenerator
+{
+	static this() { inst = new SqliteSqlGenerator; }
+	static SqliteSqlGenerator inst;
+	
+	char[] toNativeType(ColumnInfo info)
+	{
+		with(BindType)
+		{
+			switch(info.type)
+			{
+			case Bool:
+			case Byte:
+			case Short:
+			case Int:
+			case Long:
+			case UByte:
+			case UShort:
+			case UInt:
+			case ULong:
+				return "INTEGER";
+			case Float:
+			case Double:
+				return "REAL";
+			case String:
+			case Time:
+			case DateTime:
+				return "TEXT";
+				break;
+			case Binary:
+				return "BLOB";
+				break;
+			case Null:
+				return "NONE";
+			default:
+				debug assert(false, "Unhandled column type"); //TODO more detailed information;
+				break;
+			}
+		}
+	}
 }
 
 private class SqliteRegister : Registerable {
@@ -310,6 +361,8 @@ debug(DBITest) {
 				`"id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, `
 				`"name" TEXT NOT NULL, `
 				`"binary" BLOB DEFAULT  NULL, `
+				`"i" INTEGER DEFAULT NULL, `
+				`"f" FLOAT DEFAULT NULL, `
 				`"dateofbirth" TEXT DEFAULT NULL`
 			`)`;
 			

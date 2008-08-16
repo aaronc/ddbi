@@ -444,8 +444,6 @@ import dbi.Registry;
 
 unittest
 {
-	Log.getRootLogger.addAppender(new ConsoleAppender);
-	
 	//auto db = new MysqlDatabase("localhost", null, "test", "username=test&password=test");
 	auto db = getDatabaseForURL("mysql://localhost/test?username=test&password=test");
 	auto st = db.prepare("SELECT * FROM test WHERE 1");

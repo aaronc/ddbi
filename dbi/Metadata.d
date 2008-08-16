@@ -30,10 +30,10 @@ debug(UnitTest) {
 		
 		void test1()
 		{
-			assert(db.hasTable("test"));
+			assert(db.hasTable("dbi_test"));
 			TableInfo ti;
-			assert(db.getTableInfo("test", ti));
-			assert(ti.fieldNames.length == 4);
+			assert(db.getTableInfo("dbi_test", ti));
+			assert(ti.fieldNames.length == 6);
 			assert(ti.primaryKeyFields.length == 1);
 			
 			char[][char[]] fNames;
@@ -44,6 +44,8 @@ debug(UnitTest) {
 			assert("name" in fNames);
 			assert("binary" in fNames);
 			assert("dateofbirth" in fNames);
+			assert("i" in fNames);
+			assert("f" in fNames);
 			
 			assert(ti.primaryKeyFields[0] == "id");
 		}

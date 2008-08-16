@@ -72,16 +72,8 @@ abstract class Database {
 		return keywords;
 	}
 	
-    static this()
-    {
-    	sqlGen = new SqlGenerator;
-    }
-    private static SqlGenerator sqlGen;
-	
-	SqlGenerator getSqlGenerator()
-	{
-		return sqlGen;
-	}
+	abstract SqlGenerator getSqlGenerator();
+	alias getSqlGenerator sqlGen;
 	
 	debug(DBITest) {
 		abstract void doTests();
@@ -111,18 +103,49 @@ private class TestDatabase : Database {
 debug(DBITest) {
 
 	import DBIErrorCode = dbi.ErrorCode;
+	import tango.math.Math;
 	
 	abstract class DBTest
 	{
+		static class Test
+		{
+			this()
+			{
+				bind.length = 6;
+				bind[0] = &id;
+				bind[1] = &name;
+				bind[2] = &dateofbirth;
+				bind[3] = &binary;
+				bind[4] = &i;
+				bind[5] = &f;
+			}
+			
+			uint id;
+			char[] name;
+			Time dateofbirth;
+			ubyte[] binary;
+			long i;
+			double f;
+			
+			void*[] bind;
+			
+			static BindType[] resTypes =
+			[
+			 	BindType.UInt,
+			 	BindType.String,
+			 	BindType.Time,
+			 	BindType.Binary,
+			 	BindType.Long,
+			 	BindType.Double
+			];
+		}
+		
 		this(Database db, bool virtual = false)
 		{
 			this.db = db;
 			this.virtual = virtual;
 			
-			bind.length = 3;
-			bind[0] = &id;
-			bind[1] = &name;
-			bind[2] = &dateofbirth;
+			t1 = new Test;
 		}
 		
 		void run()
@@ -130,30 +153,16 @@ debug(DBITest) {
 			setup;
 			test1;
 			test2;
-			test3;
 			teardown;
 		}
 		
 		abstract void setup();
 		abstract void teardown();
 		
-		
-		BindType[] resTypes =
-		[
-		 	BindType.UInt,
-		 	BindType.String,
-		 	BindType.Time
-		];
-		
 		Database db;
 		bool virtual;
 		
-		uint id;
-		char[] name;
-		Time dateofbirth;
-		
-		
-		void*[] bind;
+		Test t1;
 		
 		IStatement prepare(char[] sql)
 		{
@@ -166,43 +175,64 @@ debug(DBITest) {
 		void test1()
 		{
 			auto sqlGen = db.getSqlGenerator;
-			auto sql = sqlGen.makeInsertSql("dbi_test", ["name", "dateofbirth"]);
+			auto sql = sqlGen.makeInsertSql("dbi_test", ["name", "dateofbirth", "binary", "i", "f"]);
 			auto st = prepare(sql);
 			
 			Stdout.formatln("Prepared:test1 - {}", sql);
-			
-			name = "test";
+					
+			t1.name = "test test test";
 			DateTime dt;
 			dt.date.year = 2008;
 			dt.date.month = 1;
 			dt.date.day = 1;
-			dateofbirth = Clock.fromDate(dt);
+			t1.dateofbirth = Clock.fromDate(dt);
+			ulong x = 0x57a60e9fe4321b0;
+			t1.binary = (cast(ubyte*)&x)[0 .. 8].dup;
+			t1.i = 5798637;
+			t1.f = 3.14159265;
 
-			BindType[] pTypes = [BindType.String, BindType.Time];
+			BindType[] pTypes = [BindType.String, BindType.Time, BindType.Binary, BindType.Long, BindType.Double];
 			
 			void*[] pBind;
-			pBind ~= &name;
-			pBind ~= &dateofbirth;
+			pBind ~= &t1.name;
+			pBind ~= &t1.dateofbirth;
+			pBind ~= &t1.binary;
+			pBind ~= &t1.i;
+			pBind ~= &t1.f;
 			
 			st.setParamTypes(pTypes);
 			Stdout.formatln("setParamTypes:test1");
 			
 			st.execute(pBind);
-			Stdout.formatln("Completed:test1");			
-		}
-		
+			t1.id = st.getLastInsertID;
+			assert(t1.id == 1);
+			
+			Stdout.formatln("Completed:test1");
+		}		
+	
 		void test2()
 		{
 			auto sqlGen = db.getSqlGenerator;
-			auto list = sqlGen.makeFieldList(["id", "name", "dateofbirth"]);
-			auto sql = "SELECT " ~ list ~ " FROM dbi_test";
+			auto list = sqlGen.makeFieldList(["id", "name", "dateofbirth", "binary", "i", "f"]);
+			auto sql = "SELECT " ~ list ~ " FROM dbi_test WHERE id = ?";
 			
 			auto st2 = prepare(sql);
-					
-			assert(st2);
-			assert(st2.getParamCount == 0);
 			
-			st2.execute();
+			assert(st2);
+			assert(st2.getParamCount == 1);
+			
+			BindType[] paramTypes = [BindType.UShort];
+			
+			void*[] pBind;
+			ushort usID = 1;
+			
+			st2.setParamTypes(paramTypes);
+			st2.setResultTypes(Test.resTypes);
+			
+			pBind ~= &usID;
+			
+			st2.execute(pBind);
+			
 			
 			auto metadata = st2.getResultMetadata();
 			foreach(f; metadata)
@@ -210,34 +240,20 @@ debug(DBITest) {
 				Stdout.formatln("Name:{}, Type:{}", f.name, f.type);
 			}
 			
-			st2.setResultTypes(resTypes);
+			auto t2 = new Test;
 			
-			assert(st2.fetch(bind));
-			Stdout.formatln("id:{},name:{},dateofbirth:{}",id,name,dateofbirth.ticks);
-			assert(!st2.fetch(bind));
-		}
-		
-		void test3()
-		{
-			auto sqlGen = db.getSqlGenerator;
-			auto list = sqlGen.makeFieldList(["id", "name", "dateofbirth"]);
-			auto sql = "SELECT " ~ list ~ " FROM dbi_test WHERE id = ?";
+			assert(st2.fetch(t2.bind));
 			
-			auto st3 = prepare(sql);
+			assert(t2.id == t1.id);
+			assert(t2.name == t1.name);
+			assert(t2.dateofbirth == t1.dateofbirth);
+			assert(t2.binary == t1.binary,
+				sqlGen.createBinaryString(t1.binary) ~ " " ~ sqlGen.createBinaryString(t2.binary));
+			assert(t2.i == t1.i);
+			assert(abs(t2.f - t1.f) < 1e9);
+			assert(!st2.fetch(t2.bind));
 			
-			assert(st3);
-			
-			BindType[] paramTypes = [BindType.UShort];
-			
-			void*[] pBind;
-			ushort usID = 1;
-			st3.setParamTypes(paramTypes);
-			st3.setResultTypes(resTypes);
-			pBind ~= &usID;
-			st3.execute(pBind);
-			assert(st3.fetch(bind));
-			Stdout.formatln("id:{},name:{},dateofbirth:{}",id,name,dateofbirth.ticks);
-			st3.reset;
+			st2.reset;
 		}
 	}
 	
