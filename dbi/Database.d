@@ -7,7 +7,7 @@ module dbi.Database;
 private static import tango.text.Util;
 private static import tango.io.Stdout;
 private import dbi.DBIException;
-public import dbi.SqlGen, dbi.Statement, dbi.Metadata;
+public import dbi.SqlGen, dbi.Statement, dbi.Metadata, dbi.Result;
 
 debug(UnitTest) public import tango.io.Stdout;
 
@@ -41,6 +41,10 @@ abstract class Database {
 	
 	abstract void execute(char[] sql);
 	abstract void execute(char[] sql, BindType[] bindTypes, void*[] ptrs);
+	Result query(char[] sql, ...)
+	{
+		return query(virtualPrepare(sql), _argptr, _arguments);
+	}
 	
 	abstract IStatement prepare(char[] sql);
 	abstract IStatement virtualPrepare(char[] sql);
@@ -72,8 +76,8 @@ abstract class Database {
 		return keywords;
 	}
 	
-	//abstract bool hasTable(char[] tablename);
-	//abstract ColumnInfo[] getTableInfo(char[] tablename);
+	abstract bool hasTable(char[] tablename);
+	abstract ColumnInfo[] getTableInfo(char[] tablename);
 	abstract SqlGenerator getSqlGenerator();
 	alias getSqlGenerator sqlGen;
 	
@@ -165,6 +169,7 @@ debug(DBITest) {
 			test1;
 			test2;
 			//test3;
+			testMetadata;
 			teardown;
 		}
 		
@@ -195,6 +200,27 @@ debug(DBITest) {
 				return db.prepare(sql);
 			else
 				return db.virtualPrepare(sql);
+		}
+		
+		void testMetadata()
+		{
+			assert(db.hasTable("dbi_test"));
+			auto ti = db.getTableInfo("dbi_test"); 
+			assert(ti);
+			assert(ti.length == 6);
+			
+			ColumnInfo[char[]] fNames;
+			foreach(col; ti)
+				fNames[col.name] = col;
+			
+			auto pID = "id" in fNames;
+			assert(pID);
+			assert(pID.primaryKey);
+			assert("name" in fNames);
+			assert("binary" in fNames);
+			assert("dateofbirth" in fNames);
+			assert("i" in fNames);
+			assert("f" in fNames);
 		}
 		
 		void test1()

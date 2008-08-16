@@ -232,7 +232,7 @@ class SqliteDatabase : Database {
 		}
 	}
 
-	/+/**
+	/**
 	 * Check if a table exists.
 	 *
 	 * Param:
@@ -249,13 +249,20 @@ class SqliteDatabase : Database {
 	 *
 	 */
 	bool hasItem(char[] type, char[] name) {
-		execute("SELECT name FROM sqlite_master WHERE type='" ~ type ~ "' AND name='" ~ name ~ "'");
-		st.execute(type, name);
-		if (rows !is null && rows.length > 0) {
-			return true;
-		}
-		return false;
-	}+/
+		auto st = prepare("SELECT name FROM sqlite_master WHERE type=? AND name=?");
+		auto row = query(st, type, name).fetch;
+		return row !is null ? true : false;
+	}
+	
+	ColumnInfo[] getTableInfo(char[] tablename)
+	{
+		auto st = prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name=?");
+		auto row = query(st, tablename).fetch;
+		if(row is null || !row.values.length) return null;
+		auto sql = row.values[0];
+		debug Stdout.formatln("Sqlite table {} has create SQL: {}", tablename, sql);
+		return null;
+	}
 	
 	override SqlGenerator getSqlGenerator()
 	{

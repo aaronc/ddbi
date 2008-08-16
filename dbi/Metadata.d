@@ -8,7 +8,7 @@ interface IMetadataProvider
 	ColumnInfo[] getTableInfo(char[] tablename);
 }
 
-debug(UnitTest) {
+debug(DBITest) {
 	class MetadataTest
 	{
 		this(IMetadataProvider db)
@@ -21,7 +21,6 @@ debug(UnitTest) {
 			test1;
 		}
 		
-		
 		IMetadataProvider db;
 		
 		void test1()
@@ -30,7 +29,6 @@ debug(UnitTest) {
 			auto ti = db.getTableInfo("dbi_test"); 
 			assert(ti);
 			assert(ti.length == 6);
-			//assert(ti.primaryKeyFields.length == 1);
 			
 			ColumnInfo[char[]] fNames;
 			foreach(col; ti)
@@ -44,8 +42,6 @@ debug(UnitTest) {
 			assert("dateofbirth" in fNames);
 			assert("i" in fNames);
 			assert("f" in fNames);
-			
-			//assert(ti.primaryKeyFields[0] == "id");
 		}
 	}
 }
