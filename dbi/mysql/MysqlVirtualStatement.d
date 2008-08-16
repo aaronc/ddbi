@@ -33,7 +33,7 @@ class MysqlVirtualStatement : VirtualStatement
 		return paramIndices.length;
 	}
 	
-	ColumnInfo[] getResultMetadata()
+	FieldInfo[] getResultMetadata()
 	{
 		if(fields is null) return null;
 
