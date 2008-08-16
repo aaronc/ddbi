@@ -269,16 +269,26 @@ class SqliteDatabase : Database {
 		ColumnInfo[] info;
 		row = res.fetch;
 		while(row) {
-			if(row.values.length < 6) return null;
+			if(row.values.length < 6) break;
+			
+			ColumnInfo col;
+			col.name = row.values[1];
+			col.type = fromSqliteType(row.values[2]);
+			if(row.values[3] == "0") col.notNull = true;
+			if(row.values[5] == "1") col.primaryKey = true;
+				
 			foreach(val; row.values) {
 				Stdout(val)("\t");
 				
 			}
 			Stdout.newline;
+			
+			info ~= col;
+			
 			row = res.fetch;
 		}
 		
-		return null;
+		return info;
 	}
 	
 	static BindType fromSqliteType(char[] str)
