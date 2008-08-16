@@ -309,11 +309,11 @@ class MysqlDatabase : Database, IMetadataProvider {
     		Stdout.formatln("Beginning Mysql Tests");
     		
     		Stdout.formatln("Testing Mysql Prepared Statements");
-			auto test = new MysqlTest(this, false);
+			auto test = new DBTest(this, false);
 			test.run;
 			
 			/+Stdout.formatln("Testing Mysql Virtual Statements");
-			auto testVirtual = new MysqlTest(this, true);
+			auto testVirtual = new DBTest(this, true);
 			testVirtual.run;+/
 			
 			Stdout.formatln("Testing Mysql Metadata");
@@ -505,55 +505,6 @@ debug(DBITest) {
 	
 	import dbi.util.DateTime;
 	import dbi.ErrorCode;
-
-	class MysqlTest : DBTest
-	{
-		this(Database db, bool virtual = false)
-		{
-			super(db, virtual);
-		}
-		
-		void setup()
-		{
-			char[] drop_test = "DROP TABLE IF EXISTS `dbi_test`;";
-			
-			Stdout.formatln("executing: {}", drop_test);
-			
-			db.execute(drop_test);
-			
-			/+char[] create_test = "CREATE TABLE  `dbi_test` ( "
-				"`id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, "
-				"`name` varchar(45) NOT NULL, "
-				"`binary` tinyblob DEFAULT NULL, "
-				"`dateofbirth` datetime DEFAULT NULL, "
-				"`i` int(10) DEFAULT NULL, "
-				"`f` DOUBLE DEFAULT NULL, "
-				"PRIMARY KEY  (`id`) "
-			") DEFAULT CHARSET=utf8; ";
-			
-			Stdout.formatln("executing: {}", create_test);+/
-			
-			/+db.execute(create_test);+/
-			
-			/+ColumnInfo[] columns = [
- 			   ColumnInfo("id", BindType.UInt, true, true, true),
- 			   ColumnInfo("name", BindType.String, true, false, false, 45),
- 			   ColumnInfo("binary", BindType.Binary, false, false, false, 255),
- 			   ColumnInfo("dateofbirth", BindType.DateTime),
- 			   ColumnInfo("i", BindType.Int),
- 			   ColumnInfo("f", BindType.Double)
- 			];+/
-			
-			auto create_test = db.sqlGen.makeCreateSql("dbi_test", columns);
-			Stdout.formatln("executing: {}", create_test);
-			db.execute(create_test);
-		}
-		
-		void teardown()
-		{
-			
-		}
-	}
 	
 	unittest
 	{

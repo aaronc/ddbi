@@ -239,7 +239,7 @@ class SqliteDatabase : Database {
 		{
 			Stdout.formatln("Beginning Sqlite Tests");
 			
-			auto test = new SqliteTest(this);
+			auto test = new DBTest(this);
 			test.run;
 			
 			Stdout.formatln("Completed Sqlite Tests");
@@ -352,45 +352,6 @@ private class SqliteRegister : Registerable {
 }
 
 debug(DBITest) {
-	
-	class SqliteTest : DBTest
-	{
-		this(Database db, bool virtual = false)
-		{
-			super(db, virtual);
-		}
-		
-		void setup()
-		{
-			char[] drop_test = `DROP TABLE IF EXISTS "dbi_test"`;
-			
-			Stdout.formatln("executing: {}", drop_test);
-			
-			db.execute(drop_test);
-			
-			/+char[] create_test = `CREATE TABLE  "dbi_test" ( `
-				`"id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, `
-				`"name" TEXT NOT NULL, `
-				`"binary" BLOB DEFAULT  NULL, `
-				`"i" INTEGER DEFAULT NULL, `
-				`"f" FLOAT DEFAULT NULL, `
-				`"dateofbirth" TEXT DEFAULT NULL`
-			`)`;
-			
-			Stdout.formatln("executing: {}", create_test);
-			
-			db.execute(create_test);+/
-			
-			auto create_test = db.sqlGen.makeCreateSql("dbi_test", columns);
-			Stdout.formatln("executing: {}", create_test);
-			db.execute(create_test);
-		}
-		
-		void teardown()
-		{
-			
-		}
-	}
 	
 unittest {
     void s1 (char[] s) {

@@ -105,7 +105,7 @@ debug(DBITest) {
 	import DBIErrorCode = dbi.ErrorCode;
 	import tango.math.Math;
 	
-	abstract class DBTest
+	class DBTest
 	{
 		static class Test
 		{
@@ -165,8 +165,21 @@ debug(DBITest) {
 			teardown;
 		}
 		
-		abstract void setup();
-		abstract void teardown();
+		void setup()
+		{
+			char[] drop_test = "DROP TABLE IF EXISTS " ~ db.sqlGen.quoteTableName("dbi_test");
+			Stdout.formatln("executing: {}", drop_test);
+			db.execute(drop_test);
+			
+			auto create_test = db.sqlGen.makeCreateSql("dbi_test", columns);
+			Stdout.formatln("executing: {}", create_test);
+			db.execute(create_test);
+		}
+		
+		void teardown()
+		{
+			
+		}
 		
 		Database db;
 		bool virtual;
