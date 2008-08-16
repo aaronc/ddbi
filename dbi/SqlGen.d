@@ -5,7 +5,7 @@ import Integer = tango.text.convert.Integer;
 import tango.time.Time;
 import tango.core.Traits;
 
-public import dbi.ColumnInfo;
+public import dbi.Metadata;
 
 /**
  * Helper methods for generating database-specific SQL (without necessarily

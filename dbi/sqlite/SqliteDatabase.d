@@ -249,19 +249,50 @@ class SqliteDatabase : Database {
 	 *
 	 */
 	bool hasItem(char[] type, char[] name) {
-		auto st = prepare("SELECT name FROM sqlite_master WHERE type=? AND name=?");
-		auto row = query(st, type, name).fetch;
+		auto row = query("SELECT name FROM sqlite_master WHERE type=? AND name=?",
+							type, name).fetch;
 		return row !is null ? true : false;
 	}
 	
 	ColumnInfo[] getTableInfo(char[] tablename)
 	{
-		auto st = prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name=?");
-		auto row = query(st, tablename).fetch;
+		auto row = query("SELECT sql FROM sqlite_master WHERE type='table' AND name=?",
+							tablename).fetch;
 		if(row is null || !row.values.length) return null;
 		auto sql = row.values[0];
 		debug Stdout.formatln("Sqlite table {} has create SQL: {}", tablename, sql);
+		
+		auto res = query("PRAGMA table_info('" ~ tablename ~ "')");
+		foreach(info; res.metadata) Stdout(info.name)("\t");
+		Stdout.newline;
+		
+		ColumnInfo[] info;
+		row = res.fetch;
+		while(row) {
+			if(row.values.length < 6) return null;
+			foreach(val; row.values) {
+				Stdout(val)("\t");
+				
+			}
+			Stdout.newline;
+			row = res.fetch;
+		}
+		
 		return null;
+	}
+	
+	static BindType fromSqliteType(char[] str)
+	{
+		switch(str)
+		{
+		case "TEXT": return BindType.String;
+		case "BLOB": return BindType.Binary;
+		case "INTEGER": return BindType.Long;
+		case "REAL": return BindType.Double;
+		case "NONE":
+		default:
+			return BindType.Null;
+		}
 	}
 	
 	override SqlGenerator getSqlGenerator()
@@ -381,7 +412,7 @@ unittest {
 	s1("dbi.sqlite.SqliteDatabase:");
 	SqliteDatabase db = new SqliteDatabase();
 	s2("connect");
-	db.connect("test.db");
+	db.connect("test.sqlite");
 
 	s2("query");
 

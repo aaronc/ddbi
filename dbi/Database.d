@@ -43,7 +43,21 @@ abstract class Database {
 	abstract void execute(char[] sql, BindType[] bindTypes, void*[] ptrs);
 	Result query(char[] sql, ...)
 	{
-		return query(virtualPrepare(sql), _argptr, _arguments);
+		auto st = virtualPrepare(sql);
+		
+		if(!_arguments.length) {
+			 st.execute;
+			 return Result(st);
+		}
+		
+		void*[] ptrs;
+		BindType[] types;
+		
+		bindArgs(_argptr, _arguments, ptrs, types);
+		
+		st.setParamTypes(types);
+		st.execute(ptrs);
+		return Result(st);
 	}
 	
 	abstract IStatement prepare(char[] sql);
