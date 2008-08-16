@@ -11,9 +11,9 @@ else {
 
 import dbi.Statement;
 
-FieldInfo[] getFieldMetadata(MYSQL_FIELD[] fields)
+ColumnInfo[] getFieldMetadata(MYSQL_FIELD[] fields)
 {
-	FieldInfo[] metadata;
+	ColumnInfo[] metadata;
 	
 	auto nFields = fields.length;
 	metadata.length = nFields;

@@ -19,13 +19,13 @@ class SqliteStatement : IStatement
 		return cast(uint)sqlite3_bind_parameter_count(stmt);
 	}
 	
-	FieldInfo[] getResultMetadata()
+	ColumnInfo[] getResultMetadata()
 	{
 		auto fieldCount = sqlite3_column_count(stmt);
-		FieldInfo[] fieldInfo;
+		ColumnInfo[] fieldInfo;
 		for(int i = 0; i < fieldCount; ++i)
 		{
-			FieldInfo info;
+			ColumnInfo info;
 			
 			info.name = toDString(sqlite3_column_name(stmt, i));
 			info.type = fromSqliteType(sqlite3_column_type(stmt, i));

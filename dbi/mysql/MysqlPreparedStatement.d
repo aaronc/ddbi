@@ -33,7 +33,7 @@ class MysqlPreparedStatement : IStatement
 		return mysql_stmt_param_count(stmt);
 	}
 	
-	FieldInfo[] getResultMetadata()
+	ColumnInfo[] getResultMetadata()
 	{
 		MYSQL_RES* res = mysql_stmt_result_metadata(stmt);
 		if(!res) return null;

@@ -191,19 +191,6 @@ class SqliteDatabase : Database {
 	}
 
 	/**
-	 * Check if a table exists.
-	 *
-	 * Param:
-	 *	name = Name of the table to check for the existance of.
-	 *
-	 * Returns:
-	 *	true if it exists or false otherwise.
-	 */
-	bool hasTable (char[] name) {
-		return hasItem("table", name);
-	}
-
-	/**
 	 * Check if a view exists.
 	 *
 	 * Params:
@@ -245,6 +232,31 @@ class SqliteDatabase : Database {
 		}
 	}
 
+	/+/**
+	 * Check if a table exists.
+	 *
+	 * Param:
+	 *	name = Name of the table to check for the existance of.
+	 *
+	 * Returns:
+	 *	true if it exists or false otherwise.
+	 */
+	bool hasTable (char[] name) {
+		return hasItem("table", name);
+	}
+	
+	/**
+	 *
+	 */
+	bool hasItem(char[] type, char[] name) {
+		execute("SELECT name FROM sqlite_master WHERE type='" ~ type ~ "' AND name='" ~ name ~ "'");
+		st.execute(type, name);
+		if (rows !is null && rows.length > 0) {
+			return true;
+		}
+		return false;
+	}+/
+	
 	override SqlGenerator getSqlGenerator()
 	{
     	return SqliteSqlGenerator.inst;
@@ -267,16 +279,7 @@ class SqliteDatabase : Database {
 		return items;
 	}
 
-	/**
-	 *
-	 */
-	bool hasItem(char[] type, char[] name) {
-		Row[] rows = queryFetchAll("SELECT name FROM sqlite_master WHERE type='" ~ type ~ "' AND name='" ~ name ~ "'");
-		if (rows !is null && rows.length > 0) {
-			return true;
-		}
-		return false;
-	}+/
+	+/
 }
 
 private class SqliteSqlGenerator : SqlGenerator

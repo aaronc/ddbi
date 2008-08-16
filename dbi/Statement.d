@@ -6,12 +6,12 @@ module dbi.Statement;
 
 public import tango.group.time;
 
-public import dbi.BindType;
+public import dbi.ColumnInfo;
 
 interface IStatement
 {
 	uint getParamCount();
-	FieldInfo[] getResultMetadata();
+	ColumnInfo[] getResultMetadata();
 	void setParamTypes(BindType[] paramTypes);
 	void setResultTypes(BindType[] resTypes);
 	void execute();
@@ -21,12 +21,6 @@ interface IStatement
 	ulong getLastInsertID();
 	void reset();
 	void close();
-}
-
-struct FieldInfo
-{
-	char[] name;
-	BindType type;
 }
 
 BindType getBindType(T)()
