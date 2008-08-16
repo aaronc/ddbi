@@ -5,7 +5,7 @@ import Integer = tango.text.convert.Integer;
 import tango.time.Time;
 import tango.core.Traits;
 
-public import dbi.BindType;
+public import dbi.ColumnInfo;
 
 /**
  * Helper methods for generating database-specific SQL (without necessarily
@@ -96,7 +96,6 @@ abstract class SqlGenerator
 		return SqlGenHelper.makeUpdateSql(whereClause, tablename, fields, getIdentifierQuoteCharacter);
 	}
 	
-	
 	abstract char[] toNativeType(ColumnInfo info);
 	
 	char[] makeCreateSql(char[] tablename, ColumnInfo[] columnInfo, char[] options = null)
@@ -116,6 +115,14 @@ abstract class SqlGenerator
 		return res;
 	}
 	
+	char[] makeDropSql(char[] tablename, bool checkExists = true)
+	{
+		char[] res = "DROP TABLE ";
+		if(checkExists) res ~= "IF EXISTS ";
+		res ~= quoteTableName(tablename);
+		return res;
+	}
+	
 	char[] makeColumnDef(ColumnInfo info)
 	{
 		char[] res = toNativeType(info);
@@ -125,6 +132,12 @@ abstract class SqlGenerator
 		if(info.autoIncrement) res ~= " AUTO_INCREMENT";
 		
 		return res;
+	}
+	
+	char[] makeAddColumnSql(char[] tablename, ColumnInfo column)
+	{
+		return "ALTER TABLE " ~ quoteTableName(tablename) ~ " ADD COLUMN " 
+		~ quoteColumnName(column.name) ~ " " ~ makeColumnDef(column);
 	}
 	
 	//char[] makeDeleteSql(char[] tablename, char[] whereClause);
@@ -194,17 +207,6 @@ abstract class SqlGenerator
 		return dest[0 .. count];
 	}
 }
-
-struct ColumnInfo
-{
-	char[] name;
-	BindType type;
-	bool notNull;
-	bool autoIncrement;
-	bool primaryKey;
-	ulong limit;
-}
-
 
 class SqlGenHelper
 {

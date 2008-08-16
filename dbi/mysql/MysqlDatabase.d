@@ -234,7 +234,7 @@ class MysqlDatabase : Database, IMetadataProvider {
 		return exists;
 	}
 	
-	bool getTableInfo(char[] tablename, inout TableInfo info)
+	ColumnInfo[] getTableInfo(char[] tablename)
 	{
 		char[] q = "SHOW COLUMNS FROM `" ~ tablename ~ "`"; 
 		auto ret = mysql_real_query(mysql, q.ptr, q.length);
@@ -243,7 +243,7 @@ class MysqlDatabase : Database, IMetadataProvider {
 				log.warn("Unable to SHOW COLUMNS for table " ~ tablename);
 				logError;
 			}
-			return false;
+			return null;
 		}
 		MYSQL_RES* res = mysql_store_result(mysql);
 		if(!res) {
@@ -251,24 +251,27 @@ class MysqlDatabase : Database, IMetadataProvider {
 				log.warn("Unable to store result for " ~ q);
 				logError;
 			}
-			return false;
+			return null;
 		}
 		if(mysql_num_fields(res) < 1) {
 			debug(Log)
 			log.warn("Result stored, but query " ~ q ~ " has no fields");
-			return false;
+			return null;
 		}
-		info.fieldNames = null;
+		
+		ColumnInfo[] info;
 		MYSQL_ROW row = mysql_fetch_row(res);
 		while(row != null) {
+			ColumnInfo col;
 			char[] dbCol = toDString(row[0]).dup;
-			info.fieldNames ~= dbCol;
+			col.name = dbCol;
 			char[] keyCol = toDString(row[3]);
-			if(keyCol == "PRI") info.primaryKeyFields ~= dbCol;
+			if(keyCol == "PRI") col.primaryKey = true;
+			info ~= col;
 			row = mysql_fetch_row(res);
 		}
 		mysql_free_result(res);
-		return true;
+		return info;
 	}
 	
 	/+char[] toNativeType(BindType type, ulong limit)
@@ -369,12 +372,13 @@ class MysqlSqlGenerator : SqlGenerator
 			case Float: return "FLOAT";
 			case Double: return "DOUBLE";
 			case String: 
-				if(info.limit <= 255) return "VARCHAR(" ~ Integer.toString(info.limit) ~ ")";
+				if(info.limit == 0) return "TINYTEXT";
+				else if(info.limit <= 255) return "VARCHAR(" ~ Integer.toString(info.limit) ~ ")";
 				else return getTextBlobPrefix(info.limit) ~ "TEXT";
 			case Binary:
-				/+if(info.limit <= 255) return "VARBINARY(" ~ Integer.toString(info.limit) ~ ")";
-				else return getTextBlobPrefix(info.limit) ~ "BLOB";+/
-				return getTextBlobPrefix(info.limit) ~ "BLOB";
+				if(info.limit == 0) return "TINYBLOB";
+				if(info.limit <= 255) return "VARBINARY(" ~ Integer.toString(info.limit) ~ ")";
+				else return getTextBlobPrefix(info.limit) ~ "BLOB";
 				break;
 			case Time:
 			case DateTime:

@@ -1,15 +1,11 @@
 module dbi.Metadata;
 
+public import dbi.ColumnInfo;
+
 interface IMetadataProvider
 {
 	bool hasTable(char[] tablename);
-	bool getTableInfo(char[] tablename, inout TableInfo info);
-}
-
-struct TableInfo
-{
-	char[][] fieldNames;
-	char[][] primaryKeyFields;
+	ColumnInfo[] getTableInfo(char[] tablename);
 }
 
 debug(UnitTest) {
@@ -31,23 +27,25 @@ debug(UnitTest) {
 		void test1()
 		{
 			assert(db.hasTable("dbi_test"));
-			TableInfo ti;
-			assert(db.getTableInfo("dbi_test", ti));
-			assert(ti.fieldNames.length == 6);
-			assert(ti.primaryKeyFields.length == 1);
+			auto ti = db.getTableInfo("dbi_test"); 
+			assert(ti);
+			assert(ti.length == 6);
+			//assert(ti.primaryKeyFields.length == 1);
 			
-			char[][char[]] fNames;
-			foreach(f; ti.fieldNames)
-				fNames[f] = f;
+			ColumnInfo[char[]] fNames;
+			foreach(col; ti)
+				fNames[col.name] = col;
 			
-			assert("id" in fNames);
+			auto pID = "id" in fNames;
+			assert(pID);
+			assert(pID.primaryKey);
 			assert("name" in fNames);
 			assert("binary" in fNames);
 			assert("dateofbirth" in fNames);
 			assert("i" in fNames);
 			assert("f" in fNames);
 			
-			assert(ti.primaryKeyFields[0] == "id");
+			//assert(ti.primaryKeyFields[0] == "id");
 		}
 	}
 }

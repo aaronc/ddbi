@@ -143,7 +143,7 @@ debug(DBITest) {
 		const static ColumnInfo[] columns = [
 		   ColumnInfo("id", BindType.UInt, true, true, true),
 		   ColumnInfo("name", BindType.String, true, false, false, 45),
-		   ColumnInfo("binary", BindType.Binary, false, false, false, 255),
+		   ColumnInfo("binary", BindType.Binary, false, false, false),
 		   ColumnInfo("dateofbirth", BindType.DateTime),
 		   ColumnInfo("i", BindType.Int),
 		   ColumnInfo("f", BindType.Double)
@@ -162,12 +162,13 @@ debug(DBITest) {
 			setup;
 			test1;
 			test2;
+			//test3;
 			teardown;
 		}
 		
 		void setup()
 		{
-			char[] drop_test = "DROP TABLE IF EXISTS " ~ db.sqlGen.quoteTableName("dbi_test");
+			char[] drop_test = db.sqlGen.makeDropSql("dbi_test");
 			Stdout.formatln("executing: {}", drop_test);
 			db.execute(drop_test);
 			
@@ -276,6 +277,13 @@ debug(DBITest) {
 			assert(!st2.fetch(t2.bind));
 			
 			st2.reset;
+		}
+		
+		void test3()
+		{
+			auto sql = db.sqlGen.makeAddColumnSql("dbi_test", ColumnInfo("added_column", BindType.String));
+			Stdout.formatln("executing: {}", sql);
+			db.execute(sql);
 		}
 	}
 	
