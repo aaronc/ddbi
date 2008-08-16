@@ -184,6 +184,7 @@ debug(DBITest) {
 			test2;
 			//test3;
 			testMetadata;
+			dbTests;
 			teardown;
 		}
 		
@@ -326,6 +327,11 @@ debug(DBITest) {
 			auto sql = db.sqlGen.makeAddColumnSql("dbi_test", ColumnInfo("added_column", BindType.String));
 			Stdout.formatln("executing: {}", sql);
 			db.execute(sql);
+		}
+		
+		void dbTests()
+		{
+			
 		}
 	}
 	

@@ -225,7 +225,7 @@ class SqliteDatabase : Database {
 		{
 			Stdout.formatln("Beginning Sqlite Tests");
 			
-			auto test = new DBTest(this);
+			auto test = new SqliteTest(this);
 			test.run;
 			
 			Stdout.formatln("Completed Sqlite Tests");
@@ -255,30 +255,24 @@ class SqliteDatabase : Database {
 	}
 	
 	ColumnInfo[] getTableInfo(char[] tablename)
-	{
-		auto row = query("SELECT sql FROM sqlite_master WHERE type='table' AND name=?",
-							tablename).fetch;
-		if(row is null || !row.values.length) return null;
-		auto sql = row.values[0];
-		debug Stdout.formatln("Sqlite table {} has create SQL: {}", tablename, sql);
-		
+	{	
 		auto res = query("PRAGMA table_info('" ~ tablename ~ "')");
 		foreach(info; res.metadata) Stdout(info.name)("\t");
 		Stdout.newline;
 		
 		ColumnInfo[] info;
-		row = res.fetch;
+		auto row = res.fetch;
 		while(row) {
 			if(row.values.length < 6) break;
 			
 			ColumnInfo col;
 			col.name = row.values[1];
 			col.type = fromSqliteType(row.values[2]);
-			if(row.values[3] == "0") col.notNull = true;
+			if(row.values[3] != "0") col.notNull = true;
 			if(row.values[5] == "1") col.primaryKey = true;
 				
 			foreach(val; row.values) {
-				Stdout(val)("\t");
+				Stdout(val)(" |\t");
 				
 			}
 			Stdout.newline;
@@ -409,6 +403,50 @@ private class SqliteRegister : Registerable {
 debug(DBITest) {
 
 import tango.io.Stdout;
+
+class SqliteTest : DBTest
+{
+	this(SqliteDatabase db)
+	{ super(db); }
+	
+	void dbTests()
+	{
+		auto ti = db.getTableInfo("dbi_test"); 
+		assert(ti);
+		assert(ti.length == 6);
+		
+		assert(ti[0].name == "id");
+		assert(ti[0].type == BindType.Long);
+		assert(ti[0].notNull == true);
+		assert(ti[0].primaryKey == true);
+		
+		assert(ti[1].name == "name");
+		assert(ti[1].type == BindType.String);
+		assert(ti[1].notNull == true);
+		assert(ti[1].primaryKey == false);
+		
+		assert(ti[2].name == "binary");
+		assert(ti[2].type == BindType.Binary);
+		assert(ti[2].notNull == false);
+		assert(ti[2].primaryKey == false);
+		
+		assert(ti[3].name == "dateofbirth");
+		assert(ti[3].type == BindType.String);
+		assert(ti[3].notNull == false);
+		assert(ti[3].primaryKey == false);
+		
+		assert(ti[4].name == "i");
+		assert(ti[4].type == BindType.Long);
+		assert(ti[4].notNull == false);
+		assert(ti[4].primaryKey == false);
+		
+		assert(ti[5].name == "f");
+		assert(ti[5].type == BindType.Double);
+		assert(ti[5].notNull == false);
+		assert(ti[5].primaryKey == false);
+	}
+}
+
 
 unittest {
     void s1 (char[] s) {
