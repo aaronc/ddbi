@@ -72,6 +72,8 @@ abstract class Database {
 		return keywords;
 	}
 	
+	abstract bool hasTable(char[] tablename);
+	//abstract ColumnInfo[] getTableInfo(char[] tablename);
 	abstract SqlGenerator getSqlGenerator();
 	alias getSqlGenerator sqlGen;
 	
