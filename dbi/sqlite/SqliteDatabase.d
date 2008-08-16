@@ -320,6 +320,17 @@ private class SqliteSqlGenerator : SqlGenerator
 			}
 		}
 	}
+	
+	char[] makeColumnDef(ColumnInfo info)
+	{
+		char[] res = toNativeType(info);
+		
+		if(info.notNull)	res ~= " NOT NULL"; else res ~= " NULL";
+		if(info.primaryKey) res ~= " PRIMARY KEY";
+		if(info.autoIncrement) res ~= " AUTOINCREMENT";
+		
+		return res;
+	}
 }
 
 private class SqliteRegister : Registerable {
@@ -357,7 +368,7 @@ debug(DBITest) {
 			
 			db.execute(drop_test);
 			
-			char[] create_test = `CREATE TABLE  "dbi_test" ( `
+			/+char[] create_test = `CREATE TABLE  "dbi_test" ( `
 				`"id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, `
 				`"name" TEXT NOT NULL, `
 				`"binary" BLOB DEFAULT  NULL, `
@@ -368,6 +379,10 @@ debug(DBITest) {
 			
 			Stdout.formatln("executing: {}", create_test);
 			
+			db.execute(create_test);+/
+			
+			auto create_test = db.sqlGen.makeCreateSql("dbi_test", columns);
+			Stdout.formatln("executing: {}", create_test);
 			db.execute(create_test);
 		}
 		

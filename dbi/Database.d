@@ -140,6 +140,15 @@ debug(DBITest) {
 			];
 		}
 		
+		const static ColumnInfo[] columns = [
+		   ColumnInfo("id", BindType.UInt, true, true, true),
+		   ColumnInfo("name", BindType.String, true, false, false, 45),
+		   ColumnInfo("binary", BindType.Binary, false, false, false, 255),
+		   ColumnInfo("dateofbirth", BindType.DateTime),
+		   ColumnInfo("i", BindType.Int),
+		   ColumnInfo("f", BindType.Double)
+		];
+		
 		this(Database db, bool virtual = false)
 		{
 			this.db = db;

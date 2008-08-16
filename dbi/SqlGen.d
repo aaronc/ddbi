@@ -106,7 +106,7 @@ abstract class SqlGenerator
 		auto len = columnInfo.length;
 		for(size_t i = 0; i < len; ++i)
 		{
-			res ~= makeColumnDef(columnInfo[i]);
+			res ~= quoteColumnName(columnInfo[i].name) ~ " " ~ makeColumnDef(columnInfo[i]);
 			if(i != len - 1) res ~= ", ";
 		}
 		res ~= ")";
@@ -118,7 +118,7 @@ abstract class SqlGenerator
 	
 	char[] makeColumnDef(ColumnInfo info)
 	{
-		char[] res = quoteColumnName(info.name) ~ " " ~ toNativeType(info);
+		char[] res = toNativeType(info);
 		
 		if(info.notNull)	res ~= " NOT NULL"; else res ~= " NULL";
 		if(info.primaryKey) res ~= " PRIMARY KEY";

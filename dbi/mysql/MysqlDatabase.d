@@ -521,7 +521,7 @@ debug(DBITest) {
 			
 			db.execute(drop_test);
 			
-			char[] create_test = "CREATE TABLE  `dbi_test` ( "
+			/+char[] create_test = "CREATE TABLE  `dbi_test` ( "
 				"`id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, "
 				"`name` varchar(45) NOT NULL, "
 				"`binary` tinyblob DEFAULT NULL, "
@@ -531,20 +531,22 @@ debug(DBITest) {
 				"PRIMARY KEY  (`id`) "
 			") DEFAULT CHARSET=utf8; ";
 			
-			Stdout.formatln("executing: {}", create_test);
+			Stdout.formatln("executing: {}", create_test);+/
 			
-			db.execute(create_test);
+			/+db.execute(create_test);+/
 			
-			ColumnInfo[] columns = [
+			/+ColumnInfo[] columns = [
  			   ColumnInfo("id", BindType.UInt, true, true, true),
- 			   ColumnInfo("name", BindType.UInt, true, false, false, 45),
+ 			   ColumnInfo("name", BindType.String, true, false, false, 45),
  			   ColumnInfo("binary", BindType.Binary, false, false, false, 255),
  			   ColumnInfo("dateofbirth", BindType.DateTime),
  			   ColumnInfo("i", BindType.Int),
  			   ColumnInfo("f", BindType.Double)
- 			];
+ 			];+/
 			
-			Stdout.formatln("created Create Sql: {}", db.sqlGen.makeCreateSql("create_test", columns));
+			auto create_test = db.sqlGen.makeCreateSql("dbi_test", columns);
+			Stdout.formatln("executing: {}", create_test);
+			db.execute(create_test);
 		}
 		
 		void teardown()
