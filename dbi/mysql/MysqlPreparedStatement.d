@@ -115,9 +115,11 @@ class MysqlPreparedStatement : IStatement
 		}
 		res = mysql_stmt_execute(stmt);
 		if(res != 0) {
-			debug Stdout.formatln("mysql_stmt_errno:{}", mysql_stmt_errno(stmt));
-			debug Stdout.formatln("mysql_stmt_error:{}", toDString(mysql_stmt_error(stmt)));
-			throw new DBIException("Error at mysql_stmt_execute.", res, specificToGeneral(res));
+			//debug Stdout.formatln("mysql_stmt_errno:{}", mysql_stmt_errno(stmt));
+			//debug Stdout.formatln("mysql_stmt_error:{}", toDString(mysql_stmt_error(stmt)));
+			auto errno = mysql_stmt_errno(stmt);
+			auto err = toDString(mysql_stmt_error(stmt));
+			throw new DBIException("Error at mysql_stmt_execute: " ~ err, errno, specificToGeneral(errno));
 		}
 	}
 	

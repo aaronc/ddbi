@@ -119,7 +119,9 @@ class DBIException : Exception {
 	}
 	
 	char[] toString() {
-		return super.toString;
+		auto msg = super.toString;
+		if(sql.length) msg ~= " SQL: " ~ sql;
+		return msg;
 	}
 
 	private:

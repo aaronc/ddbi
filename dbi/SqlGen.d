@@ -96,6 +96,20 @@ abstract class SqlGenerator
 		return SqlGenHelper.makeUpdateSql(whereClause, tablename, fields, getIdentifierQuoteCharacter);
 	}
 	
+	char[] makeDeleteSql(char[] tablename, char[][] keyFields)
+	{
+		char[] res = "DELETE FROM ";
+		res ~= quoteTableName(tablename);
+		res ~= " WHERE ";
+		auto len = keyFields.length;
+		for(size_t i = 0; i < len; ++i)
+		{
+			if(i != 0) res ~= " AND ";
+			res ~= quoteColumnName(keyFields[i]) ~ " = ?";
+		}
+		return res;
+	}
+	
 	abstract char[] toNativeType(ColumnInfo info);
 	
 	char[] makeCreateSql(char[] tablename, ColumnInfo[] columnInfo, char[] options = null)

@@ -46,6 +46,10 @@ class SqliteDatabase : Database {
 		logger = Log.lookup("dbi.sqlite.Database");
 		connect(dbFile);
 	}
+	
+	~this() {
+		close;
+	}
 
 	/**
 	 * Open a SQLite database for use.
@@ -249,9 +253,12 @@ class SqliteDatabase : Database {
 	 *
 	 */
 	bool hasItem(char[] type, char[] name) {
-		auto row = query("SELECT name FROM sqlite_master WHERE type=? AND name=?",
-							type, name).fetch;
-		return row !is null ? true : false;
+		auto res = query("SELECT name FROM sqlite_master WHERE type=? AND name=?",
+							type, name);
+		auto row = res.fetch;
+		auto isTrue = row !is null ? true : false;
+		res.finalize;
+		return isTrue;
 	}
 	
 	ColumnInfo[] getTableInfo(char[] tablename)
@@ -273,6 +280,8 @@ class SqliteDatabase : Database {
 			
 			row = res.fetch;
 		}
+		
+		res.finalize;
 		
 		return info;
 	}

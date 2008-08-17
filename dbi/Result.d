@@ -60,6 +60,16 @@ class Result
 		if(!st.fetch(ptrs)) return null;
 		return row;
 	}
+	
+	void reset()
+	{
+		st.reset;
+	}
+	
+	void finalize()
+	{
+		st.close;
+	}
 }
 
 void bindArgs(void* argptr, TypeInfo[] arguments,

@@ -111,15 +111,12 @@ class MysqlDatabase : Database {
 			char[][char[]] keywords = getKeywords(params, "&");
 			if ("username" in keywords) {
 				username = keywords["username"];
-				Stdout.formatln("Username={}", username);
 			}
 			if ("password" in keywords) {
 				password = keywords["password"];
-				Stdout.formatln("Password={}", password);
 			}
 			if ("sock" in keywords) {
 				sock = keywords["sock"];
-				Stdout.formatln("Username={}", username);
 			}
 		}
 		
