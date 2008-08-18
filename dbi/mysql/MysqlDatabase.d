@@ -171,7 +171,7 @@ class MysqlDatabase : Database {
 		delete execSql;
 	}
         
-    IStatement prepare(char[] sql)
+    MysqlPreparedStatement prepare(char[] sql)
 	{
 		MYSQL_STMT* stmt = mysql_stmt_init(mysql);
 		auto res = mysql_stmt_prepare(stmt, sql.ptr, sql.length);
@@ -187,7 +187,7 @@ class MysqlDatabase : Database {
 		return new MysqlPreparedStatement(stmt);
 	}
 			
-	IStatement virtualPrepare(char[] sql)
+    MysqlVirtualStatement virtualPrepare(char[] sql)
     {
     	return new MysqlVirtualStatement(sql, getSqlGenerator, mysql);
     }
@@ -271,6 +271,8 @@ class MysqlDatabase : Database {
 		return info;
 	}
 	
+	char[] type() { return "Mysql"; }
+	
 	/+char[] toNativeType(BindType type, ulong limit)
 	{
 		switch(BindType type)
@@ -317,6 +319,8 @@ class MysqlDatabase : Database {
 			testVirtual.run;+/
 		}
 	}
+    
+    MYSQL* handle() { return mysql; }
 
 	package:
 		MYSQL* mysql;

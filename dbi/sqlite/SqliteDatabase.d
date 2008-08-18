@@ -50,6 +50,8 @@ class SqliteDatabase : Database {
 	~this() {
 		close;
 	}
+	
+	char[] type() { return "Sqlite"; }
 
 	/**
 	 * Open a SQLite database for use.
@@ -91,7 +93,7 @@ class SqliteDatabase : Database {
 		}
 	}
 	
-	IStatement prepare(char[] sql)
+	SqliteStatement prepare(char[] sql)
 	{
 		logger.trace("querying: " ~ sql);
 		char** errorMessage;
@@ -106,7 +108,7 @@ class SqliteDatabase : Database {
 	
 	private SqliteStatement lastSt = null;
 			
-	IStatement virtualPrepare(char[] sql) { return prepare(sql); }
+	SqliteStatement virtualPrepare(char[] sql) { return prepare(sql); }
 
 	/**
 	 * Execute a SQL statement that returns no results.
@@ -304,6 +306,8 @@ class SqliteDatabase : Database {
 	{
     	return SqliteSqlGenerator.inst;
 	}
+	
+	sqlite3* handle() { return database; }
 	
 	private:
 	sqlite3* database;

@@ -95,6 +95,12 @@ abstract class Database {
 	abstract SqlGenerator getSqlGenerator();
 	alias getSqlGenerator sqlGen;
 	
+	/**
+	 * 
+	 * Returns: The database type for this instance (i.e. Mysql, Sqlite, Postgresql, etc.)
+	 */
+	abstract char[] type();
+	
 	debug(DBITest) {
 		abstract void doTests();
 		
