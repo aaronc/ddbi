@@ -2,6 +2,7 @@ module dbi.sqlite.SqliteStatement;
 
 import dbi.Statement, dbi.DBIException;
 import tango.stdc.stringz : toDString = fromStringz, toCString = toStringz;
+import Integer = tango.text.convert.Integer;
 import tango.core.Traits;
 
 import DT = tango.time.Time, tango.time.Clock;
@@ -220,8 +221,9 @@ class SqliteStatement : IStatement
 				break;
 			case Null:
 				bindNull!(P)(stmt, index);
+				break;
 			default:
-				debug assert(false, "Unhandled bind type"); //TODO more detailed information;
+				debug assert(false, "Unhandled bind type " ~ Integer.toString(type)); //TODO more detailed information;
 				bindNull!(P)(stmt, index);
 				break;
 			}
