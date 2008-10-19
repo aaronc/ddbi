@@ -119,7 +119,7 @@ abstract class SqlGenerator
 		auto len = columnInfo.length;
 		for(size_t i = 0; i < len; ++i)
 		{
-			res ~= quoteColumnName(columnInfo[i].name) ~ " " ~ makeColumnDef(columnInfo[i]);
+			res ~= quoteColumnName(columnInfo[i].name) ~ " " ~ makeColumnDef(columnInfo[i], columnInfo);
 			if(i != len - 1) res ~= ", ";
 		}
 		res ~= ")";
@@ -137,7 +137,7 @@ abstract class SqlGenerator
 		return res;
 	}
 	
-	char[] makeColumnDef(ColumnInfo info)
+	char[] makeColumnDef(ColumnInfo info, ColumnInfo[] columnInfo)
 	{
 		char[] res = toNativeType(info);
 		
@@ -151,7 +151,7 @@ abstract class SqlGenerator
 	char[] makeAddColumnSql(char[] tablename, ColumnInfo column)
 	{
 		return "ALTER TABLE " ~ quoteTableName(tablename) ~ " ADD COLUMN " 
-		~ quoteColumnName(column.name) ~ " " ~ makeColumnDef(column);
+		~ quoteColumnName(column.name) ~ " " ~ makeColumnDef(column, null);
 	}
 	
 	//char[] makeDeleteSql(char[] tablename, char[] whereClause);

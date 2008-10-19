@@ -106,6 +106,9 @@ class SqliteDatabase : Database {
 		return lastSt;
 	}
 	
+	alias SqliteStatement StatementT;
+	alias SqliteStatement VirtualStatementT;
+	
 	private SqliteStatement lastSt = null;
 			
 	SqliteStatement virtualPrepare(char[] sql) { return prepare(sql); }
@@ -370,12 +373,18 @@ private class SqliteSqlGenerator : SqlGenerator
 		}
 	}
 	
-	char[] makeColumnDef(ColumnInfo info)
+	char[] makeColumnDef(ColumnInfo info, ColumnInfo[] columnInfo)
 	{
 		char[] res = toNativeType(info);
 		
+		bool multiPKey = false;
+		foreach(col; columnInfo) if(col.primaryKey && col.name != info.name) {
+			multiPKey = true;
+			break;
+		}
+		
 		if(info.notNull)	res ~= " NOT NULL"; else res ~= " NULL";
-		if(info.primaryKey) res ~= " PRIMARY KEY";
+		if(info.primaryKey && !multiPKey) res ~= " PRIMARY KEY";
 		if(info.autoIncrement) res ~= " AUTOINCREMENT";
 		
 		return res;

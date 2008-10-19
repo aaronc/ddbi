@@ -95,6 +95,9 @@ abstract class Database {
 	abstract SqlGenerator getSqlGenerator();
 	alias getSqlGenerator sqlGen;
 	
+	alias IStatement StatementT;
+	alias IStatement VirtualStatementT;
+	
 	/**
 	 * 
 	 * Returns: The database type for this instance (i.e. Mysql, Sqlite, Postgresql, etc.)

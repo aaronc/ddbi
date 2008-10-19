@@ -180,9 +180,9 @@ class MysqlDatabase : Database {
 				auto err = mysql_stmt_error(stmt);
 				log.error("Unable to create prepared statement: \"" ~ sql ~"\", errmsg: " ~ toDString(err));
 			}
-			//return null;
 			auto errno = mysql_stmt_errno(stmt);
-			throw new DBIException("Unable to prepare statement: " ~ sql, errno, specificToGeneral(errno));
+			auto err = toDString(mysql_stmt_error(stmt));
+			throw new DBIException("Unable to prepare statement: " ~ err, sql, errno, specificToGeneral(errno));
 		}
 		return new MysqlPreparedStatement(stmt);
 	}
@@ -191,6 +191,9 @@ class MysqlDatabase : Database {
     {
     	return new MysqlVirtualStatement(sql, getSqlGenerator, mysql);
     }
+    
+    alias MysqlPreparedStatement StatementT;
+	alias MysqlVirtualStatement VirtualStatementT;
 	
 	void beginTransact()
 	{
