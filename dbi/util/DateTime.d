@@ -2,8 +2,20 @@ module dbi.util.DateTime;
 
 import tango.time.Time;
 private import ISO8601 = tango.time.ISO8601;
-import tango.time.Clock;
+//import tango.time.Clock;
 import Integer = tango.text.convert.Integer;
+
+import tango.time.chrono.Gregorian;
+import tango.time.Time;
+
+DateTime toDate(Time t)
+{
+	DateTime dt;
+	Gregorian.generic.split(t, dt.date.year, dt.date.month, 
+		dt.date.day, dt.date.doy, dt.date.dow, dt.date.era);
+	dt.time = t.time;
+	return dt;
+}
 
 import dbi.DBIException;
 
@@ -93,7 +105,8 @@ bool parseDateTime(char[] src, ref DateTime dt)
 	bool tryIso() {
 		Time t;
 		if(ISO8601.parseDateAndTime(src, t) == 0) return false;
-		dt = Clock.toDate(t);
+		//dt = Clock.toDate(t);
+		dt = toDate(t);
 		return true;
 	}
 	
@@ -113,7 +126,8 @@ bool parseDateFixed(char[] src, ref Date d)
 	bool tryIso() {
 		Time t;
 		if(ISO8601.parseDate(src, t) == 0) return false;
-		auto dt = Clock.toDate(t);
+		//auto dt = Clock.toDate(t);
+		auto dt = toDate(t);
 		d = dt.date;
 		return true;
 	}
