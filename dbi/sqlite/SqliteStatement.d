@@ -5,13 +5,17 @@ import tango.stdc.stringz : toDString = fromStringz, toCString = toStringz;
 import Integer = tango.text.convert.Integer;
 import tango.core.Traits;
 
-import DT = tango.time.Time, tango.time.Clock;
+import DT = tango.time.Time;
+import tango.time.chrono.Gregorian;
 import dbi.util.DateTime;
 
 import dbi.sqlite.SqliteError;
 import dbi.sqlite.imp;
 
+import tango.stdc.string;
+
 debug import tango.io.Stdout;
+debug import tango.util.log.Log;
 
 class SqliteStatement : IStatement
 {
@@ -49,6 +53,7 @@ class SqliteStatement : IStatement
 	
 	void execute()
 	{
+		debug log.info("Executing {}", sql);
 		lastRes = sqlite3_step(stmt);
 		wasReset = false;
 		if(lastRes != SQLITE_ROW && lastRes != SQLITE_DONE)
@@ -81,7 +86,7 @@ class SqliteStatement : IStatement
 		
 		for(size_t i = 0; i < len; ++i)
 		{
-			bind!(false)(stmt, resTypes[i], ptrs[i], i);
+			bind!(false)(stmt, resTypes[i], ptrs[i], i, allocator);
 		}
 		
 		lastRes = sqlite3_step(stmt);
@@ -89,7 +94,7 @@ class SqliteStatement : IStatement
 		return true;
 	}
 	
-	static void bindT(T, bool P)(sqlite3_stmt* stmt, void* ptr, int index)
+	static void bindT(T, bool P)(sqlite3_stmt* stmt, void* ptr, int index, void* delegate(size_t) allocator = null)
 	{
 		T* val = cast(T*)ptr;
 		static if(isIntegerType!(T) || is(T == bool))
@@ -116,7 +121,12 @@ class SqliteStatement : IStatement
 			else {
 				auto res = sqlite3_column_text(stmt, index);
 				auto len = sqlite3_column_bytes(stmt, index);
-				*val = res[0 .. len];
+				/+if(allocator !is null) {
+					*val = (cast(char*)allocator(len)[0 .. len]);
+					strncpy(val.ptr, res, len);
+				}
+				else *val = res[0 .. len].dup;+/
+				*val = res[0 .. len].dup;
 			}
 		}
 		else static if(is(T == void[]) || is(T == ubyte[]))
@@ -125,7 +135,7 @@ class SqliteStatement : IStatement
 			else {
 				auto res = sqlite3_column_blob(stmt, index);
 				auto len = sqlite3_column_bytes(stmt, index);
-				*val = res[0 .. len];
+				*val = res[0 .. len].dup;
 			}
 		}
 		else static if(is(T == DT.DateTime) || is(T == DT.Time))
@@ -137,7 +147,11 @@ class SqliteStatement : IStatement
 					txt = printDateTime(*val, txt);
 				}
 				else static if(is(T == DT.Time)) {
-					auto dt = Clock.toDate(*val);
+					DT.DateTime dt;
+					//auto dt = Clock.toDate(*val);
+					Gregorian.generic.split(*val, dt.date.year, dt.date.month, 
+						dt.date.day, dt.date.doy, dt.date.dow, dt.date.era);
+					dt.time = (*val).time;
 					txt = printDateTime(dt, txt);
 				}
 				else static assert(false);
@@ -153,9 +167,10 @@ class SqliteStatement : IStatement
 					 parseDateTime(res[0 .. len], *(cast(DT.DateTime*)ptr));
 				}
 				else static if(is(T == DT.Time)) {
-					DateTime dt;
+					DT.DateTime dt;
 					parseDateTime(res[0 .. len], dt);
-					*(cast(Time*)ptr) = Clock.fromDate(dt);
+					//*(cast(Time*)ptr) = Clock.fromDate(dt);
+					*(cast(Time*)ptr) = Gregorian.generic.toTime(dt);
 				}
 				else static assert(false);
 			}
@@ -168,56 +183,56 @@ class SqliteStatement : IStatement
 		static if(P) sqlite3_bind_null(stmt, index + 1);
 	}
 	
-	static void bind(bool P)(sqlite3_stmt* stmt, BindType type, void* ptr, int index)
+	static void bind(bool P)(sqlite3_stmt* stmt, BindType type, void* ptr, int index, void* delegate(size_t) allocator = null)
 	{
 		with(BindType)
 		{
 			switch(type)
 			{
 			case Bool:
-				bindT!(bool, P)(stmt, ptr, index);
+				bindT!(bool, P)(stmt, ptr, index, allocator);
 				break;
 			case Byte:
-				bindT!(byte, P)(stmt, ptr, index);
+				bindT!(byte, P)(stmt, ptr, index, allocator);
 				break;
 			case Short:
-				bindT!(short, P)(stmt, ptr, index);
+				bindT!(short, P)(stmt, ptr, index, allocator);
 				break;
 			case Int:
-				bindT!(int, P)(stmt, ptr, index);
+				bindT!(int, P)(stmt, ptr, index, allocator);
 				break;
 			case Long:
-				bindT!(long, P)(stmt, ptr, index);
+				bindT!(long, P)(stmt, ptr, index, allocator);
 				break;
 			case UByte:
-				bindT!(ubyte, P)(stmt, ptr, index);
+				bindT!(ubyte, P)(stmt, ptr, index, allocator);
 				break;
 			case UShort:
-				bindT!(ushort, P)(stmt, ptr, index);
+				bindT!(ushort, P)(stmt, ptr, index, allocator);
 				break;
 			case UInt:
-				bindT!(uint, P)(stmt, ptr, index);
+				bindT!(uint, P)(stmt, ptr, index, allocator);
 				break;
 			case ULong:
-				bindT!(ulong, P)(stmt, ptr, index);
+				bindT!(ulong, P)(stmt, ptr, index, allocator);
 				break;
 			case Float:
-				bindT!(float, P)(stmt, ptr, index);
+				bindT!(float, P)(stmt, ptr, index, allocator);
 				break;
 			case Double:
-				bindT!(double, P)(stmt, ptr, index);
+				bindT!(double, P)(stmt, ptr, index, allocator);
 				break;
 			case String:
-				bindT!(char[], P)(stmt, ptr, index);
+				bindT!(char[], P)(stmt, ptr, index, allocator);
 				break;
 			case Binary:
-				bindT!(void[], P)(stmt, ptr, index);
+				bindT!(void[], P)(stmt, ptr, index, allocator);
 				break;
 			case Time:
-				bindT!(DT.Time, P)(stmt, ptr, index);
+				bindT!(DT.Time, P)(stmt, ptr, index, allocator);
 				break;
 			case DateTime:
-				bindT!(DT.DateTime, P)(stmt, ptr, index);
+				bindT!(DT.DateTime, P)(stmt, ptr, index, allocator);
 				break;
 			case Null:
 				bindNull!(P)(stmt, index);
@@ -304,18 +319,12 @@ class SqliteStatement : IStatement
 		}
 	}
 	
-	debug(Log)
+	debug
 	{
 		static Logger log;
 		static this()
 		{
-			log = Log.getLogger("dbi.mysql.MysqlPreparedStatement.MysqlPreparedStatement");
-		}
-		
-		private void logError()
-		{
-			char* err = mysql_stmt_error(stmt);
-			log.trace(toDString(err));
+			log = Log.lookup("dbi.sqlite.Sqlite");
 		}
 	}
 }
