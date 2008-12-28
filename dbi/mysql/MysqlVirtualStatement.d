@@ -226,6 +226,7 @@ class MysqlVirtualStatement : VirtualStatement
 			switch(bindType)
 			{
 			case Bool:
+				bindResT!(bool)(res, type, ptr);
 				break;
 			case Byte:
 				bindResT!(byte)(res, type, ptr);
