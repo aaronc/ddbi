@@ -1,11 +1,6 @@
 module dbi.mysql.MysqlVirtualStatement;
 
-version(Windows) {
-	private import dbi.mysql.imp_win;
-}
-else {
-	private import dbi.mysql.imp;
-}
+private import dbi.mysql.c.mysql;
 
 import tango.stdc.stringz : toDString = fromStringz, toCString = toStringz;
 import DT = tango.time.Time, tango.time.Clock;

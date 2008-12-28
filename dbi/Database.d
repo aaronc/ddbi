@@ -22,7 +22,7 @@ debug(UnitTest) public import tango.io.Stdout;
  * See_Also:
  *	The database class for the DBD you are using.
  */
-abstract class Database {
+abstract class Database : IResult {
 	/**
 	 * A destructor that attempts to force the the release of of all
 	 * database connections and similar things.
@@ -60,8 +60,15 @@ abstract class Database {
 		return Result(st);
 	}
 	
+	abstract bool query2(in char[] sql, ...);
+	
 	abstract IStatement prepare(char[] sql);
 	abstract IStatement virtualPrepare(char[] sql);
+	
+	//abstract char[] writeHexString(in ubyte[] binary, char[] dst = null);
+	//abstract char[] writeDateTime(DateTime dateTime, char[] dst = null);
+	//abstract char[] escapeString(in char[] str, char[] dst = null);
+	
 	abstract void beginTransact();
 	abstract void rollback();
 	abstract void commit();

@@ -1,24 +1,16 @@
-﻿/**
+/**
  * Authors: The D DBI project
  * Copyright: BSD license
  */
-module dbi.mysql.imp;
+module dbi.mysql.c.mysql;
 
 version (dbi_mysql) {
 
-extern (C):
+extern (Windows):
 
 version (Windows) {
 	pragma (lib, "libmysql.lib");
-} else version (linux) {
-	pragma (lib, "libmysql.a");
-} else version (Posix) {
-	pragma (lib, "libmysql.a");
-} else version (darwin) {
-	pragma (lib, "libmysql.a");
-} else {
-	pragma (msg, "You will need to manually link in the MySQL library.");
-}
+} 
 
 version(MySQL_51) {
 	const uint MYSQL_VERSION = 50100;
@@ -1432,5 +1424,31 @@ const uint BINARY_FLAG = 128;		/* Field is binary   */
 
 const int MYSQL_NO_DATA = 100;
 const int MYSQL_DATA_TRUNCATED = 101;
+
+enum : uint {
+    CLIENT_LONG_PASSWORD = 1,	/* new more secure passwords */
+    CLIENT_FOUND_ROWS = 2,	/* Found instead of affected rows */
+    CLIENT_LONG_FLAG = 4,	/* Get all column flags */
+    CLIENT_CONNECT_WITH_DB = 8,	/* One can specify db on connect */
+    CLIENT_NO_SCHEMA = 16,	/* Don't allow database.table.column */
+    CLIENT_COMPRESS	= 32,	/* Can use compression protocol */
+    CLIENT_ODBC = 64,	/* Odbc client */
+    CLIENT_LOCAL_FILES = 128,	/* Can use LOAD DATA LOCAL */
+    CLIENT_IGNORE_SPACE = 256,	/* Ignore spaces before '(' */
+    CLIENT_PROTOCOL_41 = 512,	/* New 4.1 protocol */
+    CLIENT_INTERACTIVE = 1024,	/* This is an interactive client */
+    CLIENT_SSL = 2048,	/* Switch to SSL after handshake */
+    CLIENT_IGNORE_SIGPIPE = 4096,    /* IGNORE sigpipes */
+    CLIENT_TRANSACTIONS	= 8192,	/* Client knows about transactions */
+    CLIENT_RESERVED = 16384,   /* Old flag for 4.1 protocol  */
+    CLIENT_SECURE_CONNECTION = 32768,  /* New 4.1 authentication */
+    CLIENT_MULTI_STATEMENTS = (1 << 16), /* Enable/disable multi-stmt support */
+    CLIENT_MULTI_RESULTS = (1 << 17), /* Enable/disable multi-results */
+
+    CLIENT_SSL_VERIFY_SERVER_CERT = (1 << 30),
+    CLIENT_REMEMBER_OPTIONS = (1 << 31),
+}
+
+
 
 }

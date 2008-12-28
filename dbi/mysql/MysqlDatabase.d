@@ -15,13 +15,8 @@ debug(UnitTest) import tango.io.Stdout;
 public import dbi.Database;
 private import dbi.DBIException, dbi.Statement, dbi.Registry;
 private import dbi.VirtualStatement;
-version(Windows) {
-	private import dbi.mysql.imp_win;
-}
-else {
-	private import dbi.mysql.imp;
-}
-private import dbi.mysql.MysqlError, dbi.mysql.MysqlPreparedStatement, dbi.mysql.MysqlVirtualStatement;
+private import dbi.mysql.c.mysql;
+private import dbi.mysql.MysqlError, dbi.mysql.MysqlPreparedStatement, dbi.mysql.MysqlVirtualStatement, dbi.mysql.MysqlMetadata;
 import tango.text.Util;
 
 import dbi.util.StringWriter;
@@ -106,6 +101,11 @@ class MysqlDatabase : Database {
 		char[] password = null;
 		uint portNo = 0;
 		if(port.length) portNo = cast(uint)Integer.parse(port);
+		
+		bool useSSL = false;
+		char[] sslKey, sslCert, sslCa, sslCaPath, sslCipher;
+		
+		uint client_flag = CLIENT_MULTI_STATEMENTS;
 
 		void parseKeywords () {
 			char[][char[]] keywords = getKeywords(params, "&");
@@ -118,11 +118,47 @@ class MysqlDatabase : Database {
 			if ("sock" in keywords) {
 				sock = keywords["sock"];
 			}
+			if("allowMultiQueries" in keywords) {
+				if(keywords["allowLoadLocalInfile"] == "false")
+					client_flag &= ~CLIENT_MULTI_STATEMENTS;
+			}
+			if("allowLoadLocalInfile" in keywords) {
+				if(keywords["allowLoadLocalInfile"] == "true")
+					client_flag |= CLIENT_LOCAL_FILES;
+			}
+			if("useCompression" in keywords) {
+				if(keywords["useCompression"] == "true")
+					client_flag |= CLIENT_COMPRESS;
+			}
+			if("useSSL" in keywords) {
+				if(keywords["useSSL"] == "true")
+					useSSL = true;
+			}
+			if ("sslKey" in keywords) {
+				sslKey = keywords["sslKey"];
+			}
+			if ("sslCert" in keywords) {
+				sslCert = keywords["sslCert"];
+			}
+			if ("sslCa" in keywords) {
+				sslCa = keywords["sslCa"];
+			}
+			if ("sslCaPath" in keywords) {
+				sslCaPath = keywords["sslCaPath"];
+			}
+			if ("sslCipher" in keywords) {
+				sslCipher = keywords["sslCipher"];
+			}
 		}
 		
 		parseKeywords;
+		
+		if(useSSL) {
+			mysql_ssl_set(mysql, toCString(sslKey), toCString(sslCert), toCString(sslCa),
+				toCString(sslCaPath), toCString(sslCipher));
+		}
 
-		mysql_real_connect(mysql, toCString(host), toCString(username), toCString(password), toCString(dbname), portNo, toCString(sock), 0);
+		mysql_real_connect(mysql, toCString(host), toCString(username), toCString(password), toCString(dbname), portNo, toCString(sock), client_flag);
 		if (uint error = mysql_errno(mysql)) {
 		        Cout("connect(): ");
 		        Cout(toDString(mysql_error(mysql)));
@@ -192,6 +228,11 @@ class MysqlDatabase : Database {
     	return new MysqlVirtualStatement(sql, getSqlGenerator, mysql);
     }
     
+    bool query2(in char[] sql, ...)
+    {
+    	return false;
+    }
+    	
     alias MysqlPreparedStatement StatementT;
 	alias MysqlVirtualStatement VirtualStatementT;
 	
@@ -324,12 +365,35 @@ class MysqlDatabase : Database {
 	}
     
     MYSQL* handle() { return mysql; }
+    
+    ColumnInfo2[] rowMetadata()
+    {
+        auto fields = mysql_fetch_fields(_result);
+
+        _metadata = new ColumnInfo2[fieldCount];
+        for (ulong i = 0; i < fieldCount; i++) {
+            fromMysqlField(_metadata[i], fields[i]);
+        }
+
+        return _metadata;
+    }
+
+    ulong rowCount() { return mysql_num_rows(_result); }
+    ulong fieldCount() { return mysql_num_fields(_result); }
+    ulong affectedRows() { return mysql_affected_rows(_dbase.connection); }
 
 	package:
 		MYSQL* mysql;
+		ColumnInfo2[] _metadata;
+	    MysqlDatabase _dbase;
+	    MYSQL_RES* _result = null;
+	    MYSQL_ROW _curRow = null;
+		uint* _curLengths = null;
+		ulong _curFieldCount = 0;
 	
 	private:
     	MysqlSqlGenerator mysqlSqlGen;
+    	
 }
 
 class MysqlSqlGenerator : SqlGenerator

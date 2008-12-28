@@ -17,12 +17,7 @@ version(dbi_mysql) {
 	}
 	
 import dbi.DBIException, dbi.mysql.MysqlError;
-version(Windows) {
-	private import dbi.mysql.imp_win;
-}
-else {
-	private import dbi.mysql.imp;
-}
+private import dbi.mysql.c.mysql;
 public import dbi.Statement;
 import dbi.mysql.MysqlMetadata;
 
