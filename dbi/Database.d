@@ -39,7 +39,7 @@ abstract class Database : Result, IStatementProvider {
 	 */
 	abstract void close();	
 	
-	abstract void initQuery(in char[] sql);
+	abstract void initQuery(in char[] sql, bool haveParams);
 	abstract bool doQuery();
 	
 	abstract void setParam(inout bool);
@@ -60,91 +60,94 @@ abstract class Database : Result, IStatementProvider {
 	
 	bool query(Types)(in char[] sql, Types bind)
 	{
-		initQuery(sql);
-		
-		uint idx = 0;
-		foreach(Index, Type; BindTypes)
-		{
-			static if(is(Type : BindInfo))
-	    	{
-				auto bindInfo = cast(Binder)bind[Index];
-				
-				auto ptrs = bindInfo.ptrs;
-	    		foreach(i, type; bindInfo.types)
-	    		{
-	    			switch(type)
-	    			{
-	    			case BindType.Bool:
-	    				bool* ptr = cast(bool*)ptrs[i];
-	    				setParam(*ptr, idx);
-	    				break;
-	    			case BindType.Byte:
-	    				byte* ptr = cast(byte*)ptrs[i];
-	    				setParam(*ptr, idx);
-	    				break;
-	    			case BindType.Short:
-	    				short* ptr = cast(short*)ptrs[i];
-	    				setParam(*ptr, idx);
-	    				break;
-	    			case BindType.Int:
-	    				int* ptr = cast(int*)ptrs[i];
-	    				setParam(*ptr, idx);
-	    				break;
-	    			case BindType.Long:
-	    				long* ptr = cast(long*)ptrs[i];
-	    				setParam(*ptr, idx);
-	    				break;
-	    			case BindType.UByte:
-	    				ubyte* ptr = cast(ubyte*)ptrs[i];
-	    				setParam(*ptr, idx);
-	    				break;
-	    			case BindType.UShort:
-	    				ushort* ptr = cast(ushort*)ptrs[i];
-	    				setParam(*ptr, idx);
-	    				break;
-	    			case BindType.UInt:
-	    				uint* ptr = cast(uint*)ptrs[i];
-	    				setParam(*ptr, idx);
-	    				break;
-	    			case BindType.ULong:
-	    				ulong* ptr = cast(ulong*)ptrs[i];
-	    				setParam(*ptr, idx);
-	    				break;
-	    			case BindType.Float:
-	    				float* ptr = cast(float*)ptrs[i];
-	    				setParam(*ptr, idx);
-	    				break;
-	    			case BindType.Double:
-	    				double* ptr = cast(double*)ptrs[i];
-	    				setParam(*ptr, idx);
-	    				break;
-	    			case BindType.String:
-	    				char[]* ptr = cast(char[]*)ptrs[i];
-	    				setParam(*ptr, idx);
-	    				break;
-	    			case BindType.Binary:
-	    				ubyte[]* ptr = cast(ubyte[]*)ptrs[i];
-	    				setParam(*ptr, idx);
-	    				break;
-	    			case BindType.Time:
-	    				Time* ptr = cast(T.Time*)ptrs[i];
-	    				setParam(*ptr, idx);
-	    				break;
-	    			case BindType.DateTime:
-	    				DateTime* ptr = cast(T.DateTime*)ptrs[i];
-	    				setParam(*ptr, idx);
-	    				break;
-	    			case BindType.Null:
-	    			}
-	    			++idx;
-	    		}
-	    	}
-	    	else {
-	    		setParam(bind[Index], idx);
-	    		++idx;
-	    	}
+		static if(Types.length) {
+			initQuery(sql, true);
+			
+			uint idx = 0;
+			foreach(Index, Type; BindTypes)
+			{
+				static if(is(Type : BindInfo))
+		    	{
+					auto bindInfo = cast(Binder)bind[Index];
+					
+					auto ptrs = bindInfo.ptrs;
+		    		foreach(i, type; bindInfo.types)
+		    		{
+		    			switch(type)
+		    			{
+		    			case BindType.Bool:
+		    				bool* ptr = cast(bool*)ptrs[i];
+		    				setParam(*ptr, idx);
+		    				break;
+		    			case BindType.Byte:
+		    				byte* ptr = cast(byte*)ptrs[i];
+		    				setParam(*ptr, idx);
+		    				break;
+		    			case BindType.Short:
+		    				short* ptr = cast(short*)ptrs[i];
+		    				setParam(*ptr, idx);
+		    				break;
+		    			case BindType.Int:
+		    				int* ptr = cast(int*)ptrs[i];
+		    				setParam(*ptr, idx);
+		    				break;
+		    			case BindType.Long:
+		    				long* ptr = cast(long*)ptrs[i];
+		    				setParam(*ptr, idx);
+		    				break;
+		    			case BindType.UByte:
+		    				ubyte* ptr = cast(ubyte*)ptrs[i];
+		    				setParam(*ptr, idx);
+		    				break;
+		    			case BindType.UShort:
+		    				ushort* ptr = cast(ushort*)ptrs[i];
+		    				setParam(*ptr, idx);
+		    				break;
+		    			case BindType.UInt:
+		    				uint* ptr = cast(uint*)ptrs[i];
+		    				setParam(*ptr, idx);
+		    				break;
+		    			case BindType.ULong:
+		    				ulong* ptr = cast(ulong*)ptrs[i];
+		    				setParam(*ptr, idx);
+		    				break;
+		    			case BindType.Float:
+		    				float* ptr = cast(float*)ptrs[i];
+		    				setParam(*ptr, idx);
+		    				break;
+		    			case BindType.Double:
+		    				double* ptr = cast(double*)ptrs[i];
+		    				setParam(*ptr, idx);
+		    				break;
+		    			case BindType.String:
+		    				char[]* ptr = cast(char[]*)ptrs[i];
+		    				setParam(*ptr, idx);
+		    				break;
+		    			case BindType.Binary:
+		    				ubyte[]* ptr = cast(ubyte[]*)ptrs[i];
+		    				setParam(*ptr, idx);
+		    				break;
+		    			case BindType.Time:
+		    				Time* ptr = cast(T.Time*)ptrs[i];
+		    				setParam(*ptr, idx);
+		    				break;
+		    			case BindType.DateTime:
+		    				DateTime* ptr = cast(T.DateTime*)ptrs[i];
+		    				setParam(*ptr, idx);
+		    				break;
+		    			case BindType.Null:
+		    			}
+		    			++idx;
+		    		}
+		    	}
+		    	else {
+		    		setParam(bind[Index], idx);
+		    		++idx;
+		    	}
+			}
 		}
-		
+		else initQuery(sql, false);
+	
 		return doQuery();
 	}
 		

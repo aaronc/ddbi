@@ -229,19 +229,35 @@ class MysqlDatabase : Database {
 		return new MysqlPreparedStatement(stmt,sql);
 	}
     
-    void initQuery(in char[] sql)
+    void initQuery(in char[] sql, bool haveParams)
     {
     		sql_ = sql;
-    		writer_.reset;
-    		paramIndices_ = getParamIndices(sql);
+    		if(haveParams) {
+    			writer_.reset;
+    			paramIndices_ = getParamIndices(sql);
+    			paramIdx_ = 0;
+    		}
+    		else paramIndices_ = null;
     		writerIdx_ = 0;
-    		paramIdx_ = 0;
     }
     
 	bool doQuery()
 	{
-		writer_ ~= sql_[writerIdx_ .. $];
-		return false;
+		char[] querySql;
+		if(!paramIndices_.length) querySql = sql_;
+		else {
+			writer_ ~= sql_[writerIdx_ .. $];
+			querySql = writer_.get;
+		}
+				
+		int error = mysql_real_query(mysql, querySql.ptr, querySql.length);
+		if (error) {
+			throw new DBIException("mysql_real_query error: " ~ toDString(mysql_error(mysql)), querySql, error, specificToGeneral(error));
+		}
+		
+		result_ = mysql_store_result(mysql);
+		getMysqlFieldInfo;
+		return true;
 	}
 	
 	private char[] sql_;
@@ -260,7 +276,7 @@ class MysqlDatabase : Database {
 		++paramIdx_;
 	}
 	
-	void setParam(inout bool val);
+	void setParam(inout bool val) { stepWrite_; if(val) writer_ ~= "1"; else writer_ ~= "0"; }
 	void setParam(inout ubyte val) { stepWrite_; writer_ ~= Integer.toString(val); }
 	void setParam(inout byte val) { stepWrite_; writer_ ~= Integer.toString(val); }
 	void setParam(inout ushort val) { stepWrite_; writer_ ~= Integer.toString(val); }
@@ -475,6 +491,8 @@ class MysqlDatabase : Database {
     
     MYSQL_FIELD[] getMysqlFieldInfo()
     {
+    	if(result_ is null) return null;
+    
     	auto len = mysql_num_fields(result_);
         fields_ = mysql_fetch_fields(result_)[0..len];
         return fields_;
