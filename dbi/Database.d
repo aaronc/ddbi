@@ -38,8 +38,116 @@ abstract class Database : Result, IStatementProvider {
 	 * Close the current connection to the database.
 	 */
 	abstract void close();	
-	abstract bool query(in char[] sql, ...);
 	
+	abstract void initQuery(in char[] sql);
+	abstract bool doQuery();
+	
+	abstract void setParam(inout bool);
+	abstract void setParam(inout ubyte);
+	abstract void setParam(inout byte);
+	abstract void setParam(inout ushort);
+	abstract void setParam(inout short);
+	abstract void setParam(inout uint);
+	abstract void setParam(inout int);
+	abstract void setParam(inout ulong);
+	abstract void setParam(inout long);
+	abstract void setParam(inout float);
+	abstract void setParam(inout double);
+	abstract void setParam(inout char[]);
+	abstract void setParam(inout ubyte[]);
+	abstract void setParam(inout Time);
+	abstract void setParam(inout DateTime);
+	
+	bool query(Types)(in char[] sql, Types bind)
+	{
+		initQuery(sql);
+		
+		uint idx = 0;
+		foreach(Index, Type; BindTypes)
+		{
+			static if(is(Type : BindInfo))
+	    	{
+				auto bindInfo = cast(Binder)bind[Index];
+				
+				auto ptrs = bindInfo.ptrs;
+	    		foreach(i, type; bindInfo.types)
+	    		{
+	    			switch(type)
+	    			{
+	    			case BindType.Bool:
+	    				bool* ptr = cast(bool*)ptrs[i];
+	    				setParam(*ptr, idx);
+	    				break;
+	    			case BindType.Byte:
+	    				byte* ptr = cast(byte*)ptrs[i];
+	    				setParam(*ptr, idx);
+	    				break;
+	    			case BindType.Short:
+	    				short* ptr = cast(short*)ptrs[i];
+	    				setParam(*ptr, idx);
+	    				break;
+	    			case BindType.Int:
+	    				int* ptr = cast(int*)ptrs[i];
+	    				setParam(*ptr, idx);
+	    				break;
+	    			case BindType.Long:
+	    				long* ptr = cast(long*)ptrs[i];
+	    				setParam(*ptr, idx);
+	    				break;
+	    			case BindType.UByte:
+	    				ubyte* ptr = cast(ubyte*)ptrs[i];
+	    				setParam(*ptr, idx);
+	    				break;
+	    			case BindType.UShort:
+	    				ushort* ptr = cast(ushort*)ptrs[i];
+	    				setParam(*ptr, idx);
+	    				break;
+	    			case BindType.UInt:
+	    				uint* ptr = cast(uint*)ptrs[i];
+	    				setParam(*ptr, idx);
+	    				break;
+	    			case BindType.ULong:
+	    				ulong* ptr = cast(ulong*)ptrs[i];
+	    				setParam(*ptr, idx);
+	    				break;
+	    			case BindType.Float:
+	    				float* ptr = cast(float*)ptrs[i];
+	    				setParam(*ptr, idx);
+	    				break;
+	    			case BindType.Double:
+	    				double* ptr = cast(double*)ptrs[i];
+	    				setParam(*ptr, idx);
+	    				break;
+	    			case BindType.String:
+	    				char[]* ptr = cast(char[]*)ptrs[i];
+	    				setParam(*ptr, idx);
+	    				break;
+	    			case BindType.Binary:
+	    				ubyte[]* ptr = cast(ubyte[]*)ptrs[i];
+	    				setParam(*ptr, idx);
+	    				break;
+	    			case BindType.Time:
+	    				Time* ptr = cast(T.Time*)ptrs[i];
+	    				setParam(*ptr, idx);
+	    				break;
+	    			case BindType.DateTime:
+	    				DateTime* ptr = cast(T.DateTime*)ptrs[i];
+	    				setParam(*ptr, idx);
+	    				break;
+	    			case BindType.Null:
+	    			}
+	    			++idx;
+	    		}
+	    	}
+	    	else {
+	    		setParam(bind[Index], idx);
+	    		++idx;
+	    	}
+		}
+		
+		return doQuery();
+	}
+		
 	Statement prepare(char[] sql)
 	{
 		auto pSt = sql in cachedStatements;

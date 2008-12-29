@@ -10,6 +10,8 @@ import tango.stdc.stringz : toDString = fromStringz, toCString = toStringz;
 import tango.io.Console;
 static import tango.text.Util;
 import Integer = tango.text.convert.Integer;
+import Float = tango.text.convert.Float;
+import tango.time.Time;
 debug(UnitTest) import tango.io.Stdout;
 
 public import dbi.Database;
@@ -17,6 +19,7 @@ import dbi.DBIException, dbi.Statement, dbi.Registry;
 import dbi.mysql.c.mysql;
 import dbi.mysql.MysqlError, dbi.mysql.MysqlPreparedStatement,
 	dbi.mysql.MysqlMetadata, dbi.mysql.MysqlConvert;
+import dbi.util.DateTime, dbi.util.VirtualPrepare;
 import tango.text.Util;
 
 debug import tango.util.log.Log;
@@ -56,6 +59,7 @@ class MysqlDatabase : Database {
 	 */
 	this () {
 		mysql = mysql_init(null);
+		writer_ = new DisposableStringWriter(5000);
 	}
 
 	/**
@@ -225,11 +229,84 @@ class MysqlDatabase : Database {
 		return new MysqlPreparedStatement(stmt,sql);
 	}
     
-    bool query(in char[] sql, ...)
+    void initQuery(in char[] sql)
     {
-    	return false;
+    		sql_ = sql;
+    		writer_.reset;
+    		paramIndices_ = getParamIndices(sql);
+    		writerIdx_ = 0;
+    		paramIdx_ = 0;
     }
-    	
+    
+	bool doQuery()
+	{
+		writer_ ~= sql_[writerIdx_ .. $];
+		return false;
+	}
+	
+	private char[] sql_;
+	private DisposableStringWriter writer_;
+	private size_t[] paramIndices_;
+	private size_t writerIdx_, paramIdx_;
+	
+	private void stepWrite_()
+	{
+		if(paramIdx_ >= paramIndices_.length) {
+			throw new DBIException("Parameter index is out of bounds, index:"
+				~ Integer.toString(paramIdx_), sql_);
+		}
+		writer_ ~= sql_[writerIdx_ .. paramIndices_[paramIdx_]];
+		writerIdx_ = paramIndices_[paramIdx_] + 1;
+		++paramIdx_;
+	}
+	
+	void setParam(inout bool val);
+	void setParam(inout ubyte val) { stepWrite_; writer_ ~= Integer.toString(val); }
+	void setParam(inout byte val) { stepWrite_; writer_ ~= Integer.toString(val); }
+	void setParam(inout ushort val) { stepWrite_; writer_ ~= Integer.toString(val); }
+	void setParam(inout short val) { stepWrite_; writer_ ~= Integer.toString(val); }
+	void setParam(inout uint val) { stepWrite_; writer_ ~= Integer.toString(val); }
+	void setParam(inout int val) { stepWrite_; writer_ ~= Integer.toString(val); }
+	void setParam(inout ulong val) { stepWrite_; writer_ ~= Integer.toString(val); }
+	void setParam(inout long val) { stepWrite_; writer_ ~= Integer.toString(val); }
+	void setParam(inout float val) { stepWrite_; writer_ ~= Float.toString(val); }
+	void setParam(inout double val) { stepWrite_; writer_ ~= Float.toString(val); }
+	void setParam(inout char[] val)
+	{
+		stepWrite_;
+		writer_ ~= "\'";
+		auto buf = writer_.forwardReserve(val.length * 2 + 1); 
+		auto resLen = mysql_real_escape_string(mysql, buf.ptr, val.ptr, val.length);
+		writer_.forwardAdvance(resLen);
+		writer_ ~= "\'";
+	}
+	
+	void setParam(inout ubyte[] val)
+	{
+		stepWrite_;
+		writer_ ~= "0x";
+		auto buf = writer_.forwardReserve(val.length * 2 + 1); 
+		auto resLen = mysql_hex_string(buf.ptr, cast(char*)val.ptr, val.length);
+		writer_.forwardAdvance(resLen);
+	}
+	
+	void setParam(inout Time val)
+	{
+		auto dt = Clock.toDate(val);
+		writer_ ~= "\'";
+		auto res = writer_.getWriteBuffer(19);
+		printDateTime(dt, res);
+		writer_ ~= "\'";
+	}
+	
+	void setParam(inout DateTime val)
+	{
+		writer_ ~= "\'";
+		auto res = writer_.getWriteBuffer(19);
+		printDateTime(val, res);
+		writer_ ~= "\'";
+	}
+	
     alias MysqlPreparedStatement StatementT;
 	
 	void beginTransact()
