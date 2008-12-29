@@ -44,21 +44,21 @@ abstract class Database : Result, IStatementProvider {
 	abstract void initQuery(in char[] sql, bool haveParams);
 	abstract bool doQuery();
 	
-	abstract void setParam(inout bool);
-	abstract void setParam(inout ubyte);
-	abstract void setParam(inout byte);
-	abstract void setParam(inout ushort);
-	abstract void setParam(inout short);
-	abstract void setParam(inout uint);
-	abstract void setParam(inout int);
-	abstract void setParam(inout ulong);
-	abstract void setParam(inout long);
-	abstract void setParam(inout float);
-	abstract void setParam(inout double);
-	abstract void setParam(inout char[]);
-	abstract void setParam(inout ubyte[]);
-	abstract void setParam(inout Time);
-	abstract void setParam(inout DateTime);
+	abstract void setParam(bool);
+	abstract void setParam(ubyte);
+	abstract void setParam(byte);
+	abstract void setParam(ushort);
+	abstract void setParam(short);
+	abstract void setParam(uint);
+	abstract void setParam(int);
+	abstract void setParam(ulong);
+	abstract void setParam(long);
+	abstract void setParam(float);
+	abstract void setParam(double);
+	abstract void setParam(char[]);
+	abstract void setParam(ubyte[]);
+	abstract void setParam(Time);
+	abstract void setParam(DateTime);
 	
 	bool query(Types...)(in char[] sql, Types bind)
 	{
@@ -461,11 +461,11 @@ debug(DBITest) {
 		{
 			ubyte[] b = [0,1,2,3,4];
 			//assert(db.query("UPDATE `dbi_test` SET `binary` = ? WHERE `id` = ?", b, 1));
-			assert(db.query("UPDATE `dbi_test` SET `binary` = 0x1234 WHERE `id` = 1"));
+			assert(db.query("UPDATE `dbi_test` SET `binary` = ? WHERE `id` = ?", b, 1));
 			
 			assert(db.query("SELECT `id`, `name`, `dateofbirth`, `binary` FROM `dbi_test` WHERE `id` = ?", 1));
 			uint id; char[] name, dateofbirth; ubyte[] binary;
-			while(db.fetchRow(id, name, dateofbirth)) {
+			while(db.fetchRow(id, name, dateofbirth, binary)) {
 				Stdout.formatln("id:{}, name:{}, dateofbirth: {}, binary: {}", id, name, dateofbirth, binary);
 			}
 		}

@@ -243,11 +243,13 @@ class MysqlDatabase : Database {
     
 	bool doQuery()
 	{
-		char[] querySql;
+		char[] querySql = null;
 		if(!paramIndices_.length) querySql = sql_;
 		else {
 			writer_ ~= sql_[writerIdx_ .. $];
+			writer_ ~= "\0";
 			querySql = writer_.get;
+			querySql.length = writer_.get.length;
 		}
 		
 		debug log.trace("Querying with sql: {}", querySql);
@@ -278,18 +280,18 @@ class MysqlDatabase : Database {
 		++paramIdx_;
 	}
 	
-	void setParam(inout bool val) { stepWrite_; if(val) writer_ ~= "1"; else writer_ ~= "0"; }
-	void setParam(inout ubyte val) { stepWrite_; writer_ ~= Integer.toString(val); }
-	void setParam(inout byte val) { stepWrite_; writer_ ~= Integer.toString(val); }
-	void setParam(inout ushort val) { stepWrite_; writer_ ~= Integer.toString(val); }
-	void setParam(inout short val) { stepWrite_; writer_ ~= Integer.toString(val); }
-	void setParam(inout uint val) { stepWrite_; writer_ ~= Integer.toString(val); }
-	void setParam(inout int val) { stepWrite_; writer_ ~= Integer.toString(val); }
-	void setParam(inout ulong val) { stepWrite_; writer_ ~= Integer.toString(val); }
-	void setParam(inout long val) { stepWrite_; writer_ ~= Integer.toString(val); }
-	void setParam(inout float val) { stepWrite_; writer_ ~= Float.toString(val); }
-	void setParam(inout double val) { stepWrite_; writer_ ~= Float.toString(val); }
-	void setParam(inout char[] val)
+	void setParam(bool val) { stepWrite_; if(val) writer_ ~= "1"; else writer_ ~= "0"; }
+	void setParam(ubyte val) { stepWrite_; writer_ ~= Integer.toString(val); }
+	void setParam(byte val) { stepWrite_; writer_ ~= Integer.toString(val); }
+	void setParam(ushort val) { stepWrite_; writer_ ~= Integer.toString(val); }
+	void setParam(short val) { stepWrite_; writer_ ~= Integer.toString(val); }
+	void setParam(uint val) { stepWrite_; writer_ ~= Integer.toString(val); }
+	void setParam(int val) { stepWrite_; writer_ ~= Integer.toString(val); }
+	void setParam(ulong val) { stepWrite_; writer_ ~= Integer.toString(val); }
+	void setParam(long val) { stepWrite_; writer_ ~= Integer.toString(val); }
+	void setParam(float val) { stepWrite_; writer_ ~= Float.toString(val); }
+	void setParam(double val) { stepWrite_; writer_ ~= Float.toString(val); }
+	void setParam(char[] val)
 	{
 		stepWrite_;
 		writer_ ~= "\'";
@@ -299,16 +301,17 @@ class MysqlDatabase : Database {
 		writer_ ~= "\'";
 	}
 	
-	void setParam(inout ubyte[] val)
+	void setParam(ubyte[] val)
 	{
-		stepWrite_;
+		/+stepWrite_;
 		writer_ ~= "0x";
 		auto buf = writer_.forwardReserve(val.length * 2 + 1); 
 		auto resLen = mysql_hex_string(buf.ptr, cast(char*)val.ptr, val.length);
-		writer_.forwardAdvance(resLen);
+		writer_.forwardAdvance(resLen);+/
+		setParam(cast(char[])val);
 	}
 	
-	void setParam(inout Time val)
+	void setParam(Time val)
 	{
 		auto dt = Clock.toDate(val);
 		writer_ ~= "\'";
@@ -317,7 +320,7 @@ class MysqlDatabase : Database {
 		writer_ ~= "\'";
 	}
 	
-	void setParam(inout DateTime val)
+	void setParam(DateTime val)
 	{
 		writer_ ~= "\'";
 		auto res = writer_.getWriteBuffer(19);
@@ -549,6 +552,8 @@ class MysqlDatabase : Database {
 	{
 		if(curRow_ is null) return false;
 		if(fields_.length <= idx || curRow_[idx] is null) return false;
+		/+debug log.trace("Binding Mysql res field #{}, type {}, length {}, val {}",
+			idx, fields_[idx].type, curLengths_[idx], curRow_[idx][0..curLengths_[idx]]);+/
 		bindMysqlResField(curRow_[idx][0..curLengths_[idx]],fields_[idx].type, val);
 		return true;
 	}

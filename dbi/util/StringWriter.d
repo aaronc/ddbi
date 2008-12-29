@@ -113,8 +113,9 @@ class DisposableStringWriter_(bool AllowCustomAlloc = false) : IDisposableString
 	
 	void reset()
 	{
-		if(buffer.length) free;
-		buffer = (cast(char*)alloc(growSize))[0 .. growSize];
+		/+if(buffer.length) free;
+		buffer = (cast(char*)alloc(growSize))[0 .. growSize];+/
+		used = 0;
 	}
 	
 	void free()
