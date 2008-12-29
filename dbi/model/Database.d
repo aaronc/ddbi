@@ -412,8 +412,11 @@ debug(DBITest) {
 				assert(abs(dataCopy.d - data.d) < 0.0000001);
 				assert(dataCopy.str == data.str);
 				assert(dataCopy.binary == data.binary);
-				//assert(dataCopy.dt == data.dt);
-				//assert(dataCopy.t == data.t);
+				assert(dataCopy.dt.date.year == data.dt.date.year);
+				assert(dataCopy.dt.date.month == data.dt.date.month);
+				assert(dataCopy.dt.date.day == data.dt.date.day);
+				assert(dataCopy.dt.time.hours == data.dt.time.hours);
+				assert(abs((dataCopy.t - data.t).ticks) < TimeSpan.seconds(1).ticks);
 			}
 			
 			while(st.fetch(id, dataCopy.ub,dataCopy.b,dataCopy.us,dataCopy.s,dataCopy.ui,dataCopy.i,
