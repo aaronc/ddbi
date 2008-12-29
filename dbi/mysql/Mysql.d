@@ -188,26 +188,6 @@ class Mysql : Database {
 		mysqlSqlGen = null;
 	}
 	
-	/+void execute(char[] sql)
-	{
-		int error = mysql_real_query(mysql, sql.ptr, sql.length);
-		if (error) {
-		        Cout("execute(): ");
-		        Cout(toDString(mysql_error(mysql)));
-		        Cout("\n").flush;			
-		        throw new DBIException("Unable to execute a command on the MySQL database.", sql, error, specificToGeneral(error));
-		}
-	}
-	
-	void execute(char[] sql, BindType[] paramTypes, void*[] ptrs)
-	{
-		auto execSql = new DisposableStringWriter(sql.length * 2);
-		virtualBind(sql, paramTypes, ptrs, this.getSqlGenerator, execSql);
-		execute(execSql.get);
-		execSql.free;
-		delete execSql;
-	}+/
-        
     MysqlStatement doPrepare(char[] sql)
 	{
 		MYSQL_STMT* stmt = mysql_stmt_init(mysql);
@@ -301,11 +281,11 @@ class Mysql : Database {
 	
 	void setParam(Time val)
 	{
+		stepWrite_;
 		DateTime dateTime;
 		Gregorian.generic.split(val, dateTime.date.year, dateTime.date.month, 
 			dateTime.date.day, dateTime.date.doy, dateTime.date.dow, dateTime.date.era);
 		dateTime.time = val.time;
-		//auto dt = Clock.toDate(val);
 		writer_ ~= "\'";
 		auto res = writer_.getWriteBuffer(19);
 		printDateTime(dateTime, res);
@@ -314,10 +294,16 @@ class Mysql : Database {
 	
 	void setParam(DateTime val)
 	{
+		stepWrite_;
 		writer_ ~= "\'";
 		auto res = writer_.getWriteBuffer(19);
 		printDateTime(val, res);
 		writer_ ~= "\'";
+	}
+	
+	ulong lastInsertID()
+	{
+		return mysql_insert_id(mysql);
 	}
 	
     alias MysqlStatement StatementT;
@@ -665,71 +651,6 @@ private class MysqlRegister : IRegisterable {
 		}
 		return new Mysql(host, port, dbname, params);
 	}
-}
-
-
-
-debug(DBITest) {
-unittest {
-
-    void s1 (char[] s) {
-        tango.io.Stdout.Stdout(s).newline();
-    }
-
-    void s2 (char[] s) {
-        tango.io.Stdout.Stdout("   ..." ~ s).newline();
-    }
-
-	s1("dbi.mysql.MysqlDatabase:");
-	auto db = new Mysql();
-/+	s2("connect");
-	db.connect("dbname=test", "test", "test");
-
-	s2("query");
-	Result res = db.query("SELECT * FROM test");
-	assert (res !is null);
-
-	s2("fetchRow");
-	Row row = res.fetchRow();
-	assert (row !is null);
-	assert (row.getFieldIndex("id") == 0);
-	assert (row.getFieldIndex("name") == 1);
-	assert (row.getFieldIndex("dateofbirth") == 2);
-	assert (row.get("id") == "1");
-	assert (row.get("name") == "John Doe");
-	assert (row.get("dateofbirth") == "1970-01-01");
-	/** Todo: MySQL type retrieval is not functioning */
-	//assert (row.getFieldType(1) == FIELD_TYPE_STRING);
-	//assert (row.getFieldDecl(1) == "char(40)");
-	res.finish();
-
-	s2("prepare");
-	Statement stmt = db.prepare("SELECT * FROM test WHERE id = ?");
-	stmt.bind(1, "1");
-	res = stmt.query();
-	row = res.fetchRow();
-	res.finish();
-	assert (row[0] == "1");
-
-	s2("fetchOne");
-	row = db.queryFetchOne("SELECT * FROM test");
-	assert (row[0] == "1");
-
-	s2("execute(INSERT)");
-	db.execute("INSERT INTO test VALUES (2, 'Jane Doe', '2000-12-31')");
-
-	s2("execute(DELETE via prepare statement)");
-	stmt = db.prepare("DELETE FROM test WHERE id=?");
-	stmt.bind(1, "2");
-	stmt.execute();
-
-	s2("close");
-	db.close();+/
-    auto sqlgen = db.getSqlGenerator;
-    auto res = sqlgen.makeInsertSql("user", ["name", "date"]);
-	assert(res == "INSERT INTO `user` (`name`,`date`) VALUES(?,?)", res);
-}
-
 }
 
 debug(DBITest) {

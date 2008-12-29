@@ -152,6 +152,8 @@ abstract class Database : Result, IStatementProvider {
 	}
 	
 	alias query execute;
+	
+	abstract ulong lastInsertID();
 		
 	Statement prepare(char[] sql)
 	{
@@ -254,6 +256,7 @@ debug(DBITest) {
 
 	import DBIErrorCode = dbi.ErrorCode;
 	import tango.math.Math;
+	import tango.time.Clock;
 	
 	class DBTest
 	{		
@@ -299,7 +302,8 @@ debug(DBITest) {
 		{
 			setup;
 			
-			insertWithStatement;
+			initData;
+			insert;
 			
 			dbTests;
 			teardown;
@@ -323,30 +327,26 @@ debug(DBITest) {
 		
 		struct Data
 		{
-			ubyte ub = 1;
-			byte b = -56;
-			ushort us = 15764;
-			short s = -5076;
-			uint ui = 102389625;
-			int i = -400000;
-			ulong ul = 218356735475;
-			long l = -2358780732897345;
-			float f = 5.235689;
-			double d = 72523643.3458612319;
-			char[] str = "test test test test test";
-			ubyte[] binary = [0,1,2,3,4,5,6,7,8,9,10];
+			ubyte ub;
+			byte b;
+			ushort us;
+			short s;
+			uint ui;
+			int i;
+			ulong ul;
+			long l;
+			float f;
+			double d;
+			char[] str;
+			ubyte[] binary;
 			DateTime dt;
 			Time t;
 		}
 		
-		void insertWithStatement()
+		Data data;
+		
+		void initData()
 		{
-			auto sql = db.sqlGen.makeInsertSql("dbi_test",
-				["UByte", "Byte", "UShort", "Short", "UInt", "Int",
-				 "ULong", "Long", "Float", "Double",
-				 "String", "Binary", "DateTime", "Time"]);
-			auto st = db.prepare(sql);
-			Data data;
 			data.ub = 1;
 			data.b = -56;
 			data.us = 15764;
@@ -358,11 +358,31 @@ debug(DBITest) {
 			data.f = 5.235689;
 			data.d = 72523643.3458612319;
 			data.str = "test test test test test";
-			data.binary = [0,1,2,3,4,5,6,7,8,9,10];
-			/+data.dt;
-			data.t;+/
+			data.binary = [0,1,2,3,4,5,6,8,9,10];
+			data.dt.date.year = 2008;
+			data.dt.date.month = 1;
+			data.dt.date.day = 1;
+			data.dt.time.hours = 12;
+			data.t = Clock.now;
+		}
+		
+		void insert()
+		{
+			auto sql = db.sqlGen.makeInsertSql("dbi_test",
+				["UByte", "Byte", "UShort", "Short", "UInt", "Int",
+				 "ULong", "Long", "Float", "Double",
+				 "String", "Binary", "DateTime", "Time"]);
+			auto st = db.prepare(sql);
+			
 			st.execute(data.ub,data.b,data.us,data.s,data.ui,data.i,
 				data.ul,data.l,data.f,data.d,data.str,data.binary,data.dt,data.t);
+			assert(st.affectedRows == 1);
+			assert(db.lastInsertID == 1);
+			assert(db.execute(sql,data.ub,data.b,data.us,data.s,data.ui,data.i,
+				data.ul,data.l,data.f,data.d,data.str,data.binary,data.dt,data.t));
+			assert(db.affectedRows == 1);
+			assert(db.lastInsertID == 2);
+			
 		}
 		/+
 		Statement prepare(char[] sql)

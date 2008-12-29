@@ -7,14 +7,14 @@ version(dbi_mysql) {
 	static import tango.text.Util;
 	import Integer = tango.text.convert.Integer;
 	import tango.time.chrono.Gregorian;
-	debug(UnitTest) {
+	debug(DBITest) {
 		import tango.stdc.stringz;
 		import tango.io.Stdout;
 		debug = Log;
 	}
 	debug(Log) {
-		import tango.util.log.ConsoleAppender;
 		import tango.util.log.Log;
+		import tango.util.log.ConsoleAppender;
 	}
 	
 import dbi.Exception, dbi.mysql.MysqlError;
@@ -274,7 +274,7 @@ class MysqlStatement : Statement
 		return mysql_stmt_affected_rows(stmt);
 	}
 	
-	ulong getLastInsertID()
+	ulong lastInsertID()
 	{
 		return mysql_stmt_insert_id(stmt);
 	}
@@ -450,76 +450,5 @@ class MysqlStatement : Statement
 		}
 	}
 }
-/+
-debug(UnitTest) {
-	
-import dbi.Registry;
 
-unittest
-{
-	//auto db = new MysqlDatabase("localhost", null, "test", "username=test&password=test");
-	auto db = getDatabaseForURL("mysql://localhost/test?username=test&password=test");
-	auto st = db.prepare("SELECT * FROM test WHERE 1");
-	assert(st);
-	assert(st.getParamCount == 0);
-	st.execute();
-	auto metadata = st.getResultMetadata();
-	foreach(f; metadata)
-	{
-		Stdout.formatln("Name:{}, Type:{}", f.name, f.type);
-	}
-	uint id;
-	char[] name;
-	Time dateofbirth;
-	BindType[] resTypes;
-	resTypes ~= BindType.UInt;
-	resTypes ~= BindType.String;
-	resTypes ~= BindType.Time;
-	st.setResultTypes(resTypes);
-	void*[] bind;
-	bind.length = 3;
-	bind[0] = &id;
-	bind[1] = &name;
-	bind[2] = &dateofbirth;
-	st.execute;
-	assert(st.fetch(bind));
-	Stdout.formatln("id:{},name:{},dateofbirth:{}",id,name,dateofbirth.ticks);
-	assert(!st.fetch(bind));
-	
-	auto st2 = db.prepare("SELECT * FROM test WHERE id = \?");
-	assert(st2);
-	BindType[] paramTypes;
-	void*[] pBind;
-	ushort usID = 1;
-	paramTypes ~= BindType.UShort;
-	st2.setParamTypes(paramTypes);
-	st2.setResultTypes(resTypes);
-	pBind ~= &usID;
-	st2.execute(pBind);
-	assert(st2.fetch(bind));
-	Stdout.formatln("id:{},name:{},dateofbirth:{}",id,name,dateofbirth.ticks);
-	st2.reset;
-	
-	assert(db.hasTable("test"));
-	TableInfo ti;
-	assert(db.getTableInfo("test", ti));
-	assert(ti.fieldNames.length == 3);
-	assert(ti.primaryKeyFields.length == 1);
-	foreach(f; ti.fieldNames)
-	{
-		Stdout.formatln("Field Name:{}", f);
-	}
-	
-	foreach(f; ti.primaryKeyFields)
-	{
-		Stdout.formatln("Primary Key:{}", f);
-	}
-	
-	db.close;
-	
-	assert(false);
-}
-
-}
-+/
 }

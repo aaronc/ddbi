@@ -168,7 +168,7 @@ bool parseTimeFixed(char[] src, ref TimeOfDay ts)
 	return true;
 }
 
-debug(UnitTest) {
+debug(DBITest) {
 
 	unittest
 	{

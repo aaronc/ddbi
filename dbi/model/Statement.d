@@ -59,7 +59,7 @@ abstract class Statement
 	bool doFetch(void*[] bind, out bool[] isNull, void* delegate(size_t) allocator = null);
 	void prefetchAll();
 	ulong affectedRows();
-	ulong getLastInsertID();
+	ulong lastInsertID();
 	void reset();
 	
 	package void setCacheProvider(IStatementProvider cacheProvider)

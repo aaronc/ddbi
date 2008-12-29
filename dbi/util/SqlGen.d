@@ -334,7 +334,7 @@ abstract class Serializer
 	abstract bool execute();  
 }
 
-debug(UnitTest) {
+debug(DBITest) {
 
 class TestSqlGen : SqlGenerator
 {
