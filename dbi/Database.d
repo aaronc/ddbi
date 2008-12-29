@@ -57,6 +57,7 @@ abstract class Database : Result, IStatementProvider {
 	abstract void setParam(double);
 	abstract void setParam(char[]);
 	abstract void setParam(ubyte[]);
+	abstract void setParam(void[]);
 	abstract void setParam(Time);
 	abstract void setParam(DateTime);
 	
@@ -459,12 +460,12 @@ debug(DBITest) {
 		
 		void test4()
 		{
-			ubyte[] b = [0,1,2,3,4];
+			void[] b = cast(void[])[0,1,2,3,4];
 			//assert(db.query("UPDATE `dbi_test` SET `binary` = ? WHERE `id` = ?", b, 1));
 			assert(db.query("UPDATE `dbi_test` SET `binary` = ? WHERE `id` = ?", b, 1));
 			
 			assert(db.query("SELECT `id`, `name`, `dateofbirth`, `binary` FROM `dbi_test` WHERE `id` = ?", 1));
-			uint id; char[] name, dateofbirth; ubyte[] binary;
+			uint id; char[] name, dateofbirth; void[] binary;
 			while(db.fetchRow(id, name, dateofbirth, binary)) {
 				Stdout.formatln("id:{}, name:{}, dateofbirth: {}, binary: {}", id, name, dateofbirth, binary);
 			}

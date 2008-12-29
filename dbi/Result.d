@@ -43,6 +43,7 @@ abstract class Result
 	abstract bool getField(inout double, size_t idx);
 	abstract bool getField(inout char[], size_t idx);
 	abstract bool getField(inout ubyte[], size_t idx);
+	abstract bool getField(inout void[], size_t idx);
 	abstract bool getField(inout Time, size_t idx);
 	abstract bool getField(inout DateTime, size_t idx);
 	

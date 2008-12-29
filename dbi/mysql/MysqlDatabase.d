@@ -301,15 +301,8 @@ class MysqlDatabase : Database {
 		writer_ ~= "\'";
 	}
 	
-	void setParam(ubyte[] val)
-	{
-		/+stepWrite_;
-		writer_ ~= "0x";
-		auto buf = writer_.forwardReserve(val.length * 2 + 1); 
-		auto resLen = mysql_hex_string(buf.ptr, cast(char*)val.ptr, val.length);
-		writer_.forwardAdvance(resLen);+/
-		setParam(cast(char[])val);
-	}
+	void setParam(ubyte[] val) { setParam(cast(char[])val); }
+	void setParam(void[] val) { setParam(cast(char[])val); }
 	
 	void setParam(Time val)
 	{
@@ -545,6 +538,7 @@ class MysqlDatabase : Database {
 	bool getField(inout double val, size_t idx) { return bindField(val, idx); }
 	bool getField(inout char[] val, size_t idx) { return bindField(val, idx); }
 	bool getField(inout ubyte[] val, size_t idx) { return bindField(val, idx); }
+	bool getField(inout void[] val, size_t idx) { return bindField(val, idx); }
 	bool getField(inout Time val, size_t idx) { return bindField(val, idx); }
 	bool getField(inout DateTime val, size_t idx) { return bindField(val, idx); }
 	
