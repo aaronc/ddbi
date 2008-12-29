@@ -293,11 +293,6 @@ class MysqlPreparedStatement : Statement
 	    }
 	}
 	
-	~this()
-	{
-        close;
-	}
-	
 	private MYSQL_STMT* stmt;
 	private MYSQL_BIND[] paramBind;
 	private BindingHelper paramHelper;

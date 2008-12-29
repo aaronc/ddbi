@@ -53,14 +53,9 @@ abstract class Result
 		uint idx = 0;
 		foreach(Index, Type; BindTypes)
 		{
-			static if(is(Type : BindInfo) || is(Type : INullableBinder))
+			static if(is(Type : BindInfo))
 	    	{
-				static if(is(Type : INullableBinder)) {
-					auto binder = cast(INullableBinder)bind[Index];
-					assert(binder !is null);
-					auto bindInfo = binder.bindInfo;
-				}
-				else auto bindInfo = cast(Binder)bind[Index];
+				auto bindInfo = cast(BindInfo)bind[Index];
 				
 				auto ptrs = bindInfo.ptrs;
 				bool res;
@@ -130,8 +125,6 @@ abstract class Result
 	    				break;
 	    			case BindType.Null:
 	    			}
-	    			static if(is(Type : INullableBinder))
-	    				if(!res) binder.setNull(i);
 	    			++idx;
 	    		}
 	    	}

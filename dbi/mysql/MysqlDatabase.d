@@ -249,6 +249,8 @@ class MysqlDatabase : Database {
 			writer_ ~= sql_[writerIdx_ .. $];
 			querySql = writer_.get;
 		}
+		
+		debug log.trace("Querying with sql: {}", querySql);
 				
 		int error = mysql_real_query(mysql, querySql.ptr, querySql.length);
 		if (error) {

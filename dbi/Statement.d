@@ -70,8 +70,8 @@ abstract class Statement
 	
 	void close()
 	{
-		if(cacheProvider_) {
-			cacheProvider_.uncacheStatement(this.sql_);
+		if(cacheProvider_ !is null) {
+			//cacheProvider_.uncacheStatement(this);
 		}
 	}
 	

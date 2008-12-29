@@ -31,6 +31,8 @@ abstract class Database : Result, IStatementProvider {
 	 * so it is HIGHLY recommended that you close connections manually.
 	 */
 	~this () {
+		/+foreach(key, st; cachedStatements)
+			st.close;+/
 		close();
 	}
 
@@ -58,13 +60,12 @@ abstract class Database : Result, IStatementProvider {
 	abstract void setParam(inout Time);
 	abstract void setParam(inout DateTime);
 	
-	bool query(Types)(in char[] sql, Types bind)
+	bool query(Types...)(in char[] sql, Types bind)
 	{
 		static if(Types.length) {
 			initQuery(sql, true);
 			
-			uint idx = 0;
-			foreach(Index, Type; BindTypes)
+			foreach(Index, Type; Types)
 			{
 				static if(is(Type : BindInfo))
 		    	{
@@ -77,72 +78,70 @@ abstract class Database : Result, IStatementProvider {
 		    			{
 		    			case BindType.Bool:
 		    				bool* ptr = cast(bool*)ptrs[i];
-		    				setParam(*ptr, idx);
+		    				setParam(*ptr);
 		    				break;
 		    			case BindType.Byte:
 		    				byte* ptr = cast(byte*)ptrs[i];
-		    				setParam(*ptr, idx);
+		    				setParam(*ptr);
 		    				break;
 		    			case BindType.Short:
 		    				short* ptr = cast(short*)ptrs[i];
-		    				setParam(*ptr, idx);
+		    				setParam(*ptr);
 		    				break;
 		    			case BindType.Int:
 		    				int* ptr = cast(int*)ptrs[i];
-		    				setParam(*ptr, idx);
+		    				setParam(*ptr);
 		    				break;
 		    			case BindType.Long:
 		    				long* ptr = cast(long*)ptrs[i];
-		    				setParam(*ptr, idx);
+		    				setParam(*ptr);
 		    				break;
 		    			case BindType.UByte:
 		    				ubyte* ptr = cast(ubyte*)ptrs[i];
-		    				setParam(*ptr, idx);
+		    				setParam(*ptr);
 		    				break;
 		    			case BindType.UShort:
 		    				ushort* ptr = cast(ushort*)ptrs[i];
-		    				setParam(*ptr, idx);
+		    				setParam(*ptr);
 		    				break;
 		    			case BindType.UInt:
 		    				uint* ptr = cast(uint*)ptrs[i];
-		    				setParam(*ptr, idx);
+		    				setParam(*ptr);
 		    				break;
 		    			case BindType.ULong:
 		    				ulong* ptr = cast(ulong*)ptrs[i];
-		    				setParam(*ptr, idx);
+		    				setParam(*ptr);
 		    				break;
 		    			case BindType.Float:
 		    				float* ptr = cast(float*)ptrs[i];
-		    				setParam(*ptr, idx);
+		    				setParam(*ptr);
 		    				break;
 		    			case BindType.Double:
 		    				double* ptr = cast(double*)ptrs[i];
-		    				setParam(*ptr, idx);
+		    				setParam(*ptr);
 		    				break;
 		    			case BindType.String:
 		    				char[]* ptr = cast(char[]*)ptrs[i];
-		    				setParam(*ptr, idx);
+		    				setParam(*ptr);
 		    				break;
 		    			case BindType.Binary:
 		    				ubyte[]* ptr = cast(ubyte[]*)ptrs[i];
-		    				setParam(*ptr, idx);
+		    				setParam(*ptr);
 		    				break;
 		    			case BindType.Time:
 		    				Time* ptr = cast(T.Time*)ptrs[i];
-		    				setParam(*ptr, idx);
+		    				setParam(*ptr);
 		    				break;
 		    			case BindType.DateTime:
 		    				DateTime* ptr = cast(T.DateTime*)ptrs[i];
-		    				setParam(*ptr, idx);
+		    				setParam(*ptr);
 		    				break;
 		    			case BindType.Null:
 		    			}
-		    			++idx;
 		    		}
 		    	}
 		    	else {
-		    		setParam(bind[Index], idx);
-		    		++idx;
+		    		setParam(bind[Index]);
 		    	}
 			}
 		}
@@ -150,6 +149,8 @@ abstract class Database : Result, IStatementProvider {
 	
 		return doQuery();
 	}
+	
+	alias query execute;
 		
 	Statement prepare(char[] sql)
 	{
@@ -175,7 +176,7 @@ abstract class Database : Result, IStatementProvider {
 	{
 		auto pSt = sql in cachedStatements;
 		if(pSt) {
-			return *pSt;
+			cachedStatements.remove(sql);
 		}
 	}
 	//abstract char[] writeHexString(in ubyte[] binary, char[] dst = null);
@@ -312,6 +313,7 @@ debug(DBITest) {
 			test2;
 			//test3;
 			testMetadata;
+			test4;
 			dbTests;
 			teardown;
 		}
@@ -433,7 +435,8 @@ debug(DBITest) {
 			
 			auto t2 = new Test;
 			
-			assert(st2.fetch(t2.bind));
+			bool[] isNull;
+			assert(st2.doFetch(t2.bind, isNull));
 			
 			assert(t2.id == t1.id);
 			assert(t2.name == t1.name);
@@ -442,7 +445,7 @@ debug(DBITest) {
 				sqlGen.createBinaryString(t1.binary) ~ " " ~ sqlGen.createBinaryString(t2.binary));
 			assert(t2.i == t1.i);
 			assert(abs(t2.f - t1.f) < 1e9);
-			assert(!st2.fetch(t2.bind));
+			assert(!st2.doFetch(t2.bind, isNull));
 			
 			st2.reset;
 		}
@@ -452,6 +455,19 @@ debug(DBITest) {
 			auto sql = db.sqlGen.makeAddColumnSql("dbi_test", ColumnInfo("added_column", BindType.String));
 			Stdout.formatln("executing: {}", sql);
 			db.execute(sql);
+		}
+		
+		void test4()
+		{
+			ubyte[] b = [0,1,2,3,4];
+			//assert(db.query("UPDATE `dbi_test` SET `binary` = ? WHERE `id` = ?", b, 1));
+			assert(db.query("UPDATE `dbi_test` SET `binary` = 0x1234 WHERE `id` = 1"));
+			
+			assert(db.query("SELECT `id`, `name`, `dateofbirth`, `binary` FROM `dbi_test` WHERE `id` = ?", 1));
+			uint id; char[] name, dateofbirth; ubyte[] binary;
+			while(db.fetchRow(id, name, dateofbirth)) {
+				Stdout.formatln("id:{}, name:{}, dateofbirth: {}, binary: {}", id, name, dateofbirth, binary);
+			}
 		}
 		
 		void dbTests()
