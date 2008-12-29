@@ -27,7 +27,7 @@ abstract class Statement
 		close();
 	}
 	
-	char[] sql() { return sql;}
+	char[] sql() { return sql_;}
 	private char[] sql_;
 	
 	uint getParamCount();

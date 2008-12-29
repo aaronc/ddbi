@@ -6,6 +6,7 @@ version(dbi_mysql) {
 	import tango.stdc.stringz : toDString = fromStringz, toCString = toStringz;
 	static import tango.text.Util;
 	import Integer = tango.text.convert.Integer;
+	import tango.time.chrono.Gregorian;
 	debug(UnitTest) {
 		import tango.stdc.stringz;
 		import tango.io.Stdout;
@@ -83,7 +84,11 @@ class MysqlPreparedStatement : Statement
 				break;
 			case(BindType.Time):
 				auto time = *cast(Time*)(bind[i]);
-				auto dateTime = Clock.toDate(time); 
+				//auto dateTime = Clock.toDate(time);
+				DateTime dateTime;
+				Gregorian.generic.split(time, dateTime.date.year, dateTime.date.month, 
+					dateTime.date.day, dateTime.date.doy, dateTime.date.dow, dateTime.date.era);
+				dateTime.time = time.time;
 				paramHelper.time[i].year = dateTime.date.year;
 				paramHelper.time[i].month = dateTime.date.month;
 				paramHelper.time[i].day = dateTime.date.day;
@@ -108,7 +113,7 @@ class MysqlPreparedStatement : Statement
 		
 		int res = mysql_stmt_bind_param(stmt, paramBind.ptr);
 		if(res != 0) {
-			throw new DBIException("Error at mysql_stmt_bind_param.", res, specificToGeneral(res));
+			throw new DBIException("Error at mysql_stmt_bind_param.", sql, res, specificToGeneral(res));
 		}
 		res = mysql_stmt_execute(stmt);
 		if(res != 0) {
@@ -116,7 +121,7 @@ class MysqlPreparedStatement : Statement
 			//debug Stdout.formatln("mysql_stmt_error:{}", toDString(mysql_stmt_error(stmt)));
 			auto errno = mysql_stmt_errno(stmt);
 			auto err = toDString(mysql_stmt_error(stmt));
-			throw new DBIException("Error at mysql_stmt_execute: " ~ err, errno, specificToGeneral(errno));
+			throw new DBIException("Error at mysql_stmt_execute: " ~ err, sql, errno, specificToGeneral(errno));
 		}
 	}
 	
@@ -198,7 +203,8 @@ class MysqlPreparedStatement : Statement
 				dt.time.hours = mysqlTime.hour;
 				dt.time.minutes = mysqlTime.minute;
 				dt.time.seconds = mysqlTime.second;
-				*time = Clock.fromDate(dt);
+				//*time = Clock.fromDate(dt);
+				*time = Gregorian.generic.toTime(dt);
 			}
 			else if(resHelper.types[i] == BindType.DateTime) {
 				DateTime* dt = cast(DateTime*)(bind[i]);

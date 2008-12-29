@@ -3,7 +3,8 @@ module dbi.mysql.MysqlConvert;
 import ConvertInteger = tango.text.convert.Integer;
 import ConvertFloat = tango.text.convert.Float;
 import tango.stdc.stringz : toDString = fromStringz, toCString = toStringz;
-import DT = tango.time.Time, tango.time.Clock;
+import DT = tango.time.Time;
+import tango.time.chrono.Gregorian;
 import tango.core.Traits;
 
 import dbi.mysql.c.mysql;
@@ -154,7 +155,7 @@ static void bindMysqlResField(Type)(char[] res, enum_field_types type, ref Type 
 			}
 		}
 		static if(is(Type == DT.Time)) {
-			val = Clock.fromDate(dt);
+			val = Gregorian.generic.toTime(dt);
 		}
 	}
 	else static assert(false, "Unsupported MySql bind type " ~ Type.stringof);

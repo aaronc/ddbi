@@ -256,57 +256,33 @@ debug(DBITest) {
 	import tango.math.Math;
 	
 	class DBTest
-	{
-		static class Test
-		{
-			this()
-			{
-				bind.length = 6;
-				bind[0] = &id;
-				bind[1] = &name;
-				bind[2] = &dateofbirth;
-				bind[3] = &binary;
-				bind[4] = &i;
-				bind[5] = &f;
-			}
-			
-			uint id;
-			char[] name;
-			Time dateofbirth;
-			ubyte[] binary;
-			long i;
-			double f;
-			
-			void*[] bind;
-			
-			static BindType[] resTypes =
-			[
-			 	BindType.UInt,
-			 	BindType.String,
-			 	BindType.Time,
-			 	BindType.Binary,
-			 	BindType.Long,
-			 	BindType.Double
-			];
-		}
-		
+	{		
 		const static ColumnInfo[] columns = [
 		   ColumnInfo("id", BindType.UInt, true, true, true),
-		   ColumnInfo("name", BindType.String, true, false, false, 45),
-		   ColumnInfo("binary", BindType.Binary, false, false, false),
-		   ColumnInfo("dateofbirth", BindType.DateTime),
-		   ColumnInfo("i", BindType.Int),
-		   ColumnInfo("f", BindType.Double)
+		   ColumnInfo("UByte", BindType.UByte),
+		   ColumnInfo("Byte", BindType.Byte),
+		   ColumnInfo("UShort", BindType.UShort),
+		   ColumnInfo("Short", BindType.Short),
+		   ColumnInfo("UInt", BindType.UInt),
+		   ColumnInfo("Int", BindType.Int),
+		   ColumnInfo("ULong", BindType.ULong),
+		   ColumnInfo("Long", BindType.Long),
+		   ColumnInfo("Float", BindType.Float),
+		   ColumnInfo("Double", BindType.Double),
+		   ColumnInfo("String", BindType.String, true, false, false, 45),
+		   ColumnInfo("Binary", BindType.Binary, false, false, false),
+		   ColumnInfo("DateTime", BindType.DateTime),
+		   ColumnInfo("Time", BindType.Time),
 		];
 		
-		this(Database db, bool virtual = false)
+		this(Database db)
 		{
 			this.db = db;
-			this.virtual = virtual;
-			
-			t1 = new Test;
 		}
 		
+		Database db;
+		
+		/+
 		void run()
 		{
 			setup;
@@ -315,6 +291,16 @@ debug(DBITest) {
 			//test3;
 			testMetadata;
 			test4;
+			dbTests;
+			teardown;
+		}+/
+		
+		void run()
+		{
+			setup;
+			
+			insertWithStatement;
+			
 			dbTests;
 			teardown;
 		}
@@ -335,11 +321,50 @@ debug(DBITest) {
 			
 		}
 		
-		Database db;
-		bool virtual;
+		struct Data
+		{
+			ubyte ub = 1;
+			byte b = -56;
+			ushort us = 15764;
+			short s = -5076;
+			uint ui = 102389625;
+			int i = -400000;
+			ulong ul = 218356735475;
+			long l = -2358780732897345;
+			float f = 5.235689;
+			double d = 72523643.3458612319;
+			char[] str = "test test test test test";
+			ubyte[] binary = [0,1,2,3,4,5,6,7,8,9,10];
+			DateTime dt;
+			Time t;
+		}
 		
-		Test t1;
-		
+		void insertWithStatement()
+		{
+			auto sql = db.sqlGen.makeInsertSql("dbi_test",
+				["UByte", "Byte", "UShort", "Short", "UInt", "Int",
+				 "ULong", "Long", "Float", "Double",
+				 "String", "Binary", "DateTime", "Time"]);
+			auto st = db.prepare(sql);
+			Data data;
+			data.ub = 1;
+			data.b = -56;
+			data.us = 15764;
+			data.s = -5076;
+			data.ui = 102389625;
+			data.i = -400000;
+			data.ul = 218356734346345475;
+			data.l = -2358780732897345;
+			data.f = 5.235689;
+			data.d = 72523643.3458612319;
+			data.str = "test test test test test";
+			data.binary = [0,1,2,3,4,5,6,7,8,9,10];
+			/+data.dt;
+			data.t;+/
+			st.execute(data.ub,data.b,data.us,data.s,data.ui,data.i,
+				data.ul,data.l,data.f,data.d,data.str,data.binary,data.dt,data.t);
+		}
+		/+
 		Statement prepare(char[] sql)
 		{
 			return db.prepare(sql);
@@ -469,7 +494,7 @@ debug(DBITest) {
 			while(db.fetchRow(id, name, dateofbirth, binary)) {
 				Stdout.formatln("id:{}, name:{}, dateofbirth: {}, binary: {}", id, name, dateofbirth, binary);
 			}
-		}
+		}+/
 		
 		void dbTests()
 		{

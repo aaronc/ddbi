@@ -306,10 +306,14 @@ class MysqlDatabase : Database {
 	
 	void setParam(Time val)
 	{
-		auto dt = Clock.toDate(val);
+		DateTime dateTime;
+		Gregorian.generic.split(val, dateTime.date.year, dateTime.date.month, 
+			dateTime.date.day, dateTime.date.doy, dateTime.date.dow, dateTime.date.era);
+		dateTime.time = val.time;
+		//auto dt = Clock.toDate(val);
 		writer_ ~= "\'";
 		auto res = writer_.getWriteBuffer(19);
-		printDateTime(dt, res);
+		printDateTime(dateTime, res);
 		writer_ ~= "\'";
 	}
 	
@@ -441,13 +445,9 @@ class MysqlDatabase : Database {
 		{
     		Stdout.formatln("Beginning Mysql Tests");
     		
-    		Stdout.formatln("Testing Mysql Prepared Statements");
-			auto test = new DBTest(this, false);
+    		Stdout.formatln("Testing Mysql");
+			auto test = new DBTest(this);
 			test.run;
-			
-			/+Stdout.formatln("Testing Mysql Virtual Statements");
-			auto testVirtual = new DBTest(this, true);
-			testVirtual.run;+/
 		}
 	}
     
@@ -601,7 +601,7 @@ class MysqlSqlGenerator : SqlGenerator
 			case Int: return "INT";
 			case UInt: return "INT UNSIGNED";
 			case Long: return "BIGINT";
-			case ULong: return "UNSIGNED BIGINT";
+			case ULong: return "BIGINT UNSIGNED";
 			case Float: return "FLOAT";
 			case Double: return "DOUBLE";
 			case String: 
@@ -740,7 +740,7 @@ unittest {
 debug(DBITest) {
 	
 	import tango.util.log.Config;
-	import tango.time.Clock;
+	//import tango.time.Clock;
 	
 	import dbi.util.DateTime;
 	import dbi.ErrorCode;
