@@ -12,6 +12,11 @@ import dbi.util.DateTime;
 
 static void bindMysqlResField(Type)(char[] res, enum_field_types type, ref Type val, void* delegate(size_t) allocator = null)
 {
+	char[] dup(char[] val)
+	{
+		return val.dup;
+	}
+	
 	static if(isIntegerType!(Type) || isRealType!(Type) || is(Type == bool))
 	{
 		with(enum_field_types) {
@@ -72,7 +77,7 @@ static void bindMysqlResField(Type)(char[] res, enum_field_types type, ref Type 
 	}
 	else static if(is(Type == char[]))
 	{
-		val = res;
+		val = dup(res);
 	}
 	else static if(is(Type == void[]) || is(Type == ubyte[]))
 	{
@@ -100,7 +105,7 @@ static void bindMysqlResField(Type)(char[] res, enum_field_types type, ref Type 
 	        case MYSQL_TYPE_VAR_STRING:
 	        case MYSQL_TYPE_STRING:
 	        case MYSQL_TYPE_VARCHAR:
-	        	val = cast(ubyte[])res;
+	        	val = cast(ubyte[])dup(res);
 	        	break;
 	        case MYSQL_TYPE_NULL:
 	        	val = null;
@@ -110,7 +115,7 @@ static void bindMysqlResField(Type)(char[] res, enum_field_types type, ref Type 
 	        case MYSQL_TYPE_LONG_BLOB:
 	        case MYSQL_TYPE_BLOB:
 	        	//strToBinary(res, *val);
-	        	val = cast(ubyte[])res;
+	        	val = cast(ubyte[])dup(res);
 	           	break;
 	        case MYSQL_TYPE_TIMESTAMP:
 	        case MYSQL_TYPE_DATE:

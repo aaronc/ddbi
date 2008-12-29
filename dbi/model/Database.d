@@ -182,8 +182,6 @@ abstract class Database : Result, IStatementProvider {
 			cachedStatements.remove(sql);
 		}
 	}
-	//abstract char[] writeHexString(in ubyte[] binary, char[] dst = null);
-	//abstract char[] writeDateTime(DateTime dateTime, char[] dst = null);
 	abstract char[] escapeString(in char[] str, char[] dst = null);
 	
 	abstract void beginTransact();
@@ -234,8 +232,6 @@ abstract class Database : Result, IStatementProvider {
 		{
 			try
 			{
-				//Log.getRootLogger.addAppender(new ConsoleAppender);
-				
 				doTests;
 			}
 			catch(DBIException ex)
@@ -284,19 +280,6 @@ debug(DBITest) {
 		}
 		
 		Database db;
-		
-		/+
-		void run()
-		{
-			setup;
-			test1;
-			test2;
-			//test3;
-			testMetadata;
-			test4;
-			dbTests;
-			teardown;
-		}+/
 		
 		void run()
 		{
@@ -454,111 +437,7 @@ debug(DBITest) {
 			assert("i" in fNames);
 			assert("f" in fNames);
 		}
-		
-		void test1()
-		{
-			auto sqlGen = db.getSqlGenerator;
-			auto sql = sqlGen.makeInsertSql("dbi_test", ["name", "dateofbirth", "binary", "i", "f"]);
-			auto st = prepare(sql);
-			
-			Stdout.formatln("Prepared:test1 - {}", sql);
-					
-			t1.name = "test test test";
-			DateTime dt;
-			dt.date.year = 2008;
-			dt.date.month = 1;
-			dt.date.day = 1;
-			t1.dateofbirth = Clock.fromDate(dt);
-			ulong x = 0x57a60e9fe4321b0;
-			t1.binary = (cast(ubyte*)&x)[0 .. 8].dup;
-			t1.i = 5798637;
-			t1.f = 3.14159265;
-
-			BindType[] pTypes = [BindType.String, BindType.Time, BindType.Binary, BindType.Long, BindType.Double];
-			
-			void*[] pBind;
-			pBind ~= &t1.name;
-			pBind ~= &t1.dateofbirth;
-			pBind ~= &t1.binary;
-			pBind ~= &t1.i;
-			pBind ~= &t1.f;
-			
-			st.setParamTypes(pTypes);
-			Stdout.formatln("setParamTypes:test1");
-			
-			st.doExecute(pBind);
-			t1.id = st.getLastInsertID;
-			assert(t1.id == 1);
-			
-			Stdout.formatln("Completed:test1");
-		}		
-	
-		void test2()
-		{
-			auto sqlGen = db.getSqlGenerator;
-			auto list = sqlGen.makeFieldList(["id", "name", "dateofbirth", "binary", "i", "f"]);
-			auto sql = "SELECT " ~ list ~ " FROM dbi_test WHERE id = ?";
-			
-			auto st2 = prepare(sql);
-			
-			assert(st2);
-			assert(st2.getParamCount == 1);
-			
-			BindType[] paramTypes = [BindType.UShort];
-			
-			void*[] pBind;
-			ushort usID = 1;
-			
-			st2.setParamTypes(paramTypes);
-			st2.setResultTypes(Test.resTypes);
-			
-			pBind ~= &usID;
-			
-			st2.doExecute(pBind);
-			
-			
-			auto metadata = st2.getResultMetadata();
-			foreach(f; metadata)
-			{
-				Stdout.formatln("Name:{}, Type:{}", f.name, f.type);
-			}
-			
-			auto t2 = new Test;
-			
-			bool[] isNull;
-			assert(st2.doFetch(t2.bind, isNull));
-			
-			assert(t2.id == t1.id);
-			assert(t2.name == t1.name);
-			assert(t2.dateofbirth == t1.dateofbirth);
-			assert(t2.binary == t1.binary,
-				sqlGen.createBinaryString(t1.binary) ~ " " ~ sqlGen.createBinaryString(t2.binary));
-			assert(t2.i == t1.i);
-			assert(abs(t2.f - t1.f) < 1e9);
-			assert(!st2.doFetch(t2.bind, isNull));
-			
-			st2.reset;
-		}
-		
-		void test3()
-		{
-			auto sql = db.sqlGen.makeAddColumnSql("dbi_test", ColumnInfo("added_column", BindType.String));
-			Stdout.formatln("executing: {}", sql);
-			db.execute(sql);
-		}
-		
-		void test4()
-		{
-			void[] b = cast(void[])[0,1,2,3,4];
-			//assert(db.query("UPDATE `dbi_test` SET `binary` = ? WHERE `id` = ?", b, 1));
-			assert(db.query("UPDATE `dbi_test` SET `binary` = ? WHERE `id` = ?", b, 1));
-			
-			assert(db.query("SELECT `id`, `name`, `dateofbirth`, `binary` FROM `dbi_test` WHERE `id` = ?", 1));
-			uint id; char[] name, dateofbirth; void[] binary;
-			while(db.fetchRow(id, name, dateofbirth, binary)) {
-				Stdout.formatln("id:{}, name:{}, dateofbirth: {}, binary: {}", id, name, dateofbirth, binary);
-			}
-		}+/
+		+/
 		
 		void dbTests()
 		{
