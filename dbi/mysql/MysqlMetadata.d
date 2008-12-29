@@ -2,9 +2,8 @@ module dbi.mysql.MysqlMetadata;
 
 version (dbi_mysql) {
 	
-private import dbi.mysql.c.mysql;
-
-import dbi.Statement;
+import dbi.mysql.c.mysql;
+import dbi.Metadata;
 
 FieldInfo[] getFieldMetadata(MYSQL_FIELD[] fields)
 {
@@ -73,14 +72,6 @@ BindType fromMysqlType(enum_field_types type, uint flags)
 		}
 	}
 	}
-}
-
-void fromMysqlField(inout ColumnInfo2 column, MYSQL_FIELD field)
-{
-    column.name = field.name[0..field.name_length];
-    column.name.length = field.name_length;
-    column.type = fromMysqlType(field.type);
-    column.flags = field.flags;
 }
 
 }

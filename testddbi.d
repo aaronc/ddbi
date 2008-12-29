@@ -19,8 +19,6 @@ version (dbi_mysql) {
 	private import dbi.mysql.MysqlDatabase;
 }
 
-import dbi.VirtualStatement;
-
 void main(char[][] args) {
 	auto logger = Log.getLogger(args[0]);
 	logger.info("testing ddbi");

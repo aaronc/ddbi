@@ -6,11 +6,6 @@ enum BindType : ubyte { Null, Bool, Byte, Short, Int, Long, UByte, UShort, UInt,
 struct BindInfo
 {
 	BindType[] types;
-	void*[] ptrs;	
-}
-
-interface INullableBinder
-{
-	BindInfo bindInfo();
-	void setNull(size_t idx);
+	void*[] ptrs;
+	bool[] isNull;
 }

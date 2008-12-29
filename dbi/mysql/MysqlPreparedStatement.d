@@ -21,7 +21,7 @@ private import dbi.mysql.c.mysql;
 public import dbi.Statement;
 import dbi.mysql.MysqlMetadata;
 
-class MysqlPreparedStatement : IStatement
+class MysqlPreparedStatement : Statement
 {
 	uint getParamCount()
 	{
@@ -43,13 +43,15 @@ class MysqlPreparedStatement : IStatement
 		return metadata;
 	}
 	
-	void setParamTypes(BindType[] paramTypes)
+	override void setParamTypes(BindType[] paramTypes)
 	{
+		super.setParamTypes(paramTypes);
 		initBindings(paramTypes, paramBind, paramHelper);
 	}
 	
-	void setResultTypes(BindType[] resTypes)
+	override void setResultTypes(BindType[] resTypes)
 	{
+		super.setResultTypes(resTypes);
 		initBindings(resTypes, resBind, resHelper);
 	}
 	
@@ -61,7 +63,7 @@ class MysqlPreparedStatement : IStatement
 		}
 	}
 	
-	void execute(void*[] bind)
+	void doExecute(void*[] bind)
 	{
 		if(!bind || !paramBind) throw new DBIException("Attempting to execute a statement without having set parameters types or passed a valid bind array.");
 		if(bind.length != paramBind.length) throw new DBIException("Incorrect number of pointers in bind array");
@@ -118,10 +120,16 @@ class MysqlPreparedStatement : IStatement
 		}
 	}
 	
-	bool fetch(void*[] bind, void* delegate(size_t) allocator = null)
+	bool doFetch(void*[] bind, out bool[] isNull, void* delegate(size_t) allocator = null)
 	{
 		if(!bind || !resBind) throw new DBIException("Attempting to fetch from a statement without having set parameters types or passed a valid bind array.");
 		if(bind.length != resBind.length) throw new DBIException("Incorrect number of pointers in bind array");
+		
+		/+scope(exit) {
+			isNull.length = resHelper.is_null.length;
+			foreach(i, isN; resHelper.is_null)
+				isNull[i] = isN;
+		}+/
 		
 		uint len = bind.length;
 		for(uint i = 0; i < len; ++i)
@@ -255,6 +263,11 @@ class MysqlPreparedStatement : IStatement
 		mysql_stmt_free_result(stmt);
 	}
 	
+	ulong affectedRows()
+	{
+		return mysql_stmt_affected_rows(stmt);
+	}
+	
 	ulong getLastInsertID()
 	{
 		return mysql_stmt_insert_id(stmt);
@@ -265,13 +278,15 @@ class MysqlPreparedStatement : IStatement
 		return toDString(mysql_stmt_error(stmt));
 	}
 	
-	package this(MYSQL_STMT* stmt)
+	package this(MYSQL_STMT* stmt, char[] sql)
 	{
 		this.stmt = stmt;
+		super(sql);
 	}
 	
 	void close()
 	{
+		super.close;
 		if (stmt !is null) {
 	        mysql_stmt_close(stmt);
 	        stmt = null;

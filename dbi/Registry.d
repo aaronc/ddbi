@@ -7,20 +7,23 @@ module dbi.Registry;
 import dbi.Database, dbi.DBIException;
 
 private import tango.text.Util;
-private import tango.util.log.Log;
 
-private static Registerable[char[]] dbs;
-private static Logger logger;
+private static IRegisterable[char[]] dbs;
 
-static this() {
-	logger = Log.getLogger("dbi.Registry");
+debug {
+	private import tango.util.log.Log;
+	private static Logger logger;
+	
+	static this() {
+		logger = Log.getLogger("dbi.Registry");
+	}
 }
 
 /**
  * Interface for registering a database provider.  This will allow you to only 
  * link the database drivers that you will use.
  */
-public interface Registerable {
+public interface IRegisterable {
 	public char[] getPrefix();
 	public Database getInstance(char[] url);
 }
@@ -34,7 +37,7 @@ public interface Registerable {
  *     newDB = Registerable instance that will create Database instances when 
  *     asked via getDatabaseForURL.
  */
-public static void registerDatabase(Registerable newDB) {
+public static void registerDatabase(IRegisterable newDB) {
 	//logger.trace("registering provider: " ~ newDB.getPrefix());
 	dbs[newDB.getPrefix()] = newDB;
 }
@@ -53,7 +56,7 @@ public static void registerDatabase(Registerable newDB) {
  */
 public static Database getDatabaseForURL(char[] dbUrl) {
 	char[] origURL = dbUrl.dup;
-	logger.trace("getDatabaseForURL: " ~ dbUrl);
+	debug logger.trace("getDatabaseForURL: " ~ dbUrl);
 	char[][] fields = delimit(dbUrl, ":");
 	if(fields.length < 2)
 		throw new DBIException("Unable to find : in database URL");

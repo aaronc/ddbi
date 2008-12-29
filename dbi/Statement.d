@@ -8,24 +8,145 @@ public import tango.group.time;
 
 public import dbi.Metadata;
 
-interface IStatement
+interface IStatementProvider
 {
+	Statement prepare(char[] sql);
+	Statement doPrepare(char[] sql);
+	void uncacheStatement(Statement st);
+	void uncacheStatement(char[] sql);
+}
+
+abstract class Statement
+{
+	this(char[] sql)
+	{
+		sql_ = sql;
+	}
+	
+	~this () {
+		close();
+	}
+	
+	char[] sql() { return sql;}
+	private char[] sql_;
+	
 	uint getParamCount();
 	FieldInfo[] getResultMetadata();
-	void setParamTypes(BindType[] paramTypes);
-	void setResultTypes(BindType[] resTypes);
-	void execute();
-	void execute(void*[] bind);
-	bool fetch(void*[] bind, void* delegate(size_t) allocator = null);
+	
+	void setParamTypes(BindType[] paramTypes)
+	{
+		paramTypes_ = paramTypes;
+	}
+	private BindType[] paramTypes_;
+	
+	void resetParamTypes()
+	{
+		paramTypes_ = null;
+	}
+	
+	void setResultTypes(BindType[] resTypes)
+	{
+		resTypes_ = resTypes;
+	}
+	private BindType[] resTypes_;
+	
+	void resetResultTypes()
+	{
+		resTypes_ = null;
+	}
+	
+	void doExecute(void*[] bind);
+	bool doFetch(void*[] bind, out bool[] isNull, void* delegate(size_t) allocator = null);
 	void prefetchAll();
+	ulong affectedRows();
 	ulong getLastInsertID();
 	void reset();
-	void close();
+	
+	package void setCacheProvider(IStatementProvider cacheProvider)
+	{
+		cacheProvider_ = cacheProvider;
+	}
+	private IStatementProvider cacheProvider_;
+	
+	void close()
+	{
+		if(cacheProvider_) {
+			cacheProvider_.uncacheStatement(this.sql_);
+		}
+	}
+	
+	final void execute(Types...)(ref Types bind)
+	{
+		static if(Types.length) {
+			void*[] ptrs = setPtrs(bind);
+			
+			if(!paramTypes_.length)
+				setParamTypes(setBindTypes(bind));
+			
+			doExecute(ptrs);
+		}
+		else doExecute(null);
+	}
+	
+	final bool fetch(Types...)(ref Types bind)
+	{
+		void*[] ptrs = setPtrs(bind);
+		
+		if(!resTypes_.length)
+			setResultTypes(setBindTypes(bind));
+		
+		bool[] isNull;
+		auto res = doFetch(ptrs, isNull);
+		
+		uint i = 0;
+		foreach(x; bind)
+		{
+			static if(is(typeof(x) == BindInfo)) {
+				x.isNull = isNull[i .. i + x.types.length];
+				i += x.types.length;
+			}
+			else ++i;
+		}
+		
+		return res;
+	}
+	
+	static BindType[] setBindTypes(Types...)(Types bind)
+	{
+		BindType[] types;			
+		
+		foreach(x; bind)
+		{
+			static if(is(typeof(x) == BindInfo))
+				types ~= bind[Index].types;
+			else types ~= getBindType!(typeof(x))();
+		}
+		
+		return types;
+	}
+	
+	static void*[] setPtrs(Types...)(ref Types bind)
+	{
+		void*[] ptrs;
+		
+		foreach(Index, Type; Types)
+		{
+			static if (is(Type == BindInfo))
+				ptrs ~= bind[Index].ptrs;
+			else ptrs ~= &bind[Index];
+		}
+		
+		return ptrs;
+	}
 }
 
 BindType getBindType(T)()
 {
-	static if(is(T == byte))
+	static if(is(T == bool))
+	{
+		return BindType.Bool;
+	}
+	else static if(is(T == byte))
 	{
 	    return BindType.Byte;
 	}
@@ -81,5 +202,5 @@ BindType getBindType(T)()
 	{
 	    return BindType.DateTime;
 	}
-	else return BindType.Null;
+	else static assert(false, "Unknown bind type " ~ T.stringof);
 }

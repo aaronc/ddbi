@@ -13,11 +13,13 @@ import Integer = tango.text.convert.Integer;
 debug(UnitTest) import tango.io.Stdout;
 
 public import dbi.Database;
-private import dbi.DBIException, dbi.Statement, dbi.Registry;
-private import dbi.VirtualStatement;
-private import dbi.mysql.c.mysql;
-private import dbi.mysql.MysqlError, dbi.mysql.MysqlPreparedStatement, dbi.mysql.MysqlVirtualStatement, dbi.mysql.MysqlMetadata;
+import dbi.DBIException, dbi.Statement, dbi.Registry;
+import dbi.mysql.c.mysql;
+import dbi.mysql.MysqlError, dbi.mysql.MysqlPreparedStatement,
+	dbi.mysql.MysqlMetadata, dbi.mysql.MysqlConvert;
 import tango.text.Util;
+
+debug import tango.util.log.Log;
 
 import dbi.util.StringWriter;
 
@@ -187,7 +189,7 @@ class MysqlDatabase : Database {
 		mysqlSqlGen = null;
 	}
 	
-	void execute(char[] sql)
+	/+void execute(char[] sql)
 	{
 		int error = mysql_real_query(mysql, sql.ptr, sql.length);
 		if (error) {
@@ -205,36 +207,30 @@ class MysqlDatabase : Database {
 		execute(execSql.get);
 		execSql.free;
 		delete execSql;
-	}
+	}+/
         
-    MysqlPreparedStatement prepare(char[] sql)
+    MysqlPreparedStatement doPrepare(char[] sql)
 	{
 		MYSQL_STMT* stmt = mysql_stmt_init(mysql);
 		auto res = mysql_stmt_prepare(stmt, sql.ptr, sql.length);
 		if(res != 0) {
-			debug(Log) {
+			debug {
 				auto err = mysql_stmt_error(stmt);
 				log.error("Unable to create prepared statement: \"" ~ sql ~"\", errmsg: " ~ toDString(err));
 			}
 			auto errno = mysql_stmt_errno(stmt);
-			auto err = toDString(mysql_stmt_error(stmt));
-			throw new DBIException("Unable to prepare statement: " ~ err, sql, errno, specificToGeneral(errno));
+			auto dErr = toDString(mysql_stmt_error(stmt));
+			throw new DBIException("Unable to prepare statement: " ~ dErr, sql, errno, specificToGeneral(errno));
 		}
-		return new MysqlPreparedStatement(stmt);
+		return new MysqlPreparedStatement(stmt,sql);
 	}
-			
-    MysqlVirtualStatement virtualPrepare(char[] sql)
-    {
-    	return new MysqlVirtualStatement(sql, getSqlGenerator, mysql);
-    }
     
-    bool query2(in char[] sql, ...)
+    bool query(in char[] sql, ...)
     {
     	return false;
     }
     	
     alias MysqlPreparedStatement StatementT;
-	alias MysqlVirtualStatement VirtualStatementT;
 	
 	void beginTransact()
 	{
@@ -252,7 +248,7 @@ class MysqlDatabase : Database {
 		mysql_commit(mysql);
 	}
 	
-	char[] escape(char[] str)
+	char[] escapeString(char[] str, char[] dst)
 	{
 		assert(false, "Not implemented");
 		//char* res = new char[str.length];
@@ -327,18 +323,18 @@ class MysqlDatabase : Database {
 		}
 	}+/
 	
-	debug(Log)
+	debug
 	{
 		static Logger log;
 		static this()
 		{
-			log = Log.lookup("dbi.mysql.MysqlPreparedStatement.MysqlPreparedStatementProvider");
+			log = Log.lookup("dbi.mysql.MysqlDatabase");
 		}
 		
 		private void logError()
 		{
 			char* err = mysql_error(mysql);
-			log.trace(toDString(err));
+			log.error(toDString(err));
 		}
 	}
                
@@ -366,34 +362,111 @@ class MysqlDatabase : Database {
     
     MYSQL* handle() { return mysql; }
     
-    ColumnInfo2[] rowMetadata()
+	bool moreResults()
+    in {
+        assert (result_ !is null);
+    }
+    body {
+        if (result_ is null)
+            throw new DBIException ("This result set was already closed.");
+
+        return cast(bool)mysql_more_results(mysql);
+    }
+    
+
+    Result nextResult()
     {
-        auto fields = mysql_fetch_fields(_result);
-
-        _metadata = new ColumnInfo2[fieldCount];
-        for (ulong i = 0; i < fieldCount; i++) {
-            fromMysqlField(_metadata[i], fields[i]);
+        if (result_ !is null) {
+        	mysql_free_result(result_);
         }
-
-        return _metadata;
+        
+        rowMetadata_ = null;
+        
+        auto res = mysql_next_result(mysql);
+        if (res == 0) {
+        	result_ = mysql_store_result(mysql);
+        	getMysqlFieldInfo;
+            return this;
+        }
+        else if(res < 0) return null;
+        else {
+            throw new DBIException("Failed to retrieve next result set.");
+        }
     }
 
-    ulong rowCount() { return mysql_num_rows(_result); }
-    ulong fieldCount() { return mysql_num_fields(_result); }
-    ulong affectedRows() { return mysql_affected_rows(_dbase.connection); }
+    bool validResult() { return result_ !is null; }
+    
+    MYSQL_FIELD[] getMysqlFieldInfo()
+    {
+    	auto len = mysql_num_fields(result_);
+        fields_ = mysql_fetch_fields(result_)[0..len];
+        return fields_;
+    }
+	
+    FieldInfo[] rowMetadata()
+    {
+    	if(result_ is null) return null;
+    	if(!fields_.length) getMysqlFieldInfo;    	
+
+        rowMetadata_ = getFieldMetadata(fields_);
+        return rowMetadata_;
+    }
+    
+    FieldInfo rowMetadata(size_t idx)
+    {
+    	if(rowMetadata_ is null) rowMetadata;
+    	assert(idx < rowMetadata_.length);
+    	return rowMetadata_[idx];
+    }
+
+    ulong rowCount() { return mysql_num_rows(result_); }
+    ulong fieldCount() { return mysql_num_fields(result_); }
+    ulong affectedRows() { return mysql_affected_rows(mysql); }
+    
+    bool nextRow()
+    {
+    	if(result_ is null) return false;
+    	curRow_ = mysql_fetch_row(result_);
+    	if(curRow_ is null) return false;
+        curLengths_ = mysql_fetch_lengths(result_);
+        return true;
+    }
+    
+    bool getField(inout bool val, size_t idx) { return bindField(val, idx); }    
+	bool getField(inout ubyte val, size_t idx) { return bindField(val, idx); }
+	bool getField(inout byte val, size_t idx) { return bindField(val, idx); }
+	bool getField(inout ushort val, size_t idx) { return bindField(val, idx); }
+	bool getField(inout short val, size_t idx) { return bindField(val, idx); }
+	bool getField(inout uint val, size_t idx) { return bindField(val, idx); }
+	bool getField(inout int val, size_t idx) { return bindField(val, idx); }
+	bool getField(inout ulong val, size_t idx) { return bindField(val, idx); }
+	bool getField(inout long val, size_t idx) { return bindField(val, idx); }
+	bool getField(inout float val, size_t idx) { return bindField(val, idx); }
+	bool getField(inout double val, size_t idx) { return bindField(val, idx); }
+	bool getField(inout char[] val, size_t idx) { return bindField(val, idx); }
+	bool getField(inout ubyte[] val, size_t idx) { return bindField(val, idx); }
+	bool getField(inout Time val, size_t idx) { return bindField(val, idx); }
+	bool getField(inout DateTime val, size_t idx) { return bindField(val, idx); }
+	
+	bool bindField(Type)(inout Type val, size_t idx)
+	{
+		if(curRow_ is null) return false;
+		if(fields_.length <= idx || curRow_[idx] is null) return false;
+		bindMysqlResField(curRow_[idx][0..curLengths_[idx]],fields_[idx].type, val);
+		return true;
+	}
 
 	package:
 		MYSQL* mysql;
-		ColumnInfo2[] _metadata;
-	    MysqlDatabase _dbase;
-	    MYSQL_RES* _result = null;
-	    MYSQL_ROW _curRow = null;
-		uint* _curLengths = null;
-		ulong _curFieldCount = 0;
-	
+
 	private:
+		MYSQL_RES* result_ = null;
+		MYSQL_ROW curRow_ = null;
+		MYSQL_FIELD[] fields_;
+		uint* curLengths_ = null;
+		FieldInfo[] rowMetadata_;
+		
     	MysqlSqlGenerator mysqlSqlGen;
-    	
 }
 
 class MysqlSqlGenerator : SqlGenerator
@@ -459,7 +532,7 @@ class MysqlSqlGenerator : SqlGenerator
 	}
 }
 
-private class MysqlRegister : Registerable {
+private class MysqlRegister : IRegisterable {
 
 	static this() {
 		debug(UnitTest) Cout("Attempting to register MysqlDatabase in Registry").newline;

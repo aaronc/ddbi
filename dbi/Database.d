@@ -9,7 +9,7 @@ private static import tango.io.Stdout;
 private import dbi.DBIException;
 public import dbi.SqlGen, dbi.Statement, dbi.Metadata, dbi.Result;
 
-debug(UnitTest) public import tango.io.Stdout;
+debug(DBITest) public import tango.io.Stdout;
 
 /**
  * The database interface that all DBDs must inherit from.
@@ -22,7 +22,7 @@ debug(UnitTest) public import tango.io.Stdout;
  * See_Also:
  *	The database class for the DBD you are using.
  */
-abstract class Database : IResult {
+abstract class Database : Result, IStatementProvider {
 	/**
 	 * A destructor that attempts to force the the release of of all
 	 * database connections and similar things.
@@ -37,37 +37,39 @@ abstract class Database : IResult {
 	/**
 	 * Close the current connection to the database.
 	 */
-	abstract void close();
+	abstract void close();	
+	abstract bool query(in char[] sql, ...);
 	
-	abstract void execute(char[] sql);
-	abstract void execute(char[] sql, BindType[] bindTypes, void*[] ptrs);
-	Result query(char[] sql, ...)
+	Statement prepare(char[] sql)
 	{
-		auto st = virtualPrepare(sql);
-		
-		if(!_arguments.length) {
-			 st.execute;
-			 return Result(st);
+		auto pSt = sql in cachedStatements;
+		if(pSt) {
+			return *pSt;
 		}
-		
-		void*[] ptrs;
-		BindType[] types;
-		
-		bindArgs(_argptr, _arguments, ptrs, types);
-		
-		st.setParamTypes(types);
-		st.execute(ptrs);
-		return Result(st);
+		auto st = doPrepare(sql);
+		cachedStatements[sql] = st;
+		st.setCacheProvider(this);
+		return st;
+	}
+	private Statement[char[]] cachedStatements;
+	
+	abstract Statement doPrepare(char[] sql);
+	
+	void uncacheStatement(Statement st)
+	{
+		uncacheStatement(st.sql);
 	}
 	
-	abstract bool query2(in char[] sql, ...);
-	
-	abstract IStatement prepare(char[] sql);
-	abstract IStatement virtualPrepare(char[] sql);
-	
+	void uncacheStatement(char[] sql)
+	{
+		auto pSt = sql in cachedStatements;
+		if(pSt) {
+			return *pSt;
+		}
+	}
 	//abstract char[] writeHexString(in ubyte[] binary, char[] dst = null);
 	//abstract char[] writeDateTime(DateTime dateTime, char[] dst = null);
-	//abstract char[] escapeString(in char[] str, char[] dst = null);
+	abstract char[] escapeString(in char[] str, char[] dst = null);
 	
 	abstract void beginTransact();
 	abstract void rollback();
@@ -102,8 +104,7 @@ abstract class Database : IResult {
 	abstract SqlGenerator getSqlGenerator();
 	alias getSqlGenerator sqlGen;
 	
-	alias IStatement StatementT;
-	alias IStatement VirtualStatementT;
+	alias Statement StatementT;
 	
 	/**
 	 * 
@@ -208,11 +209,11 @@ debug(DBITest) {
 		{
 			char[] drop_test = db.sqlGen.makeDropSql("dbi_test");
 			Stdout.formatln("executing: {}", drop_test);
-			db.execute(drop_test);
+			db.query(drop_test);
 			
 			auto create_test = db.sqlGen.makeCreateSql("dbi_test", columns);
 			Stdout.formatln("executing: {}", create_test);
-			db.execute(create_test);
+			db.query(create_test);
 		}
 		
 		void teardown()
@@ -225,12 +226,9 @@ debug(DBITest) {
 		
 		Test t1;
 		
-		IStatement prepare(char[] sql)
+		Statement prepare(char[] sql)
 		{
-			if(!virtual)
-				return db.prepare(sql);
-			else
-				return db.virtualPrepare(sql);
+			return db.prepare(sql);
 		}
 		
 		void testMetadata()
@@ -285,7 +283,7 @@ debug(DBITest) {
 			st.setParamTypes(pTypes);
 			Stdout.formatln("setParamTypes:test1");
 			
-			st.execute(pBind);
+			st.doExecute(pBind);
 			t1.id = st.getLastInsertID;
 			assert(t1.id == 1);
 			
@@ -313,7 +311,7 @@ debug(DBITest) {
 			
 			pBind ~= &usID;
 			
-			st2.execute(pBind);
+			st2.doExecute(pBind);
 			
 			
 			auto metadata = st2.getResultMetadata();
