@@ -2,11 +2,11 @@
  * Authors: The D DBI project
  * Copyright: BSD license
  */
-module dbi.Statement;
+module dbi.model.Statement;
 
 public import tango.group.time;
 
-public import dbi.Metadata;
+public import dbi.model.Metadata;
 
 interface IStatementProvider
 {

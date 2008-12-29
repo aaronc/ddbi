@@ -6,7 +6,7 @@ module dbi.mysql.c.mysql;
 
 version (dbi_mysql) {
 
-extern (Windows):
+extern (System):
 
 version (Windows) {
 	pragma (lib, "libmysql.lib");

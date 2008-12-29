@@ -2,7 +2,7 @@
  * Authors: The D DBI project
  * Copyright: BSD license
  */
-module dbi.DBIException;
+module dbi.Exception;
 
 private import tango.core.Vararg : va_arg;
 private import dbi.ErrorCode;

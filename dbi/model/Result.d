@@ -1,6 +1,6 @@
-module dbi.Result;
+module dbi.model.Result;
 
-public import dbi.Metadata;
+public import dbi.model.Metadata;
 public import dbi.util.Memory;
 
 public import tango.time.Time;

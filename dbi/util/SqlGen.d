@@ -1,11 +1,11 @@
-module dbi.SqlGen;
+module dbi.util.SqlGen;
 
-import DT = dbi.util.DateTime;import DT = dbi.util.DateTime;
+import DT = dbi.util.DateTime;
 import Integer = tango.text.convert.Integer;
 import tango.time.Time;
 import tango.core.Traits;
 
-public import dbi.Metadata;
+public import dbi.model.Metadata;
 
 /**
  * Helper methods for generating database-specific SQL (without necessarily

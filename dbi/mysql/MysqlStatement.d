@@ -1,4 +1,4 @@
-module dbi.mysql.MysqlPreparedStatement;
+module dbi.mysql.MysqlStatement;
 
 version(dbi_mysql) {
 
@@ -17,12 +17,12 @@ version(dbi_mysql) {
 		import tango.util.log.Log;
 	}
 	
-import dbi.DBIException, dbi.mysql.MysqlError;
-private import dbi.mysql.c.mysql;
-public import dbi.Statement;
+import dbi.Exception, dbi.mysql.MysqlError;
+import dbi.mysql.c.mysql;
+import dbi.model.Statement;
 import dbi.mysql.MysqlMetadata;
 
-class MysqlPreparedStatement : Statement
+class MysqlStatement : Statement
 {
 	uint getParamCount()
 	{

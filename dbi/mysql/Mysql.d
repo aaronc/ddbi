@@ -2,29 +2,28 @@
  * Authors: The D DBI project
  * Copyright: BSD license
  */
-module dbi.mysql.MysqlDatabase;
+module dbi.mysql.Mysql;
 
 version (dbi_mysql) {
 
 import tango.stdc.stringz : toDString = fromStringz, toCString = toStringz;
-import tango.io.Console;
-static import tango.text.Util;
+import TextUtil = tango.text.Util;
 import Integer = tango.text.convert.Integer;
 import Float = tango.text.convert.Float;
 import tango.time.Time;
-debug(UnitTest) import tango.io.Stdout;
 
-public import dbi.Database;
-import dbi.DBIException, dbi.Statement, dbi.Registry;
+import dbi.model.Database;
+import dbi.util.DateTime, dbi.util.VirtualPrepare,
+	dbi.util.Registry, dbi.util.StringWriter;
+import dbi.Exception;
+
 import dbi.mysql.c.mysql;
-import dbi.mysql.MysqlError, dbi.mysql.MysqlPreparedStatement,
+import dbi.mysql.MysqlError, dbi.mysql.MysqlStatement,
 	dbi.mysql.MysqlMetadata, dbi.mysql.MysqlConvert;
-import dbi.util.DateTime, dbi.util.VirtualPrepare;
-import tango.text.Util;
 
 debug import tango.util.log.Log;
+debug(DBITest) import tango.io.Stdout;
 
-import dbi.util.StringWriter;
 
 static this() {
 	uint ver = mysql_get_client_version();
@@ -52,7 +51,7 @@ static this() {
  * See_Also:
  *	Database is the interface that this provides an implementation of.
  */
-class MysqlDatabase : Database {
+class Mysql : Database {
 	public:
 	/**
 	 * Create a new instance of MysqlDatabase, but don't connect.
@@ -166,9 +165,7 @@ class MysqlDatabase : Database {
 
 		mysql_real_connect(mysql, toCString(host), toCString(username), toCString(password), toCString(dbname), portNo, toCString(sock), client_flag);
 		if (uint error = mysql_errno(mysql)) {
-		        Cout("connect(): ");
-		        Cout(toDString(mysql_error(mysql)));
-		        Cout("\n").flush;			
+			debug log.error("connect(): {}", toDString(mysql_error(mysql)));
 			throw new DBIException("Unable to connect to the MySQL database.", error, specificToGeneral(error));
 		}
 	}
@@ -183,9 +180,7 @@ class MysqlDatabase : Database {
 		if (mysql !is null) {
 			mysql_close(mysql);
 			if (uint error = mysql_errno(mysql)) {
-   		                Cout("close(): ");
-		                Cout(toDString(mysql_error(mysql)));
-		                Cout("\n").flush;			
+   		        debug log.error("close(): {}", toDString(mysql_error(mysql)));
 				throw new DBIException("Unable to close the MySQL database.", error, specificToGeneral(error));
 			}
 			mysql = null;
@@ -213,7 +208,7 @@ class MysqlDatabase : Database {
 		delete execSql;
 	}+/
         
-    MysqlPreparedStatement doPrepare(char[] sql)
+    MysqlStatement doPrepare(char[] sql)
 	{
 		MYSQL_STMT* stmt = mysql_stmt_init(mysql);
 		auto res = mysql_stmt_prepare(stmt, sql.ptr, sql.length);
@@ -226,7 +221,7 @@ class MysqlDatabase : Database {
 			auto dErr = toDString(mysql_stmt_error(stmt));
 			throw new DBIException("Unable to prepare statement: " ~ dErr, sql, errno, specificToGeneral(errno));
 		}
-		return new MysqlPreparedStatement(stmt,sql);
+		return new MysqlStatement(stmt,sql);
 	}
     
     void initQuery(in char[] sql, bool haveParams)
@@ -325,7 +320,7 @@ class MysqlDatabase : Database {
 		writer_ ~= "\'";
 	}
 	
-    alias MysqlPreparedStatement StatementT;
+    alias MysqlStatement StatementT;
 	
 	void beginTransact()
 	{
@@ -631,7 +626,7 @@ class MysqlSqlGenerator : SqlGenerator
 private class MysqlRegister : IRegisterable {
 
 	static this() {
-		debug(UnitTest) Cout("Attempting to register MysqlDatabase in Registry").newline;
+		debug(DBITest) Stdout("Attempting to register MysqlDatabase in Registry").newline;
 		registerDatabase(new MysqlRegister());
 	}
 	
@@ -650,10 +645,10 @@ private class MysqlRegister : IRegisterable {
 		char[] host = "127.0.0.1";
 		char[] port, dbname, params;
 
-		auto fields = delimit(url, "/");
+		auto fields = TextUtil.delimit(url, "/");
 		
 		if(fields.length) {
-			auto fields1 = delimit(fields[0], ":");
+			auto fields1 = TextUtil.delimit(fields[0], ":");
 			
 			if(fields1.length) {
 				if(fields1[0].length) host = fields1[0];
@@ -661,20 +656,20 @@ private class MysqlRegister : IRegisterable {
 			}
 			
 			if(fields.length > 1) {
-				auto fields2 = delimit(fields[1], "?");
+				auto fields2 = TextUtil.delimit(fields[1], "?");
 				if(fields2.length) { 
 					dbname = fields2[0];
 					if(fields2.length > 1) params = fields2[1];
 				}
 			}
 		}
-		return new MysqlDatabase(host, port, dbname, params);
+		return new Mysql(host, port, dbname, params);
 	}
 }
 
 
 
-debug(UnitTest) {
+debug(DBITest) {
 unittest {
 
     void s1 (char[] s) {
@@ -686,7 +681,7 @@ unittest {
     }
 
 	s1("dbi.mysql.MysqlDatabase:");
-	MysqlDatabase db = new MysqlDatabase();
+	auto db = new Mysql();
 /+	s2("connect");
 	db.connect("dbname=test", "test", "test");
 
@@ -749,7 +744,7 @@ debug(DBITest) {
 	{
 		try
 		{
-			auto db = new MysqlDatabase("localhost", null, "test", "username=test&password=test");
+			auto db = new Mysql("localhost", null, "test", "username=test&password=test");
 			
 			db.test();
 			

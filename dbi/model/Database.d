@@ -2,12 +2,12 @@
  * Authors: The D DBI project
  * Copyright: BSD license
  */
-module dbi.Database;
+module dbi.model.Database;
 
 private static import tango.text.Util;
 private static import tango.io.Stdout;
-private import dbi.DBIException;
-public import dbi.SqlGen, dbi.Statement, dbi.Metadata, dbi.Result;
+public import dbi.Exception;
+public import dbi.util.SqlGen, dbi.model.Statement, dbi.model.Metadata, dbi.model.Result;
 
 debug(DBITest) public import tango.io.Stdout;
 

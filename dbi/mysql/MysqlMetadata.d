@@ -3,7 +3,7 @@ module dbi.mysql.MysqlMetadata;
 version (dbi_mysql) {
 	
 import dbi.mysql.c.mysql;
-import dbi.Metadata;
+import dbi.model.Metadata;
 
 FieldInfo[] getFieldMetadata(MYSQL_FIELD[] fields)
 {

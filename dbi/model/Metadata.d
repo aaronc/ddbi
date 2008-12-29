@@ -1,6 +1,6 @@
-module dbi.Metadata;
+module dbi.model.Metadata;
 
-public import dbi.BindType;
+public import dbi.model.BindType;
 
 /+
 enum ColumnFlag : ulong

@@ -1,12 +1,11 @@
 module dbi.util.DateTime;
 
 import tango.time.Time;
-private import ISO8601 = tango.time.ISO8601;
-//import tango.time.Clock;
+import tango.time.chrono.Gregorian;
+import ISO8601 = tango.time.ISO8601;
 import Integer = tango.text.convert.Integer;
 
-import tango.time.chrono.Gregorian;
-import tango.time.Time;
+import dbi.Exception;
 
 DateTime toDate(Time t)
 {
@@ -16,8 +15,6 @@ DateTime toDate(Time t)
 	dt.time = t.time;
 	return dt;
 }
-
-import dbi.DBIException;
 
 /*
  * Does a fixed-length unsigned-integer to string conversion.

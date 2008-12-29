@@ -2,9 +2,9 @@
  * Authors: The D DBI project
  * Copyright: BSD license
  */
-module dbi.Registry;
+module dbi.util.Registry;
 
-import dbi.Database, dbi.DBIException;
+import dbi.model.Database, dbi.Exception;
 
 private import tango.text.Util;
 
