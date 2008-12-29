@@ -304,6 +304,7 @@ debug(DBITest) {
 			
 			initData;
 			insert;
+			select;
 			
 			dbTests;
 			teardown;
@@ -384,11 +385,51 @@ debug(DBITest) {
 			assert(db.lastInsertID == 2);
 			
 		}
-		/+
-		Statement prepare(char[] sql)
+		
+		void select()
 		{
-			return db.prepare(sql);
+			auto list = db.sqlGen.makeFieldList(
+				["id", "UByte", "Byte", "UShort", "Short", "UInt", "Int",
+		    	 "ULong", "Long", "Float", "Double",
+			     "String", "Binary", "DateTime", "Time"]);
+			auto sql = "SELECT " ~ list ~ " FROM dbi_test WHERE 1";
+			auto st = db.prepare(sql);
+			assert(st);
+			st.execute();
+			Data dataCopy;
+			uint id;
+			
+			void assertData() {
+				assert(dataCopy.ub == data.ub);
+				assert(dataCopy.b == data.b);
+				assert(dataCopy.us == data.us);
+				assert(dataCopy.s == data.s);
+				assert(dataCopy.ui == data.ui);
+				assert(dataCopy.i == data.i);
+				assert(dataCopy.ul == data.ul);
+				assert(dataCopy.l == data.l);
+				assert(abs(dataCopy.f - data.f) < 0.00001);
+				assert(abs(dataCopy.d - data.d) < 0.0000001);
+				assert(dataCopy.str == data.str);
+				assert(dataCopy.binary == data.binary);
+				//assert(dataCopy.dt == data.dt);
+				//assert(dataCopy.t == data.t);
+			}
+			
+			while(st.fetch(id, dataCopy.ub,dataCopy.b,dataCopy.us,dataCopy.s,dataCopy.ui,dataCopy.i,
+					dataCopy.ul,dataCopy.l,dataCopy.f,dataCopy.d,dataCopy.str,dataCopy.binary,dataCopy.dt,dataCopy.t)) {
+				assertData;
+			}
+			
+			assert(db.execute(sql));
+			
+			while(db.fetchRow(id, dataCopy.ub,dataCopy.b,dataCopy.us,dataCopy.s,dataCopy.ui,dataCopy.i,
+				dataCopy.ul,dataCopy.l,dataCopy.f,dataCopy.d,dataCopy.str,dataCopy.binary,dataCopy.dt,dataCopy.t)) {
+				assertData;
+			}
 		}
+		
+		/+
 		
 		void testMetadata()
 		{

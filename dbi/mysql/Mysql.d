@@ -256,16 +256,26 @@ class Mysql : Database {
 	}
 	
 	void setParam(bool val) { stepWrite_; if(val) writer_ ~= "1"; else writer_ ~= "0"; }
-	void setParam(ubyte val) { stepWrite_; writer_ ~= Integer.toString(val); }
-	void setParam(byte val) { stepWrite_; writer_ ~= Integer.toString(val); }
-	void setParam(ushort val) { stepWrite_; writer_ ~= Integer.toString(val); }
-	void setParam(short val) { stepWrite_; writer_ ~= Integer.toString(val); }
-	void setParam(uint val) { stepWrite_; writer_ ~= Integer.toString(val); }
-	void setParam(int val) { stepWrite_; writer_ ~= Integer.toString(val); }
-	void setParam(ulong val) { stepWrite_; writer_ ~= Integer.toString(val); }
-	void setParam(long val) { stepWrite_; writer_ ~= Integer.toString(val); }
-	void setParam(float val) { stepWrite_; writer_ ~= Float.toString(val); }
-	void setParam(double val) { stepWrite_; writer_ ~= Float.toString(val); }
+	void setParam(ubyte val)
+	{ stepWrite_; char[3] buf; writer_ ~= Integer.format(buf,val); }
+	void setParam(byte val)
+	{ stepWrite_; char[4] buf; writer_ ~= Integer.format(buf,val); }
+	void setParam(ushort val)
+	{ stepWrite_; char[5] buf; writer_ ~= Integer.format(buf,val); }
+	void setParam(short val)
+	{ stepWrite_; char[6] buf; writer_ ~= Integer.format(buf,val); }
+	void setParam(uint val)
+	{ stepWrite_; char[10] buf; writer_ ~= Integer.format(buf,val); }
+	void setParam(int val)
+	{ stepWrite_; char[11] buf; writer_ ~= Integer.format(buf,val); }
+	void setParam(ulong val)
+	{ stepWrite_; char[20] buf; writer_ ~= Integer.format(buf,val); }
+	void setParam(long val)
+	{ stepWrite_; char[21] buf; writer_ ~= Integer.format(buf,val); }
+	void setParam(float val)
+	{ stepWrite_; char[100] buf; writer_ ~= Float.format(buf,val,10,0); }
+	void setParam(double val)
+	{ stepWrite_; char[150] buf; writer_ ~= Float.format(buf,val,20,0); }
 	void setParam(char[] val)
 	{
 		stepWrite_;

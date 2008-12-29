@@ -56,7 +56,7 @@ class MysqlStatement : Statement
 		initBindings(resTypes, resBind, resHelper);
 	}
 	
-	void execute()
+	private void executeNoParams()
 	{
 		auto res = mysql_stmt_execute(stmt);
 		if(res != 0) {
@@ -66,7 +66,9 @@ class MysqlStatement : Statement
 	
 	void doExecute(void*[] bind)
 	{
-		if(!bind || !paramBind) throw new DBIException("Attempting to execute a statement without having set parameters types or passed a valid bind array.");
+		if(!bind.length) return executeNoParams;
+		
+		if(!paramBind.length) throw new DBIException("Attempting to execute a statement without having set parameters types or passed a valid bind array.");
 		if(bind.length != paramBind.length) throw new DBIException("Incorrect number of pointers in bind array");
 		
 		uint len = bind.length;
