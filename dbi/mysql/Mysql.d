@@ -246,12 +246,16 @@ class Mysql : Database {
 		writer_ ~= " FROM `";
 		writer_ ~= tablename;
 		writer_ ~= "` ";
-		writer_ ~= where;
 		
-		sql_ = writer_.get;
 		if(haveParams) {
+			where_ = where;
+			sql_ = writer_.get;
 			writeFiber_ = new Fiber(&writeSelect);
     		writeFiber_.call;
+		}
+		else {
+			writer_ ~= where;
+			sql_ = writer_.get;
 		}
 	}
     
@@ -363,8 +367,11 @@ class Mysql : Database {
 	
 	private void writeSelect()
 	{
+		assert(where_.length);
+	
 		auto paramIndices = getParamIndices(where_);
 		size_t writerIdx = 0;
+		
 	
 		foreach(idx; paramIndices)
 		{
@@ -372,10 +379,10 @@ class Mysql : Database {
 			writerIdx = idx + 1;
 			Fiber.yield;
 		}
-		
 		writer_ ~= where_[writerIdx .. $];
-		
+		Fiber.yield;
 		sql_ = writer_.get;
+		where_ = null;
 	}
 	
 	private void stepWrite_()

@@ -174,7 +174,7 @@ abstract class Database : Result, IStatementProvider {
 	
 	bool select(Types...)(char[] tablename, char[][] fields, char[] where, Types bind)
 	{
-		bool haveParams = Types.length > fields.length ? true : false;
+		bool haveParams = Types.length ? true : false;
 		initSelect(tablename, fields, where, haveParams);
 		setParams(bind);
 		return doQuery();
@@ -408,7 +408,20 @@ debug(DBITest) {
 		void update()
 		{
 			assert(db.update("dbi_test",["UByte","Byte"],"WHERE id = ?",5,-7,1));
+			assert(db.update("dbi_test",["UByte","Byte"],"WHERE id = 2",5,-7));
 			assert(db.affectedRows == 1);
+			
+			void doFetch()
+			{
+				ubyte ub; byte b;
+				assert(db.fetchRow(ub, b));
+				assert(ub == 5);
+				assert(b == -7);
+			}
+			assert(db.select("dbi_test",["UByte","Byte"],"WHERE id = 1"));
+			doFetch;
+			assert(db.select("dbi_test",["UByte","Byte"],"WHERE id = ?",2));
+			doFetch;
 		}
 		
 		void select()
