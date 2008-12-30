@@ -58,6 +58,12 @@ class DisposableStringWriter_(bool AllowCustomAlloc = false) : IDisposableString
 		used += x;
 	}
 	
+	void backup(size_t n = 1)
+	{
+		assert(n <= used);
+		used -= n;
+	}
+	
 	char[] getOpenBuffer()
 	{
 		return buffer[used .. $];

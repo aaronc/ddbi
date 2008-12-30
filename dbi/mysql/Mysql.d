@@ -213,12 +213,30 @@ class Mysql : Database {
     		}
     }
     
+    void initInsert(char[] tablename, char[][] fields)
+	{
+		sql_ = "Generating INSERT sql for " ~ tablename;
+		tablename_ = tablename;
+		fieldnames_ = fields;
+		writeFiber_ = new Fiber(&writeInsert);
+    	writeFiber_.call;
+	}
+	
+	void initUpdate(char[] tablename, char[][] fields)
+	{
+		sql_ = "Generating UPDATE sql for " ~ tablename;
+		tablename_ = tablename;
+		fieldnames_ = fields;
+		writeFiber_ = new Fiber(&writeUpdate);
+    	writeFiber_.call;
+	}
+    
 	bool doQuery()
 	{
 		if(writeFiber_) {
-			assert(writeFiber_.state == Fiber.State.HOLD);
+			assert(writeFiber_.state == Fiber.State.HOLD, "Param index out of bounds, sql: " ~ sql_);
 			writeFiber_.call;
-			assert(writeFiber_.state == Fiber.State.TERM);
+			assert(writeFiber_.state == Fiber.State.TERM, "Param index out of bounds, sql: " ~ sql_);
 			writeFiber_ = null;
 		}
 		
@@ -236,9 +254,9 @@ class Mysql : Database {
 	
 	private Fiber writeFiber_;
 	private char[] sql_;
+	private char[] tablename_;
+	private char[][] fieldnames_;
 	private DisposableStringWriter writer_;
-	private size_t[] paramIndices_;
-	private size_t writerIdx_, paramIdx_;
 	
 	private void virtualPrepare()
 	{
@@ -250,19 +268,37 @@ class Mysql : Database {
 		
 		foreach(idx; paramIndices)
 		{
-			writer_ ~= sql_[writerIdx_ .. idx];
-			writerIdx_ = idx + 1;
+			writer_ ~= sql_[writerIdx .. idx];
+			writerIdx = idx + 1;
 			Fiber.yield;
 		}
 		
-		writer_ ~= sql_[writerIdx_ .. $];
-		writer_ ~= "\0";
+		writer_ ~= sql_[writerIdx .. $];
 		sql_ = writer_.get;
 	}
 	
 	private void writeInsert()
 	{
+		writer_.reset;
+		assert(tablename_.length && fieldnames_.length);
+		writer_ ~= "INSERT INTO `" ~ tablename_ ~ "` (";
+		foreach(fieldname; fieldnames_)
+		{
+			writer_ ~= "`" ~ fieldname ~ "`,";
+		}
+		writer_.backup;
+		writer_ ~= ") VALUES(";
+		Fiber.yield;
 		
+		auto n = fieldnames_.length;
+		for(uint i = 0; i < n - 1; ++i)
+		{
+			Fiber.yield;
+			writer_ ~= ",";
+		}
+		Fiber.yield;
+		writer_ ~= ")";
+		sql_ = writer_.get;
 	}
 	
 	private void writeUpdate()
@@ -272,14 +308,8 @@ class Mysql : Database {
 	
 	private void stepWrite_()
 	{
-		/+if(paramIdx_ >= paramIndices_.length) {
-			throw new DBIException("Parameter index is out of bounds, index:"
-				~ Integer.toString(paramIdx_), sql_);
-		}
-		writer_ ~= sql_[writerIdx_ .. paramIndices_[paramIdx_]];
-		writerIdx_ = paramIndices_[paramIdx_] + 1;
-		++paramIdx_;+/
-		assert(writeFiber_ !is null && writeFiber_.state == Fiber.State.HOLD);
+		assert(writeFiber_ !is null && writeFiber_.state == Fiber.State.HOLD,
+			"Param index out of bounds, sql: " ~ sql_);
 		writeFiber_.call;
 	}
 	
@@ -319,15 +349,11 @@ class Mysql : Database {
 	
 	void setParam(Time val)
 	{
-		stepWrite_;
 		DateTime dateTime;
 		Gregorian.generic.split(val, dateTime.date.year, dateTime.date.month, 
 			dateTime.date.day, dateTime.date.doy, dateTime.date.dow, dateTime.date.era);
 		dateTime.time = val.time;
-		writer_ ~= "\'";
-		auto res = writer_.getWriteBuffer(19);
-		printDateTime(dateTime, res);
-		writer_ ~= "\'";
+		setParam(dateTime);
 	}
 	
 	void setParam(DateTime val)
@@ -551,16 +577,6 @@ class Mysql : Database {
 		return true;
 	}
 	
-	void initInsert(char[] tablename, char[][] fields)
-	{
-		
-	}
-	
-	void initUpdate(char[] tablename, char[][] fields)
-	{
-		
-	}
-    
     debug(DBITest) {
 		override void doTests()
 		{

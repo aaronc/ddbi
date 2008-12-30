@@ -155,8 +155,8 @@ abstract class Database : Result, IStatementProvider {
 		return doQuery();
 	}
 	
-	/+abstract void initInsert(char[] tablename, char[][] fields);
-	abstract void initUpdate(char[] tablename, char[][] fields);
+	abstract void initInsert(char[] tablename, char[][] fields);
+	//abstract void initUpdate(char[] tablename, char[][] fields);
 	bool insert(Types...)(char[] tablename, char[][] fields, Types bind)
 	{
 		initInsert(tablename, fields);
@@ -164,7 +164,7 @@ abstract class Database : Result, IStatementProvider {
 		return doQuery();
 	}
 	
-	bool update(Types...)(char[] tablename, char[][] fields, Types bind)
+	/+bool update(Types...)(char[] tablename, char[][] fields, Types bind)
 	{
 		initUpdate(tablename, fields);
 		setParams(bind);
@@ -382,7 +382,13 @@ debug(DBITest) {
 				data.ul,data.l,data.f,data.d,data.str,data.binary,data.dt,data.t);
 			assert(st.affectedRows == 1);
 			assert(db.lastInsertID == 1);
-			assert(db.execute(sql,data.ub,data.b,data.us,data.s,data.ui,data.i,
+			
+			
+			assert(db.insert("dbi_test",
+				["UByte", "Byte", "UShort", "Short", "UInt", "Int",
+				 "ULong", "Long", "Float", "Double",
+				 "String", "Binary", "DateTime", "Time"],
+				 data.ub,data.b,data.us,data.s,data.ui,data.i,
 				data.ul,data.l,data.f,data.d,data.str,data.binary,data.dt,data.t));
 			assert(db.affectedRows == 1);
 			assert(db.lastInsertID == 2);
