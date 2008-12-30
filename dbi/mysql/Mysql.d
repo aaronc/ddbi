@@ -250,7 +250,26 @@ class Mysql : Database {
 		if(haveParams) {
 			where_ = where;
 			sql_ = writer_.get;
-			writeFiber_ = new Fiber(&writeSelect);
+			writeFiber_ = new Fiber(&writeWhereClause);
+    		writeFiber_.call;
+		}
+		else {
+			writer_ ~= where;
+			sql_ = writer_.get;
+		}
+	}
+	
+	void initRemove(char[] tablename, char[] where, bool haveParams)
+	{
+		writer_.reset;
+		writer_ ~= "DELETE FROM `";
+		writer_ ~= tablename;
+		writer_ ~= "` ";
+		
+		if(haveParams) {
+			where_ = where;
+			sql_ = writer_.get;
+			writeFiber_ = new Fiber(&writeWhereClause);
     		writeFiber_.call;
 		}
 		else {
@@ -365,7 +384,7 @@ class Mysql : Database {
 		where_ = null;
 	}
 	
-	private void writeSelect()
+	private void writeWhereClause()
 	{
 		assert(where_.length);
 	

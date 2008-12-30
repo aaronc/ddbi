@@ -158,6 +158,7 @@ abstract class Database : Result, IStatementProvider {
 	abstract void initInsert(char[] tablename, char[][] fields);
 	abstract void initUpdate(char[] tablename, char[][] fields, char[] where);
 	abstract void initSelect(char[] tablename, char[][] fields, char[] where, bool haveParams);
+	abstract void initRemove(char[] tablename, char[] where, bool haveParams);
 	bool insert(Types...)(char[] tablename, char[][] fields, Types bind)
 	{
 		initInsert(tablename, fields);
@@ -176,6 +177,14 @@ abstract class Database : Result, IStatementProvider {
 	{
 		bool haveParams = Types.length ? true : false;
 		initSelect(tablename, fields, where, haveParams);
+		setParams(bind);
+		return doQuery();
+	}
+	
+	bool remove(Types...)(char[] tablename, char[] where, Types bind)
+	{
+		bool haveParams = Types.length ? true : false;
+		initRemove(tablename, where, haveParams);
 		setParams(bind);
 		return doQuery();
 	}
@@ -318,6 +327,7 @@ debug(DBITest) {
 			insert;
 			select;
 			update;
+			remove;
 			
 			dbTests;
 			teardown;
@@ -422,6 +432,16 @@ debug(DBITest) {
 			doFetch;
 			assert(db.select("dbi_test",["UByte","Byte"],"WHERE id = ?",2));
 			doFetch;
+		}
+		
+		void remove()
+		{
+			assert(db.remove("dbi_test","WHERE id = 1"));
+			assert(db.select("dbi_test",["id"],"WHERE 1"));
+			assert(db.rowCount == 1);
+			assert(db.remove("dbi_test","WHERE id = ?",2));
+			assert(db.select("dbi_test",["id"],"WHERE 1"));
+			assert(db.rowCount == 0);
 		}
 		
 		void select()
