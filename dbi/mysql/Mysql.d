@@ -11,6 +11,7 @@ import TextUtil = tango.text.Util;
 import Integer = tango.text.convert.Integer;
 import Float = tango.text.convert.Float;
 import tango.time.Time;
+import tango.core.Thread;
 
 import dbi.model.Database;
 import dbi.util.DateTime, dbi.util.VirtualPrepare,
@@ -52,7 +53,6 @@ static this() {
  *	Database is the interface that this provides an implementation of.
  */
 class Mysql : Database {
-	public:
 	/**
 	 * Create a new instance of MysqlDatabase, but don't connect.
 	 */
@@ -208,30 +208,25 @@ class Mysql : Database {
     {
     		sql_ = sql;
     		if(haveParams) {
-    			writer_.reset;
-    			paramIndices_ = getParamIndices(sql);
-    			paramIdx_ = 0;
+    			writeFiber_ = new Fiber(&virtualPrepare);
+    			writeFiber_.call;
     		}
-    		else paramIndices_ = null;
-    		writerIdx_ = 0;
     }
     
 	bool doQuery()
 	{
-		char[] querySql = null;
-		if(!paramIndices_.length) querySql = sql_;
-		else {
-			writer_ ~= sql_[writerIdx_ .. $];
-			writer_ ~= "\0";
-			querySql = writer_.get;
-			querySql.length = writer_.get.length;
+		if(writeFiber_) {
+			assert(writeFiber_.state == Fiber.State.HOLD);
+			writeFiber_.call;
+			assert(writeFiber_.state == Fiber.State.TERM);
+			writeFiber_ = null;
 		}
 		
-		debug log.trace("Querying with sql: {}", querySql);
+		debug log.trace("Querying with sql: {}", sql_);
 				
-		int error = mysql_real_query(mysql, querySql.ptr, querySql.length);
+		int error = mysql_real_query(mysql, sql_.ptr, sql_.length);
 		if (error) {
-			throw new DBIException("mysql_real_query error: " ~ toDString(mysql_error(mysql)), querySql, error, specificToGeneral(error));
+			throw new DBIException("mysql_real_query error: " ~ toDString(mysql_error(mysql)), sql_, error, specificToGeneral(error));
 		}
 		
 		result_ = mysql_store_result(mysql);
@@ -239,20 +234,53 @@ class Mysql : Database {
 		return true;
 	}
 	
+	private Fiber writeFiber_;
 	private char[] sql_;
 	private DisposableStringWriter writer_;
 	private size_t[] paramIndices_;
 	private size_t writerIdx_, paramIdx_;
 	
+	private void virtualPrepare()
+	{
+		assert(sql_.length);
+		writer_.reset;
+		auto paramIndices = getParamIndices(sql_);
+		size_t writerIdx = 0;
+		Fiber.yield;
+		
+		foreach(idx; paramIndices)
+		{
+			writer_ ~= sql_[writerIdx_ .. idx];
+			writerIdx_ = idx + 1;
+			Fiber.yield;
+		}
+		
+		writer_ ~= sql_[writerIdx_ .. $];
+		writer_ ~= "\0";
+		sql_ = writer_.get;
+	}
+	
+	private void writeInsert()
+	{
+		
+	}
+	
+	private void writeUpdate()
+	{
+		
+	}
+	
 	private void stepWrite_()
 	{
-		if(paramIdx_ >= paramIndices_.length) {
+		/+if(paramIdx_ >= paramIndices_.length) {
 			throw new DBIException("Parameter index is out of bounds, index:"
 				~ Integer.toString(paramIdx_), sql_);
 		}
 		writer_ ~= sql_[writerIdx_ .. paramIndices_[paramIdx_]];
 		writerIdx_ = paramIndices_[paramIdx_] + 1;
-		++paramIdx_;
+		++paramIdx_;+/
+		assert(writeFiber_ !is null && writeFiber_.state == Fiber.State.HOLD);
+		writeFiber_.call;
 	}
 	
 	void setParam(bool val) { stepWrite_; if(val) writer_ ~= "1"; else writer_ ~= "0"; }
@@ -336,10 +364,10 @@ class Mysql : Database {
 	
 	char[] escapeString(char[] str, char[] dst)
 	{
-		assert(false, "Not implemented");
-		//char* res = new char[str.length];
-		char* res;
-		mysql_real_escape_string(mysql, res, str.ptr, str.length);
+		assert(dst.length >= 2 * str.length + 1, "Destination string length " 
+			"must be at least 2 * source string length + 1");
+		auto len = mysql_real_escape_string(mysql, dst.ptr, str.ptr, str.length);
+		return dst[0..len];
 	}
 	
 	bool hasTable(char[] tablename)
@@ -399,16 +427,6 @@ class Mysql : Database {
 	
 	char[] type() { return "Mysql"; }
 	
-	/+char[] toNativeType(BindType type, ulong limit)
-	{
-		switch(BindType type)
-		{
-		case BindType.Null:
-		default:
-			return null;
-		}
-	}+/
-	
 	debug
 	{
 		static Logger log;
@@ -431,17 +449,7 @@ class Mysql : Database {
 		return mysqlSqlGen;
 	}
     
-    debug(DBITest) {
-    	override void doTests()
-		{
-    		Stdout.formatln("Beginning Mysql Tests");
-    		
-    		Stdout.formatln("Testing Mysql");
-			auto test = new DBTest(this);
-			test.run;
-		}
-	}
-    
+
     MYSQL* handle() { return mysql; }
     
 	bool moreResults()
@@ -541,6 +549,28 @@ class Mysql : Database {
 			idx, fields_[idx].type, curLengths_[idx], curRow_[idx][0..curLengths_[idx]]);+/
 		bindMysqlResField(curRow_[idx][0..curLengths_[idx]],fields_[idx].type, val);
 		return true;
+	}
+	
+	void initInsert(char[] tablename, char[][] fields)
+	{
+		
+	}
+	
+	void initUpdate(char[] tablename, char[][] fields)
+	{
+		
+	}
+    
+    debug(DBITest) {
+		override void doTests()
+		{
+			Stdout.formatln("Beginning Mysql Tests");
+			
+			Stdout.formatln("Testing Mysql");
+			auto test = new DBTest(this);
+			test.run;
+	
+	    }
 	}
 
 	package:
