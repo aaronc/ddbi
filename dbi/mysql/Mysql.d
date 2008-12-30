@@ -486,10 +486,12 @@ class Mysql : Database {
 		mysql_commit(mysql);
 	}
 	
-	char[] escapeString(char[] str, char[] dst)
+	char[] escapeString(char[] str, char[] dst = null)
 	{
-		assert(dst.length >= 2 * str.length + 1, "Destination string length " 
-			"must be at least 2 * source string length + 1");
+		/+assert(dst.length >= 2 * str.length + 1, "Destination string length " 
+			"must be at least 2 * source string length + 1");+/
+		if(dst.length < str.length * 2 + 1)
+			dst.length = str.length *2 + 1;
 		auto len = mysql_real_escape_string(mysql, dst.ptr, str.ptr, str.length);
 		return dst[0..len];
 	}
