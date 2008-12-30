@@ -194,6 +194,7 @@ class Mysql : Database {
 	 */
 	override void close () {
 		if (mysql !is null) {
+			closeResult;
 			mysql_close(mysql);
 			if (uint error = mysql_errno(mysql)) {
    		        debug log.error("close(): {}", toDString(mysql_error(mysql)));
