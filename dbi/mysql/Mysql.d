@@ -124,8 +124,14 @@ class Mysql : Database {
 				sock = keywords["sock"];
 			}
 			if("allowMultiQueries" in keywords) {
-				if(keywords["allowLoadLocalInfile"] == "false")
+				if(keywords["allowMultiQueries"] == "false") {
 					client_flag &= ~CLIENT_MULTI_STATEMENTS;
+					allowMultiQueries = false;
+				}
+				else {
+					client_flag |= CLIENT_MULTI_STATEMENTS;
+					allowMultiQueries = true;
+				}
 			}
 			if("allowLoadLocalInfile" in keywords) {
 				if(keywords["allowLoadLocalInfile"] == "true")
@@ -169,6 +175,16 @@ class Mysql : Database {
 			throw new DBIException("Unable to connect to the MySQL database.", error, specificToGeneral(error));
 		}
 	}
+	
+    bool enabled(DbiFeature feature)
+    {
+    	switch(feature)
+		{
+		case DbiFeature.MultiStatements: return allowMultiQueries;
+		default: return false;
+		}
+    }
+    private bool allowMultiQueries = true;
 
 	/**
 	 * Close the current connection to the database.
@@ -443,7 +459,6 @@ class Mysql : Database {
 	}
 	
 	void setParam(ubyte[] val) { setParam(cast(char[])val); }
-	void setParam(void[] val) { setParam(cast(char[])val); }
 	
 	void setParam(Time val)
 	{
@@ -579,18 +594,12 @@ class Mysql : Database {
     MYSQL* handle() { return mysql; }
     
 	bool moreResults()
-    in {
-        assert (result_ !is null);
-    }
-    body {
-        if (result_ is null)
-            throw new DBIException ("This result set was already closed.");
-
+	{
         return cast(bool)mysql_more_results(mysql);
     }
     
 
-    Result nextResult()
+    bool nextResult()
     {
         if (result_ !is null) {
         	mysql_free_result(result_);
@@ -602,15 +611,16 @@ class Mysql : Database {
         if (res == 0) {
         	result_ = mysql_store_result(mysql);
         	getMysqlFieldInfo;
-            return this;
+            return true;
         }
-        else if(res < 0) return null;
+        else if(res < 0) return false;
         else {
             throw new DBIException("Failed to retrieve next result set.");
         }
     }
 
     bool validResult() { return result_ !is null; }
+    void closeResult() { while(nextResult) {} }
     
     MYSQL_FIELD[] getMysqlFieldInfo()
     {

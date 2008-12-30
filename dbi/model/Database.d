@@ -11,6 +11,12 @@ public import dbi.util.SqlGen, dbi.model.Statement, dbi.model.Metadata, dbi.mode
 
 debug(DBITest) public import tango.io.Stdout;
 
+enum DbiFeature
+{
+    MultiStatements 
+}
+
+
 /**
  * The database interface that all DBDs must inherit from.
  *
@@ -36,6 +42,12 @@ abstract class Database : Result, IStatementProvider {
 		close();
 	}
 
+   /**
+     * Returns true if the given feature has been enabled in
+     * this Database instance.
+     */
+   bool enabled(DbiFeature feature);
+	
 	/**
 	 * Close the current connection to the database.
 	 */
@@ -57,7 +69,6 @@ abstract class Database : Result, IStatementProvider {
 	abstract void setParam(double);
 	abstract void setParam(char[]);
 	abstract void setParam(ubyte[]);
-	abstract void setParam(void[]);
 	abstract void setParam(Time);
 	abstract void setParam(DateTime);
 	
@@ -138,6 +149,9 @@ abstract class Database : Result, IStatementProvider {
 	    			}
 	    		}
 	    	}
+			else static if(is(Type : void[])) {
+				setParam(cast(ubyte[])bind[Index]);
+			}
 	    	else {
 	    		setParam(bind[Index]);
 	    	}
@@ -328,6 +342,7 @@ debug(DBITest) {
 			select;
 			update;
 			remove;
+			testMultiStatements;
 			
 			dbTests;
 			teardown;
@@ -488,6 +503,30 @@ debug(DBITest) {
 				dataCopy.ul,dataCopy.l,dataCopy.f,dataCopy.d,dataCopy.str,dataCopy.binary,dataCopy.dt,dataCopy.t)) {
 				assertData;
 			}
+		}
+		
+		void testMultiStatements()
+		{
+			if(!db.enabled(DbiFeature.MultiStatements))
+				return;
+			
+			char[] sql = db.sqlGen.makeInsertSql("dbi_test",
+				["UByte", "Byte","String"]);
+			sql ~= ";";
+			sql ~= "SELECT UByte, Byte FROM dbi_test WHERE 1";
+			assert(db.query(sql,15,-15,"testMultiStatements"));
+			assert(!db.validResult);
+			assert(db.affectedRows == 1);
+			assert(db.moreResults);
+			assert(db.nextResult);
+			assert(db.rowCount == 1);
+			ubyte ub; byte b;
+			assert(db.fetchRow(ub, b));
+			assert(ub == 15);
+			assert(b == -15);
+			assert(!db.fetchRow(ub, b));
+			assert(!db.nextResult);
+			assert(!db.moreResults);
 		}
 		
 		/+

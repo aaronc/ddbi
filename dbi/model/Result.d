@@ -19,9 +19,11 @@ abstract class Result
     
 	protected Allocator alloc_;
     
-	abstract bool validResult();
-	abstract Result nextResult();
+	
 	abstract bool moreResults();
+	abstract bool nextResult();
+	abstract bool validResult();
+	abstract void closeResult();
 	abstract ulong rowCount();
 	abstract ulong fieldCount();
 	abstract ulong affectedRows();
