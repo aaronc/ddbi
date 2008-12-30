@@ -156,7 +156,8 @@ abstract class Database : Result, IStatementProvider {
 	}
 	
 	abstract void initInsert(char[] tablename, char[][] fields);
-	//abstract void initUpdate(char[] tablename, char[][] fields);
+	abstract void initUpdate(char[] tablename, char[][] fields, char[] where);
+	abstract void initSelect(char[] tablename, char[][] fields, char[] where, bool haveParams);
 	bool insert(Types...)(char[] tablename, char[][] fields, Types bind)
 	{
 		initInsert(tablename, fields);
@@ -164,12 +165,20 @@ abstract class Database : Result, IStatementProvider {
 		return doQuery();
 	}
 	
-	/+bool update(Types...)(char[] tablename, char[][] fields, Types bind)
+	bool update(Types...)(char[] tablename, char[][] fields, char[] where, Types bind)
 	{
-		initUpdate(tablename, fields);
+		initUpdate(tablename, fields, where);
 		setParams(bind);
 		return doQuery();
-	}+/
+	}
+	
+	bool select(Types...)(char[] tablename, char[][] fields, char[] where, Types bind)
+	{
+		bool haveParams = Types.length > fields.length ? true : false;
+		initSelect(tablename, fields, where, haveParams);
+		setParams(bind);
+		return doQuery();
+	}
 	
 	alias query execute;
 	
@@ -308,6 +317,7 @@ debug(DBITest) {
 			initData;
 			insert;
 			select;
+			update;
 			
 			dbTests;
 			teardown;
@@ -393,6 +403,12 @@ debug(DBITest) {
 			assert(db.affectedRows == 1);
 			assert(db.lastInsertID == 2);
 			
+		}
+		
+		void update()
+		{
+			assert(db.update("dbi_test",["UByte","Byte"],"WHERE id = ?",5,-7,1));
+			assert(db.affectedRows == 1);
 		}
 		
 		void select()

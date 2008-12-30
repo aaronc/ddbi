@@ -222,13 +222,37 @@ class Mysql : Database {
     	writeFiber_.call;
 	}
 	
-	void initUpdate(char[] tablename, char[][] fields)
+	void initUpdate(char[] tablename, char[][] fields, char[] where)
 	{
 		sql_ = "Generating UPDATE sql for " ~ tablename;
 		tablename_ = tablename;
 		fieldnames_ = fields;
+		where_ = where;
 		writeFiber_ = new Fiber(&writeUpdate);
     	writeFiber_.call;
+	}
+	
+	void initSelect(char[] tablename, char[][] fields, char[] where, bool haveParams)
+	{
+		writer_.reset;
+		writer_ ~= "SELECT ";
+		foreach(fieldname; fields)
+		{
+			writer_ ~= "`";
+			writer_ ~= fieldname;
+			writer_ ~= "`,";
+		}
+		writer_.backup;
+		writer_ ~= " FROM `";
+		writer_ ~= tablename;
+		writer_ ~= "` ";
+		writer_ ~= where;
+		
+		sql_ = writer_.get;
+		if(haveParams) {
+			writeFiber_ = new Fiber(&writeSelect);
+    		writeFiber_.call;
+		}
 	}
     
 	bool doQuery()
@@ -255,6 +279,7 @@ class Mysql : Database {
 	private Fiber writeFiber_;
 	private char[] sql_;
 	private char[] tablename_;
+	private char[] where_;
 	private char[][] fieldnames_;
 	private DisposableStringWriter writer_;
 	
@@ -299,11 +324,58 @@ class Mysql : Database {
 		Fiber.yield;
 		writer_ ~= ")";
 		sql_ = writer_.get;
+		tablename_ = null;
+		fieldnames_ = null;
 	}
 	
 	private void writeUpdate()
 	{
+		writer_.reset;
+		assert(tablename_.length && fieldnames_.length && where_.length);
+		writer_ ~= "UPDATE  `" ~ tablename_ ~ "` SET ";
+		Fiber.yield;
+		foreach(fieldname; fieldnames_)
+		{
+			writer_ ~= "`" ~ fieldname ~ "` = ";
+			Fiber.yield;
+			writer_ ~= ",";
+		}
+		writer_.backup;
+		writer_ ~= " ";
 		
+		auto paramIndices = getParamIndices(where_);
+		size_t writerIdx = 0;
+	
+		foreach(idx; paramIndices)
+		{
+			writer_ ~= where_[writerIdx .. idx];
+			writerIdx = idx + 1;
+			Fiber.yield;
+		}
+		
+		writer_ ~= where_[writerIdx .. $];
+		
+		sql_ = writer_.get;
+		tablename_ = null;
+		fieldnames_ = null;
+		where_ = null;
+	}
+	
+	private void writeSelect()
+	{
+		auto paramIndices = getParamIndices(where_);
+		size_t writerIdx = 0;
+	
+		foreach(idx; paramIndices)
+		{
+			writer_ ~= where_[writerIdx .. idx];
+			writerIdx = idx + 1;
+			Fiber.yield;
+		}
+		
+		writer_ ~= where_[writerIdx .. $];
+		
+		sql_ = writer_.get;
 	}
 	
 	private void stepWrite_()
