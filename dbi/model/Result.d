@@ -45,7 +45,7 @@ abstract class Result
 	abstract bool getField(inout double, size_t idx);
 	abstract bool getField(inout char[], size_t idx);
 	abstract bool getField(inout ubyte[], size_t idx);
-	abstract bool getField(inout void[], size_t idx);
+	//abstract bool getField(inout void[], size_t idx);
 	abstract bool getField(inout Time, size_t idx);
 	abstract bool getField(inout DateTime, size_t idx);
 	
@@ -130,6 +130,12 @@ abstract class Result
 	    			}
 	    			++idx;
 	    		}
+	    	}
+	    	else static if(is(Type == void[])) {
+	    		ubyte[] temp;
+	    		getField(temp, idx);
+	    		bind[Index] = temp;
+	    		++idx;
 	    	}
 	    	else {
 	    		getField(bind[Index], idx);

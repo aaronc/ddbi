@@ -129,6 +129,24 @@ abstract class SqlGenerator
 		return res;
 	}
 	
+/+	char[] makeCreateSql(TableSchema schema, char[] options = null)
+	{
+		char[] res = "CREATE TABLE ";
+		res ~= quoteTableName(schema.tablename) ~ " (";
+		auto len = schema.columnInfo.length;
+		for(size_t i = 0; i < len; ++i)
+		{
+			res ~= quoteColumnName(schema.columnInfo[i].name) ~ " " ~ makeColumnDef(schema.columnInfo[i], columnInfo);
+			if(i != len - 1) res ~= ", ";
+		}
+		res ~= ")";
+		
+		if(options.length) res ~= " " ~ options;
+		
+		return res;
+	}+/
+	
+	
 	char[] makeDropSql(char[] tablename, bool checkExists = true)
 	{
 		char[] res = "DROP TABLE ";

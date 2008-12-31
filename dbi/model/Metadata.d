@@ -31,6 +31,13 @@ struct ColumnInfo
     bool zeroFill() { return cast(bool)(flags & ColumnFlag.ZeroFill); }
 }+/
 
+struct FieldInfo
+{
+	char[] name;
+	BindType type;
+}
+
+
 struct ColumnInfo
 {
 	char[] name;
@@ -39,10 +46,32 @@ struct ColumnInfo
 	bool autoIncrement;
 	bool primaryKey;
 	ulong limit;
+	bool uniqueKey;
 }
 
-struct FieldInfo
+/+
+
+class Key
+{
+	char[][] colNames;
+}
+
+class ForeignKey : Key
 {
 	char[] name;
-	BindType type;
+	char[] refTableName;
+	char[] refIndexColNames;
+	enum ReferenceOption { NONE, RESTRICT, CASCADE, SET_NULL, NO_ACTION };
+	ReferenceOption onDelete;
+	ReferenceOption onUpdate;
 }
+
+class TableSchema
+{
+	char[] tablename;
+	ColumnInfo[] columns;
+	ForeignKey[] foreignKeys;
+	Key primaryKey;
+	Key[] uniqueKeys;
+}
++/

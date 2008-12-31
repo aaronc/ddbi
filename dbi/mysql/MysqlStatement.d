@@ -12,7 +12,7 @@ version(dbi_mysql) {
 		import tango.io.Stdout;
 		debug = Log;
 	}
-	debug(Log) {
+	debug {
 		import tango.util.log.Log;
 		import tango.util.log.ConsoleAppender;
 	}
@@ -58,6 +58,8 @@ class MysqlStatement : Statement
 	
 	private void executeNoParams()
 	{
+		debug log.trace("Executing statement: {}",sql);
+		
 		auto res = mysql_stmt_execute(stmt);
 		if(res != 0) {
 			throw new DBIException("Error at mysql_stmt_execute.", res, specificToGeneral(res));
@@ -117,10 +119,14 @@ class MysqlStatement : Statement
 		if(res != 0) {
 			throw new DBIException("Error at mysql_stmt_bind_param.", sql, res, specificToGeneral(res));
 		}
+		
+		debug log.trace("Executing statement: {}",sql);
+		
 		res = mysql_stmt_execute(stmt);
 		if(res != 0) {
 			//debug Stdout.formatln("mysql_stmt_errno:{}", mysql_stmt_errno(stmt));
 			//debug Stdout.formatln("mysql_stmt_error:{}", toDString(mysql_stmt_error(stmt)));
+			debug log.error("mysql_stmt_error:{} for sql", toDString(mysql_stmt_error(stmt)),sql);
 			auto errno = mysql_stmt_errno(stmt);
 			auto err = toDString(mysql_stmt_error(stmt));
 			throw new DBIException("Error at mysql_stmt_execute: " ~ err, sql, errno, specificToGeneral(errno));
@@ -175,7 +181,7 @@ class MysqlStatement : Statement
 		
 		my_bool bres = mysql_stmt_bind_result(stmt, resBind.ptr);
 		if(bres != 0) {
-			debug(Log) {
+			debug {
 				log.error("Unable to bind result params");
 				logError;
 			}
@@ -183,7 +189,7 @@ class MysqlStatement : Statement
 		}
 		int res = mysql_stmt_fetch(stmt);
 		if(res == 1) {
-			debug(Log) {
+			debug {
 				log.error("Error fetching result data");
 				logError;
 			}
@@ -246,7 +252,7 @@ class MysqlStatement : Statement
 					resBind[i].buffer_length = l;
 					resBind[i].buffer = buf.ptr;
 					if(mysql_stmt_fetch_column(stmt, &resBind[i], i, 0) != 0) {
-						debug(Log) {
+						debug {
 							log.error("Error fetching String of Binary that failed due to truncation");
 							logError;
 						}
@@ -274,6 +280,11 @@ class MysqlStatement : Statement
 	ulong affectedRows()
 	{
 		return mysql_stmt_affected_rows(stmt);
+	}
+	
+	ulong rowCount()
+	{
+		return mysql_stmt_num_rows(stmt);
 	}
 	
 	ulong lastInsertID()
@@ -437,7 +448,7 @@ class MysqlStatement : Statement
 		helper.types = types;
 	}
 	
-	debug(Log)
+	debug
 	{
 		static Logger log;
 		static this()

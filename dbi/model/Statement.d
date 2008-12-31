@@ -55,12 +55,13 @@ abstract class Statement
 		resTypes_ = null;
 	}
 	
-	void doExecute(void*[] bind);
-	bool doFetch(void*[] bind, out bool[] isNull, void* delegate(size_t) allocator = null);
-	void prefetchAll();
-	ulong affectedRows();
-	ulong lastInsertID();
-	void reset();
+	abstract void doExecute(void*[] bind);
+	abstract bool doFetch(void*[] bind, out bool[] isNull, void* delegate(size_t) allocator = null);
+	abstract void prefetchAll();
+	abstract ulong affectedRows();
+	abstract ulong rowCount();
+	abstract ulong lastInsertID();
+	abstract void reset();
 	
 	package void setCacheProvider(IStatementProvider cacheProvider)
 	{

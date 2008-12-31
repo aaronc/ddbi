@@ -78,7 +78,7 @@ abstract class Database : Result, IStatementProvider {
 		{
 			static if(is(Type : BindInfo))
 	    	{
-				auto bindInfo = cast(Binder)bind[Index];
+				auto bindInfo = cast(BindInfo)bind[Index];
 				
 				auto ptrs = bindInfo.ptrs;
 	    		foreach(i, type; bindInfo.types)
@@ -138,11 +138,11 @@ abstract class Database : Result, IStatementProvider {
 	    				setParam(*ptr);
 	    				break;
 	    			case BindType.Time:
-	    				Time* ptr = cast(T.Time*)ptrs[i];
+	    				Time* ptr = cast(Time*)ptrs[i];
 	    				setParam(*ptr);
 	    				break;
 	    			case BindType.DateTime:
-	    				DateTime* ptr = cast(T.DateTime*)ptrs[i];
+	    				DateTime* ptr = cast(DateTime*)ptrs[i];
 	    				setParam(*ptr);
 	    				break;
 	    			case BindType.Null:
@@ -377,7 +377,7 @@ debug(DBITest) {
 			float f;
 			double d;
 			char[] str;
-			ubyte[] binary;
+			void[] binary;
 			DateTime dt;
 			Time t;
 		}
@@ -397,7 +397,7 @@ debug(DBITest) {
 			data.f = 5.235689;
 			data.d = 72523643.3458612319;
 			data.str = "test test test test test";
-			data.binary = [0,1,2,3,4,5,6,8,9,10];
+			data.binary = cast(void[])[0,1,2,3,4,5,6,8,9,10];
 			data.dt.date.year = 2008;
 			data.dt.date.month = 1;
 			data.dt.date.day = 1;
