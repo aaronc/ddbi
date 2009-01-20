@@ -193,14 +193,16 @@ class Mysql : Database {
 	 *	DBIException if there was an error disconnecting.
 	 */
 	override void close () {
+		debug log.trace("Closing: checking for null handle");
 		if (mysql !is null) {
+			debug log.trace("Closing database: handle isn't null");
 			closeResult;
 			mysql_close(mysql);
 			if (uint error = mysql_errno(mysql)) {
    		        debug log.error("close(): {}", toDString(mysql_error(mysql)));
 				throw new DBIException("Unable to close the MySQL database.", error, specificToGeneral(error));
 			}
-			mysql = null;
+			scope(exit) mysql = null;
 		}
 		mysqlSqlGen = null;
 	}
@@ -515,6 +517,7 @@ class Mysql : Database {
 	bool hasTable(char[] tablename)
 	{
 		MYSQL_RES* res = mysql_list_tables(mysql, toCString(tablename));
+		scope(exit) mysql_free_result(res);
 		if(!res) {
 			debug(Log) {
 				log.warn("mysql_list_tables returned null in method tableExists()");
@@ -523,14 +526,12 @@ class Mysql : Database {
 			return false;
 		}
 		bool exists = mysql_fetch_row(res) ? true : false;
-		mysql_free_result(res);
 		return exists;
 	}
 	
 	ColumnInfo[] getTableInfo(char[] tablename)
 	{
 		assert(query("SHOW COLUMNS FROM `" ~ tablename ~ "`"));
-		
 		
 		ColumnInfo[] info;
 		
@@ -601,7 +602,19 @@ class Mysql : Database {
     }
 
     bool validResult() { return result_ !is null; }
-    void closeResult() { while(nextResult) {} }
+    void closeResult()
+    {
+    	int res = 0;
+    	while(res == 0) {
+	    	if (result_ !is null) {
+	        	mysql_free_result(result_);
+	        	result_ = null;
+	        }
+	        res = mysql_next_result(mysql);
+	        //if(res == 0) result_ = mysql_store_result(mysql);
+	        //else result_ = null;
+	    }
+    }
     
     MYSQL_FIELD[] getMysqlFieldInfo()
     {
@@ -654,7 +667,6 @@ class Mysql : Database {
 	bool getField(inout double val, size_t idx) { return bindField(val, idx); }
 	bool getField(inout char[] val, size_t idx) { return bindField(val, idx); }
 	bool getField(inout ubyte[] val, size_t idx) { return bindField(val, idx); }
-	//bool getField(inout void[] val, size_t idx) { return bindField(val, idx); }
 	bool getField(inout Time val, size_t idx) { return bindField(val, idx); }
 	bool getField(inout DateTime val, size_t idx) { return bindField(val, idx); }
 	

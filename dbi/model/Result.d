@@ -1,3 +1,7 @@
+/**
+ * Authors: The D DBI project
+ * Copyright: BSD license
+ */
 module dbi.model.Result;
 
 public import dbi.model.Metadata;
@@ -19,36 +23,139 @@ abstract class Result
     
 	protected Allocator alloc_;
     
-	
+	/**
+	*	Returns: true if there are more results, false otherwise.
+	*/
 	abstract bool moreResults();
+	
+	/**
+	*	Loads the next result set if there is one.
+	*
+	*	Returns: true if there was another result and it was loaded properly,
+	* 	false otherwise.
+	*/
 	abstract bool nextResult();
+	
+	/**
+	*	Returns: true if the current result set is valid, false otherwise.
+	*	validResult() may return false even if there are still additional result
+	*	sets.  For statements which do not return result sets but modify data,
+	*	check affectedRows().
+	*	
+	*/
 	abstract bool validResult();
+	
+	/**
+	*	Closes all result sets for the current query.
+	*
+	*	Any call to nextResult() after calling closeResult() will fail and
+	* 	return false.
+	*/
 	abstract void closeResult();
+	
+	/**
+	*	Returns: The number of rows in the current result set
+	*/ 
 	abstract ulong rowCount();
+	
+	/**
+	*	Returns: The number of fields per row for the current result set.
+	*/
 	abstract ulong fieldCount();
+	
+	/**
+	*	Returns the number of rows affected by the current sql statement.
+	*
+	*	For multi-statement sql queries, when nextResult() returns true
+	*	a valid result set will be present (in which case validResult()
+	* 	will return true) and/or affectedRows() will be valid (for statements
+	*	which do not return a result set).
+	*
+	*	Returns: The number of rows affected by the current sql statement.
+	*/
 	abstract ulong affectedRows();
 
+	/**
+	* Returns: the row metadata for the current result set.
+	*/
 	abstract FieldInfo[] rowMetadata();
 	
+	/**
+	*	Loads the next row in the result set.
+	*
+	*	Returns: true if there was next row and it was correctly loaded, false if
+	*	there was not another row or there was an error loading it.
+	*/
 	abstract bool nextRow();
 	
+	///
 	abstract bool getField(inout bool, size_t idx);
+	///
 	abstract bool getField(inout ubyte, size_t idx);
+	///
 	abstract bool getField(inout byte, size_t idx);
+	///
 	abstract bool getField(inout ushort, size_t idx);
+	///
 	abstract bool getField(inout short, size_t idx);
+	///
 	abstract bool getField(inout uint, size_t idx);
+	///
 	abstract bool getField(inout int, size_t idx);
+	///
 	abstract bool getField(inout ulong, size_t idx);
+	///
 	abstract bool getField(inout long, size_t idx);
+	///
 	abstract bool getField(inout float, size_t idx);
+	///
 	abstract bool getField(inout double, size_t idx);
+	///
 	abstract bool getField(inout char[], size_t idx);
+	///
 	abstract bool getField(inout ubyte[], size_t idx);
-	//abstract bool getField(inout void[], size_t idx);
+	///
 	abstract bool getField(inout Time, size_t idx);
+	///
 	abstract bool getField(inout DateTime, size_t idx);
 	
+	
+	/**
+	*	Fetchs a row from the current result set binding the returned field
+	* 	values to the variadic arguments provided in the call to fetchRow().
+	*
+	*	Arguments of the following types can be used as bind arguments:
+			bool
+			byte
+			ubyte
+			short
+			ushort
+			int
+			uint
+			long
+			ulong
+			float
+			double
+			char[]
+			void[]
+			ubyte[]
+			tango.time.Time
+			tango.time.DateTime
+			dbi.model.BindType.BindInfo
+	*
+	*	Examples:
+	*	------------------
+	*	uint id;
+	*	char name;
+	*	
+	*	while(res.fetchRow(id,name)) { 
+	*		Stdout.formatln("id: {}, name: {}", id, name);
+	*	}
+	*	------------------ 
+	*
+	*	Returns: true if a row was successfully loaded and bound to the passed
+	*	arguments, false if there are no more rows 
+	*/
 	bool fetchRow(BindTypes...)(ref BindTypes bind)
     {
 		if(!nextRow) return false;

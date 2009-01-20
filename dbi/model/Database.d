@@ -11,6 +11,12 @@ public import dbi.util.SqlGen, dbi.model.Statement, dbi.model.Metadata, dbi.mode
 
 debug(DBITest) public import tango.io.Stdout;
 
+import tango.util.log.Log;
+private static Logger log;
+static this() {
+	log = Log.lookup("dbi.model.Database");
+}
+
 enum DbiFeature
 {
     MultiStatements 
@@ -37,9 +43,16 @@ abstract class Database : Result, IStatementProvider {
 	 * so it is HIGHLY recommended that you close connections manually.
 	 */
 	~this () {
-		/+foreach(key, st; cachedStatements)
-			st.close;+/
-		close();
+		try
+		{
+			/+foreach(key, st; cachedStatements)
+				st.close;+/
+			close();
+		}
+		catch(Exception ex)
+		{
+			log.error("Error closing database {}", ex.toString);
+		}
 	}
 
    /**
@@ -158,6 +171,48 @@ abstract class Database : Result, IStatementProvider {
 		}
 	}
 	
+	/**
+	 *	Sends a query to the database server.  Queries can use ? to represent
+	 *	parameters that will be filled in by the variadic argument parameters
+	 *	that can be passed to query.
+	 *
+	 *	Arguments of the following types can be used as bind arguments:
+			bool
+			byte
+			ubyte
+			short
+			ushort
+			int
+			uint
+			long
+			ulong
+			float
+			double
+			char[]
+			void[]
+			ubyte[]
+			tango.time.Time
+			tango.time.DateTime
+			dbi.model.BindType.BindInfo
+			
+		Examples:
+		----------
+		db.query("SELECT name FROM user WHERE id = ?", 15);
+		
+		uint limit = 15;
+		uint offset = 100;
+		db.query("SELECT id,name FROM user WHERE 1 LIMIT ? OFFSET ?", limit, offset);
+		----------
+		
+		Params:
+			sql = The sql query that will be sent to the server, can use ?'s to represent
+			parameters that will be bound autmotically by DBI using the variadic parameters
+			passed by bind.
+			bind = Variadic arguments that bind to ?'s used in the query text.  (optional)
+			
+		Returns: true if the query was successful, false otherwise
+		Throws: DBIException on a serious error executing the query
+	 */
 	bool query(Types...)(in char[] sql, Types bind)
 	{
 		static if(Types.length) {
@@ -173,6 +228,8 @@ abstract class Database : Result, IStatementProvider {
 	abstract void initUpdate(char[] tablename, char[][] fields, char[] where);
 	abstract void initSelect(char[] tablename, char[][] fields, char[] where, bool haveParams);
 	abstract void initRemove(char[] tablename, char[] where, bool haveParams);
+	
+	///
 	bool insert(Types...)(char[] tablename, char[][] fields, Types bind)
 	{
 		initInsert(tablename, fields);
@@ -180,6 +237,7 @@ abstract class Database : Result, IStatementProvider {
 		return doQuery();
 	}
 	
+	///
 	bool update(Types...)(char[] tablename, char[][] fields, char[] where, Types bind)
 	{
 		initUpdate(tablename, fields, where);
@@ -187,6 +245,7 @@ abstract class Database : Result, IStatementProvider {
 		return doQuery();
 	}
 	
+	///
 	bool select(Types...)(char[] tablename, char[][] fields, char[] where, Types bind)
 	{
 		bool haveParams = Types.length ? true : false;
@@ -195,6 +254,7 @@ abstract class Database : Result, IStatementProvider {
 		return doQuery();
 	}
 	
+	///
 	bool remove(Types...)(char[] tablename, char[] where, Types bind)
 	{
 		bool haveParams = Types.length ? true : false;
@@ -203,6 +263,7 @@ abstract class Database : Result, IStatementProvider {
 		return doQuery();
 	}
 	
+	///
 	alias query execute;
 	
 	abstract ulong lastInsertID();
