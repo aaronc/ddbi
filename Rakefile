@@ -1,4 +1,4 @@
-SRC = FileList["dbi/**/*.d"]
+SRC = FileList["dbi/**/*.d","dbi/*.d"]
 TEST_SRC = FileList[SRC,"testddbi.d"]
 
 file "testddbi.exe" => TEST_SRC do
