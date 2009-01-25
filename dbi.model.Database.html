@@ -22,6 +22,37 @@ The D DBI project
 <script>explorer.outline.incSymbolLevel();</script>
 <dl>
 <script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">enum 
+<span class="currsymbol">DbiFeature</span>
+<script>explorer.outline.addDecl('DbiFeature');</script>
+
+;
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd><br><br>
+
+<script>explorer.outline.incSymbolLevel();</script>
+<dl>
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">
+<span class="currsymbol">MultiStatements</span>
+<script>explorer.outline.addDecl('MultiStatements');</script>
+
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd><br><br>
+</dd>
+</dl>
+<script>explorer.outline.decSymbolLevel();</script>
+
+
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
 <dt><span class="decl">class 
 <span class="currsymbol">Database</span>
 <script>explorer.outline.addDecl('Database');</script>
@@ -31,20 +62,20 @@ The D DBI project
 <script>explorer.outline.writeEnabled = false;</script>
 
 
-<dd>The database interface that all DBDs must inherit from.
+<dd>The database interface that all databases must inherit from.
 <br><br>
-
+<b>See Also:</b><br>
+The documentation for dbi.model.Result - 
 <span class="currsymbol">Database</span>
 <script>explorer.outline.addDecl('Database');</script>
 
- only provides a core set of functionality.  Many DBDs have functions
- that are specific to themselves, as they wouldn't make sense in any many other
- databases.  Please reference the documentation for the DBD you will be using to
- discover these functions.
-
+ inherits from Result.
 <br><br>
-<b>See Also:</b><br>
-The database class for the DBD you are using.
+
+	The database class for the specific database you are using.  Many databases have
+	functions that are specific to themselves, as they wouldn't make sense in any man
+	other databases.  Please reference the documentation for the database you will be
+	using to discover these functions.
  
 <br><br>
 
@@ -220,6 +251,22 @@ DBIException on a serious error executing the
 
 
 <dd><br><br>
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">Statement 
+<span class="currsymbol">prepare</span>
+<script>explorer.outline.addDecl('prepare');</script>
+
+(char[] <span class="funcparam">sql</span>);
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd>Prepares a statement for the given <span class="funcparam">sql</span>
+	 
+<br><br>
+
 </dd>
 
 <script>explorer.outline.writeEnabled = true;</script>
@@ -879,7 +926,7 @@ DBIException if the database does support this feature but the
 
 </td></tr>
 		<tr><td id="docfooter">
-			Documentation last updated Sun Jan 25 16:59:56 2009
+			Documentation last updated Sun Jan 25 17:43:53 2009
 
 		</td></tr>
 	</table>
