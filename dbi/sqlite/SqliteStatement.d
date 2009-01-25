@@ -1,6 +1,6 @@
 module dbi.sqlite.SqliteStatement;
 
-import dbi.Statement, dbi.DBIException;
+import dbi.model.Statement, dbi.Exception;
 import tango.stdc.stringz : toDString = fromStringz, toCString = toStringz;
 import Integer = tango.text.convert.Integer;
 import tango.core.Traits;
@@ -17,23 +17,23 @@ import tango.stdc.string;
 debug import tango.io.Stdout;
 debug import tango.util.log.Log;
 
-class SqliteStatement : IStatement
+class SqliteStatement : Statement
 {
 	uint getParamCount()
 	{
-		return cast(uint)sqlite3_bind_parameter_count(stmt);
+		return cast(uint)sqlite3_bind_parameter_count(stmt_);
 	}
 	
 	FieldInfo[] getResultMetadata()
 	{
-		auto fieldCount = sqlite3_column_count(stmt);
+		auto fieldCount = sqlite3_column_count(stmt_);
 		FieldInfo[] fieldInfo;
 		for(int i = 0; i < fieldCount; ++i)
 		{
 			FieldInfo info;
 			
-			info.name = toDString(sqlite3_column_name(stmt, i));
-			info.type = fromSqliteType(sqlite3_column_type(stmt, i));
+			info.name = toDString(sqlite3_column_name(stmt_, i));
+			info.type = fromSqliteType(sqlite3_column_type(stmt_, i));
 			
 			fieldInfo ~= info;
 		}
@@ -51,10 +51,10 @@ class SqliteStatement : IStatement
 		this.resTypes = resTypes;
 	}
 	
-	void execute()
+	/+void execute()
 	{
 		debug log.info("Executing {}", sql);
-		lastRes = sqlite3_step(stmt);
+		lastRes = sqlite3_step(stmt_);
 		wasReset = false;
 		if(lastRes != SQLITE_ROW && lastRes != SQLITE_DONE)
 			throw new DBIException("sqlite3_step error: " ~ toDString(sqlite3_errmsg(sqlite)),
@@ -69,13 +69,32 @@ class SqliteStatement : IStatement
 		
 		for(size_t i = 0; i < len; ++i)
 		{
-			bind!(true)(stmt, paramTypes[i], ptrs[i], i);
+			bind!(true)(stmt_, paramTypes[i], ptrs[i], i);
 		}
 		
 		execute;
+	}+/
+	
+	void doExecute(void*[] ptrs)
+	{
+		auto len = paramTypes.length;
+		if(ptrs.length != len)
+			throw new DBIException("ptrs array is not the same size as paramTypes array in SqliteStatement.execute", sql);
+		
+		for(size_t i = 0; i < len; ++i)
+		{
+			bind!(true)(stmt_, paramTypes[i], ptrs[i], i);
+		}
+		
+		debug log.info("Executing {}", sql);
+		lastRes = sqlite3_step(stmt_);
+		wasReset = false;
+		if(lastRes != SQLITE_ROW && lastRes != SQLITE_DONE)
+			throw new DBIException("sqlite3_step error: " ~ toDString(sqlite3_errmsg(sqlite)),
+				sql, lastRes, specificToGeneral(lastRes));
 	}
 	
-	bool fetch(void*[] ptrs, void* delegate(size_t) allocator = null)
+	bool doFetch(void*[] ptrs, out bool[] isNull, void* delegate(size_t) allocator = null)
 	{
 		if(lastRes != SQLITE_ROW)
 			return false;
@@ -86,17 +105,22 @@ class SqliteStatement : IStatement
 		
 		for(size_t i = 0; i < len; ++i)
 		{
-			bind!(false)(stmt, resTypes[i], ptrs[i], i, allocator);
+			bind!(false)(stmt_, resTypes[i], ptrs[i], i, allocator);
 		}
 		
-		lastRes = sqlite3_step(stmt);
+		lastRes = sqlite3_step(stmt_);
 		wasReset = false;
 		return true;
 	}
 	
-	static void bindT(T, bool P)(sqlite3_stmt* stmt, void* ptr, int index, void* delegate(size_t) allocator = null)
+	static void bindTPtr(T, bool P)(sqlite3_stmt* stmt, void* ptr, int index, void* delegate(size_t) allocator = null)
 	{
-		T* val = cast(T*)ptr;
+		T* pVal = cast(T*)ptr;
+		bindT!(T,P)(stmt,pVal,index,allocator);
+	}
+	
+	static void bindT(T, bool P)(sqlite3_stmt* stmt, T* val, int index, void* delegate(size_t) allocator = null)
+	{
 		static if(isIntegerType!(T) || is(T == bool))
 		{
 			static if(is(Int == long) || is(Int == uint) || is(Int == ulong))
@@ -135,7 +159,7 @@ class SqliteStatement : IStatement
 			else {
 				auto res = sqlite3_column_blob(stmt, index);
 				auto len = sqlite3_column_bytes(stmt, index);
-				*val = res[0 .. len].dup;
+				*val = cast(T)res[0 .. len].dup;
 			}
 		}
 		else static if(is(T == DT.DateTime) || is(T == DT.Time))
@@ -164,13 +188,13 @@ class SqliteStatement : IStatement
 				auto src = res[0 .. len];
 				
 				static if(is(T == DT.DateTime)) {
-					 parseDateTime(res[0 .. len], *(cast(DT.DateTime*)ptr));
+					 parseDateTime(res[0 .. len], *val);
 				}
 				else static if(is(T == DT.Time)) {
 					DT.DateTime dt;
 					parseDateTime(res[0 .. len], dt);
 					//*(cast(Time*)ptr) = Clock.fromDate(dt);
-					*(cast(Time*)ptr) = Gregorian.generic.toTime(dt);
+					*val = Gregorian.generic.toTime(dt);
 				}
 				else static assert(false);
 			}
@@ -190,49 +214,49 @@ class SqliteStatement : IStatement
 			switch(type)
 			{
 			case Bool:
-				bindT!(bool, P)(stmt, ptr, index, allocator);
+				bindTPtr!(bool, P)(stmt, ptr, index, allocator);
 				break;
 			case Byte:
-				bindT!(byte, P)(stmt, ptr, index, allocator);
+				bindTPtr!(byte, P)(stmt, ptr, index, allocator);
 				break;
 			case Short:
-				bindT!(short, P)(stmt, ptr, index, allocator);
+				bindTPtr!(short, P)(stmt, ptr, index, allocator);
 				break;
 			case Int:
-				bindT!(int, P)(stmt, ptr, index, allocator);
+				bindTPtr!(int, P)(stmt, ptr, index, allocator);
 				break;
 			case Long:
-				bindT!(long, P)(stmt, ptr, index, allocator);
+				bindTPtr!(long, P)(stmt, ptr, index, allocator);
 				break;
 			case UByte:
-				bindT!(ubyte, P)(stmt, ptr, index, allocator);
+				bindTPtr!(ubyte, P)(stmt, ptr, index, allocator);
 				break;
 			case UShort:
-				bindT!(ushort, P)(stmt, ptr, index, allocator);
+				bindTPtr!(ushort, P)(stmt, ptr, index, allocator);
 				break;
 			case UInt:
-				bindT!(uint, P)(stmt, ptr, index, allocator);
+				bindTPtr!(uint, P)(stmt, ptr, index, allocator);
 				break;
 			case ULong:
-				bindT!(ulong, P)(stmt, ptr, index, allocator);
+				bindTPtr!(ulong, P)(stmt, ptr, index, allocator);
 				break;
 			case Float:
-				bindT!(float, P)(stmt, ptr, index, allocator);
+				bindTPtr!(float, P)(stmt, ptr, index, allocator);
 				break;
 			case Double:
-				bindT!(double, P)(stmt, ptr, index, allocator);
+				bindTPtr!(double, P)(stmt, ptr, index, allocator);
 				break;
 			case String:
-				bindT!(char[], P)(stmt, ptr, index, allocator);
+				bindTPtr!(char[], P)(stmt, ptr, index, allocator);
 				break;
 			case Binary:
-				bindT!(void[], P)(stmt, ptr, index, allocator);
+				bindTPtr!(void[], P)(stmt, ptr, index, allocator);
 				break;
 			case Time:
-				bindT!(DT.Time, P)(stmt, ptr, index, allocator);
+				bindTPtr!(DT.Time, P)(stmt, ptr, index, allocator);
 				break;
 			case DateTime:
-				bindT!(DT.DateTime, P)(stmt, ptr, index, allocator);
+				bindTPtr!(DT.DateTime, P)(stmt, ptr, index, allocator);
 				break;
 			case Null:
 				bindNull!(P)(stmt, index);
@@ -252,13 +276,14 @@ class SqliteStatement : IStatement
 	void reset()
 	{
 		if(!wasReset) {
-			sqlite3_reset(stmt);
+			sqlite3_clear_bindings(stmt_);
+			sqlite3_reset(stmt_);
 			wasReset = true;
 			lastRes = SQLITE_DONE;
 		}
 	}
 	
-	ulong getLastInsertID()
+	ulong lastInsertID()
 	{
 		long id = sqlite3_last_insert_rowid(sqlite);
 		if(id == 0)	return 0;
@@ -267,17 +292,19 @@ class SqliteStatement : IStatement
 	
 	package this(sqlite3* sqlite, sqlite3_stmt* stmt, char[] sql, SqliteStatement lastSt)
 	{
+		super(sql);
 		this.sqlite = sqlite;
-		this.stmt = stmt;
+		this.stmt_ = stmt;
 		this.sql = sql;
 		this.lastSt = lastSt;
 	}
 	
 	void close()
 	{
-		if (stmt !is null) {
-			sqlite3_finalize(stmt);
-			stmt = null;
+		super.close;
+		if (stmt_ !is null) {
+			sqlite3_finalize(stmt_);
+			stmt_ = null;
 		}
 	}
 	
@@ -286,11 +313,21 @@ class SqliteStatement : IStatement
 		close;
 	}
 	
+	ulong affectedRows()
+	{
+		return sqlite3_changes(sqlite);
+	}
+		
+	ulong rowCount()
+	{
+		return sqlite3_data_count(stmt_);
+	}
+	
 	private int lastRes;
 	private bool wasReset = false;
 	
 	private sqlite3* sqlite;
-	private sqlite3_stmt* stmt;
+	private sqlite3_stmt* stmt_;
 	private char[] sql;
 	package SqliteStatement lastSt; // Used as a linked list ensuring that all statements are closed when the connection is closed
 	

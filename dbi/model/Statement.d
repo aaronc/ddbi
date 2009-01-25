@@ -30,8 +30,8 @@ abstract class Statement
 	char[] sql() { return sql_;}
 	private char[] sql_;
 	
-	uint getParamCount();
-	FieldInfo[] getResultMetadata();
+	abstract uint getParamCount();
+	abstract FieldInfo[] getResultMetadata();
 	
 	void setParamTypes(BindType[] paramTypes)
 	{
@@ -69,7 +69,7 @@ abstract class Statement
 	}
 	private IStatementProvider cacheProvider_;
 	
-	void close()
+	abstract void close()
 	{
 		if(cacheProvider_ !is null) {
 			//cacheProvider_.uncacheStatement(this);

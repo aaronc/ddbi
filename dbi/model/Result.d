@@ -9,77 +9,12 @@ public import dbi.util.Memory;
 
 public import tango.time.Time;
 
+
+/**
+*
+*/
 abstract class Result
 {
-	Allocator allocator()
-	{
-		return alloc_;
-	}
-    
-	void allocator(Allocator alloc)
-    {
-    	alloc_ = alloc;
-    }
-    
-	protected Allocator alloc_;
-    
-	/**
-	*	Returns: true if there are more results, false otherwise.
-	*/
-	abstract bool moreResults();
-	
-	/**
-	*	Loads the next result set if there is one.
-	*
-	*	Returns: true if there was another result and it was loaded properly,
-	* 	false otherwise.
-	*/
-	abstract bool nextResult();
-	
-	/**
-	*	Returns: true if the current result set is valid, false otherwise.
-	*	validResult() may return false even if there are still additional result
-	*	sets.  For statements which do not return result sets but modify data,
-	*	check affectedRows().
-	*	
-	*/
-	abstract bool validResult();
-	
-	/**
-	*	Closes all result sets for the current query.
-	*
-	*	Any call to nextResult() after calling closeResult() will fail and
-	* 	return false.
-	*/
-	abstract void closeResult();
-	
-	/**
-	*	Returns: The number of rows in the current result set
-	*/ 
-	abstract ulong rowCount();
-	
-	/**
-	*	Returns: The number of fields per row for the current result set.
-	*/
-	abstract ulong fieldCount();
-	
-	/**
-	*	Returns the number of rows affected by the current sql statement.
-	*
-	*	For multi-statement sql queries, when nextResult() returns true
-	*	a valid result set will be present (in which case validResult()
-	* 	will return true) and/or affectedRows() will be valid (for statements
-	*	which do not return a result set).
-	*
-	*	Returns: The number of rows affected by the current sql statement.
-	*/
-	abstract ulong affectedRows();
-
-	/**
-	* Returns: the row metadata for the current result set.
-	*/
-	abstract FieldInfo[] rowMetadata();
-	
 	/**
 	*	Loads the next row in the result set.
 	*
@@ -87,37 +22,6 @@ abstract class Result
 	*	there was not another row or there was an error loading it.
 	*/
 	abstract bool nextRow();
-	
-	///
-	abstract bool getField(inout bool, size_t idx);
-	///
-	abstract bool getField(inout ubyte, size_t idx);
-	///
-	abstract bool getField(inout byte, size_t idx);
-	///
-	abstract bool getField(inout ushort, size_t idx);
-	///
-	abstract bool getField(inout short, size_t idx);
-	///
-	abstract bool getField(inout uint, size_t idx);
-	///
-	abstract bool getField(inout int, size_t idx);
-	///
-	abstract bool getField(inout ulong, size_t idx);
-	///
-	abstract bool getField(inout long, size_t idx);
-	///
-	abstract bool getField(inout float, size_t idx);
-	///
-	abstract bool getField(inout double, size_t idx);
-	///
-	abstract bool getField(inout char[], size_t idx);
-	///
-	abstract bool getField(inout ubyte[], size_t idx);
-	///
-	abstract bool getField(inout Time, size_t idx);
-	///
-	abstract bool getField(inout DateTime, size_t idx);
 	
 	
 	/**
@@ -252,4 +156,105 @@ abstract class Result
     	
 		return true;
     }
+
+	Allocator allocator()
+	{
+		return alloc_;
+	}
+    
+	void allocator(Allocator alloc)
+    {
+    	alloc_ = alloc;
+    }
+    
+	protected Allocator alloc_;
+	
+	/**
+	*	Returns: The number of rows in the current result set
+	*/ 
+	abstract ulong rowCount();
+	
+	/**
+	*	Returns: The number of fields per row for the current result set.
+	*/
+	abstract ulong fieldCount();
+	
+	/**
+	*	Returns the number of rows affected by the current sql statement.
+	*
+	*	For multi-statement sql queries, when nextResult() returns true
+	*	a valid result set will be present (in which case validResult()
+	* 	will return true) and/or affectedRows() will be valid (for statements
+	*	which do not return a result set).
+	*
+	*	Returns: The number of rows affected by the current sql statement.
+	*/
+	abstract ulong affectedRows();
+
+	/**
+	* Returns: the row metadata for the current result set.
+	*/
+	abstract FieldInfo[] rowMetadata();
+    
+    /**
+	*	Returns: true if the current result set is valid, false otherwise.
+	*	validResult() may return false even if there are still additional result
+	*	sets.  For statements which do not return result sets but modify data,
+	*	check affectedRows().
+	*	
+	*/
+	abstract bool validResult();
+	
+	/**
+	*	Closes all result sets for the current query.
+	*
+	*	Any call to nextResult() after calling closeResult() will fail and
+	* 	return false.
+	*/
+	abstract void closeResult();
+    
+	/**
+	*	Returns: true if there are more results, false otherwise.
+	*/
+	abstract bool moreResults();
+	
+	/**
+	*	Loads the next result set if there is one.
+	*
+	*	Returns: true if there was another result and it was loaded properly,
+	* 	false otherwise.
+	*/
+	abstract bool nextResult();
+	
+	
+    ///
+	abstract bool getField(inout bool, size_t idx);
+	///
+	abstract bool getField(inout ubyte, size_t idx);
+	///
+	abstract bool getField(inout byte, size_t idx);
+	///
+	abstract bool getField(inout ushort, size_t idx);
+	///
+	abstract bool getField(inout short, size_t idx);
+	///
+	abstract bool getField(inout uint, size_t idx);
+	///
+	abstract bool getField(inout int, size_t idx);
+	///
+	abstract bool getField(inout ulong, size_t idx);
+	///
+	abstract bool getField(inout long, size_t idx);
+	///
+	abstract bool getField(inout float, size_t idx);
+	///
+	abstract bool getField(inout double, size_t idx);
+	///
+	abstract bool getField(inout char[], size_t idx);
+	///
+	abstract bool getField(inout ubyte[], size_t idx);
+	///
+	abstract bool getField(inout Time, size_t idx);
+	///
+	abstract bool getField(inout DateTime, size_t idx);
 }

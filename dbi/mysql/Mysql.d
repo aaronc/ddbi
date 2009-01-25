@@ -297,7 +297,7 @@ class Mysql : Database {
 		}
 	}
     
-	bool doQuery()
+	void doQuery()
 	{
 		if(writeFiber_) {
 			assert(writeFiber_.state == Fiber.State.HOLD, "Param index out of bounds, sql: " ~ sql_);
@@ -315,7 +315,6 @@ class Mysql : Database {
 		
 		result_ = mysql_store_result(mysql);
 		getMysqlFieldInfo;
-		return true;
 	}
 	
 	private Fiber writeFiber_;
@@ -481,6 +480,8 @@ class Mysql : Database {
 		writer_ ~= "\'";
 	}
 	
+	void setParamNull() { writer_ ~= "NULL"; }
+	
 	ulong lastInsertID()
 	{
 		return mysql_insert_id(mysql);
@@ -531,7 +532,7 @@ class Mysql : Database {
 	
 	ColumnInfo[] getTableInfo(char[] tablename)
 	{
-		assert(query("SHOW COLUMNS FROM `" ~ tablename ~ "`"));
+		query("SHOW COLUMNS FROM `" ~ tablename ~ "`");
 		
 		ColumnInfo[] info;
 		

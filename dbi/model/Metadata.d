@@ -31,21 +31,36 @@ struct ColumnInfo
     bool zeroFill() { return cast(bool)(flags & ColumnFlag.ZeroFill); }
 }+/
 
+/**
+ * 
+ */
 struct FieldInfo
 {
+	///
 	char[] name;
+	///
 	BindType type;
 }
 
 
+/**
+ * 
+ */
 struct ColumnInfo
 {
+	///
 	char[] name;
+	///
 	BindType type;
+	///
 	bool notNull;
+	///
 	bool autoIncrement;
+	///
 	bool primaryKey;
+	///
 	ulong limit;
+	///
 	bool uniqueKey;
 }
 

@@ -35,6 +35,97 @@ enum DbiFeature
  *	The database class for the DBD you are using.
  */
 abstract class Database : Result, IStatementProvider {
+	
+	///
+	alias query execute;
+	
+	/**
+	 *	Sends a query to the database server.  Queries can use ? to represent
+	 *	parameters that will be filled in by the variadic argument parameters
+	 *	that can be passed to query.
+	 *
+	 *	Arguments of the following types can be used as bind arguments:
+			bool
+			byte
+			ubyte
+			short
+			ushort
+			int
+			uint
+			long
+			ulong
+			float
+			double
+			char[]
+			void[]
+			ubyte[]
+			tango.time.Time
+			tango.time.DateTime
+			dbi.model.BindType.BindInfo
+			
+		Examples:
+		----------
+		db.query("SELECT name FROM user WHERE id = ?", 15);
+		
+		uint limit = 15;
+		uint offset = 100;
+		db.query("SELECT id,name FROM user WHERE 1 LIMIT ? OFFSET ?", limit, offset);
+		----------
+		
+		Params:
+			sql = The sql query that will be sent to the server, can use ?'s to represent
+			parameters that will be bound autmotically by DBI using the variadic parameters
+			passed by bind.
+			bind = Variadic arguments that bind to ?'s used in the query text.  (optional)
+			
+		Returns: true if the query was successful, false otherwise
+		Throws: DBIException on a serious error executing the query
+	 */
+	void query(Types...)(in char[] sql, Types bind)
+	{
+		static if(Types.length) {
+			initQuery(sql, true);
+			setParams(bind);			
+		}
+		else initQuery(sql, false);
+	
+		return doQuery();
+	}
+	
+//	/
+	void insert(Types...)(char[] tablename, char[][] fields, Types bind)
+	{
+		initInsert(tablename, fields);
+		setParams(bind);			
+		return doQuery();
+	}
+	
+	///
+	void update(Types...)(char[] tablename, char[][] fields, char[] where, Types bind)
+	{
+		initUpdate(tablename, fields, where);
+		setParams(bind);
+		return doQuery();
+	}
+	
+	///
+	void select(Types...)(char[] tablename, char[][] fields, char[] where, Types bind)
+	{
+		bool haveParams = Types.length ? true : false;
+		initSelect(tablename, fields, where, haveParams);
+		setParams(bind);
+		return doQuery();
+	}
+	
+	///
+	void remove(Types...)(char[] tablename, char[] where, Types bind)
+	{
+		bool haveParams = Types.length ? true : false;
+		initRemove(tablename, where, haveParams);
+		setParams(bind);
+		return doQuery();
+	}
+	
 	/**
 	 * A destructor that attempts to force the the release of of all
 	 * database connections and similar things.
@@ -54,12 +145,14 @@ abstract class Database : Result, IStatementProvider {
 			log.error("Error closing database {}", ex.toString);
 		}
 	}
+	
+//	abstract Result detachResult();
 
    /**
      * Returns true if the given feature has been enabled in
      * this Database instance.
      */
-   bool enabled(DbiFeature feature);
+   abstract bool enabled(DbiFeature feature);
 	
 	/**
 	 * Close the current connection to the database.
@@ -67,7 +160,7 @@ abstract class Database : Result, IStatementProvider {
 	abstract void close();	
 	
 	abstract void initQuery(in char[] sql, bool haveParams);
-	abstract bool doQuery();
+	abstract void doQuery();
 	
 	abstract void setParam(bool);
 	abstract void setParam(ubyte);
@@ -84,6 +177,7 @@ abstract class Database : Result, IStatementProvider {
 	abstract void setParam(ubyte[]);
 	abstract void setParam(Time);
 	abstract void setParam(DateTime);
+	abstract void setParamNull();
 	
 	private void setParams(Types...)(Types bind)
 	{
@@ -159,6 +253,9 @@ abstract class Database : Result, IStatementProvider {
 	    				setParam(*ptr);
 	    				break;
 	    			case BindType.Null:
+	    			default:
+	    				setParamNull();
+	    				break;
 	    			}
 	    		}
 	    	}
@@ -171,100 +268,12 @@ abstract class Database : Result, IStatementProvider {
 		}
 	}
 	
-	/**
-	 *	Sends a query to the database server.  Queries can use ? to represent
-	 *	parameters that will be filled in by the variadic argument parameters
-	 *	that can be passed to query.
-	 *
-	 *	Arguments of the following types can be used as bind arguments:
-			bool
-			byte
-			ubyte
-			short
-			ushort
-			int
-			uint
-			long
-			ulong
-			float
-			double
-			char[]
-			void[]
-			ubyte[]
-			tango.time.Time
-			tango.time.DateTime
-			dbi.model.BindType.BindInfo
-			
-		Examples:
-		----------
-		db.query("SELECT name FROM user WHERE id = ?", 15);
-		
-		uint limit = 15;
-		uint offset = 100;
-		db.query("SELECT id,name FROM user WHERE 1 LIMIT ? OFFSET ?", limit, offset);
-		----------
-		
-		Params:
-			sql = The sql query that will be sent to the server, can use ?'s to represent
-			parameters that will be bound autmotically by DBI using the variadic parameters
-			passed by bind.
-			bind = Variadic arguments that bind to ?'s used in the query text.  (optional)
-			
-		Returns: true if the query was successful, false otherwise
-		Throws: DBIException on a serious error executing the query
-	 */
-	bool query(Types...)(in char[] sql, Types bind)
-	{
-		static if(Types.length) {
-			initQuery(sql, true);
-			setParams(bind);			
-		}
-		else initQuery(sql, false);
-	
-		return doQuery();
-	}
-	
 	abstract void initInsert(char[] tablename, char[][] fields);
 	abstract void initUpdate(char[] tablename, char[][] fields, char[] where);
 	abstract void initSelect(char[] tablename, char[][] fields, char[] where, bool haveParams);
 	abstract void initRemove(char[] tablename, char[] where, bool haveParams);
 	
-	///
-	bool insert(Types...)(char[] tablename, char[][] fields, Types bind)
-	{
-		initInsert(tablename, fields);
-		setParams(bind);			
-		return doQuery();
-	}
 	
-	///
-	bool update(Types...)(char[] tablename, char[][] fields, char[] where, Types bind)
-	{
-		initUpdate(tablename, fields, where);
-		setParams(bind);
-		return doQuery();
-	}
-	
-	///
-	bool select(Types...)(char[] tablename, char[][] fields, char[] where, Types bind)
-	{
-		bool haveParams = Types.length ? true : false;
-		initSelect(tablename, fields, where, haveParams);
-		setParams(bind);
-		return doQuery();
-	}
-	
-	///
-	bool remove(Types...)(char[] tablename, char[] where, Types bind)
-	{
-		bool haveParams = Types.length ? true : false;
-		initRemove(tablename, where, haveParams);
-		setParams(bind);
-		return doQuery();
-	}
-	
-	///
-	alias query execute;
 	
 	abstract ulong lastInsertID();
 		
@@ -298,6 +307,7 @@ abstract class Database : Result, IStatementProvider {
 	abstract char[] escapeString(in char[] str, char[] dst = null);
 	
 	abstract void beginTransact();
+	alias beginTransact startTransaction;
 	abstract void rollback();
 	abstract void commit();
   
@@ -480,12 +490,12 @@ debug(DBITest) {
 			assert(db.lastInsertID == 1);
 			
 			
-			assert(db.insert("dbi_test",
+			db.insert("dbi_test",
 				["UByte", "Byte", "UShort", "Short", "UInt", "Int",
 				 "ULong", "Long", "Float", "Double",
 				 "String", "Binary", "DateTime", "Time"],
 				 data.ub,data.b,data.us,data.s,data.ui,data.i,
-				data.ul,data.l,data.f,data.d,data.str,data.binary,data.dt,data.t));
+				data.ul,data.l,data.f,data.d,data.str,data.binary,data.dt,data.t);
 			assert(db.affectedRows == 1);
 			assert(db.lastInsertID == 2);
 			
@@ -493,8 +503,8 @@ debug(DBITest) {
 		
 		void update()
 		{
-			assert(db.update("dbi_test",["UByte","Byte"],"WHERE id = ?",5,-7,1));
-			assert(db.update("dbi_test",["UByte","Byte"],"WHERE id = 2",5,-7));
+			db.update("dbi_test",["UByte","Byte"],"WHERE id = ?",5,-7,1);
+			db.update("dbi_test",["UByte","Byte"],"WHERE id = 2",5,-7);
 			assert(db.affectedRows == 1);
 			
 			void doFetch()
@@ -504,19 +514,19 @@ debug(DBITest) {
 				assert(ub == 5);
 				assert(b == -7);
 			}
-			assert(db.select("dbi_test",["UByte","Byte"],"WHERE id = 1"));
+			db.select("dbi_test",["UByte","Byte"],"WHERE id = 1");
 			doFetch;
-			assert(db.select("dbi_test",["UByte","Byte"],"WHERE id = ?",2));
+			db.select("dbi_test",["UByte","Byte"],"WHERE id = ?",2);
 			doFetch;
 		}
 		
 		void remove()
 		{
-			assert(db.remove("dbi_test","WHERE id = 1"));
-			assert(db.select("dbi_test",["id"],"WHERE 1"));
+			db.remove("dbi_test","WHERE id = 1");
+			db.select("dbi_test",["id"],"WHERE 1");
 			assert(db.rowCount == 1);
-			assert(db.remove("dbi_test","WHERE id = ?",2));
-			assert(db.select("dbi_test",["id"],"WHERE 1"));
+			db.remove("dbi_test","WHERE id = ?",2);
+			db.select("dbi_test",["id"],"WHERE 1");
 			assert(db.rowCount == 0);
 		}
 		
@@ -558,7 +568,7 @@ debug(DBITest) {
 				assertData;
 			}
 			
-			assert(db.execute(sql));
+			db.execute(sql);
 			
 			while(db.fetchRow(id, dataCopy.ub,dataCopy.b,dataCopy.us,dataCopy.s,dataCopy.ui,dataCopy.i,
 				dataCopy.ul,dataCopy.l,dataCopy.f,dataCopy.d,dataCopy.str,dataCopy.binary,dataCopy.dt,dataCopy.t)) {
@@ -575,7 +585,7 @@ debug(DBITest) {
 				["UByte", "Byte","String"]);
 			sql ~= ";";
 			sql ~= "SELECT UByte, Byte FROM dbi_test WHERE 1";
-			assert(db.query(sql,15,-15,"testMultiStatements"));
+			db.query(sql,15,-15,"testMultiStatements");
 			assert(!db.validResult);
 			assert(db.affectedRows == 1);
 			assert(db.moreResults);

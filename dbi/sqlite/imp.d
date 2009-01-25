@@ -13,8 +13,8 @@
  */
 module dbi.sqlite.imp;
 
-version (dbi_sqlite) {
-
+extern(System):
+	
 version (Windows) {
 	pragma (lib, "sqlite3.lib");
 } else version (linux) {
@@ -829,5 +829,3 @@ void* sqlite3_value_text16le (sqlite3_value* value);
  *
  */
 int sqlite3_value_type (sqlite3_value* value);
-
-}

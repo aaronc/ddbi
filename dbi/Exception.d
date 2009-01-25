@@ -5,7 +5,7 @@
 module dbi.Exception;
 
 private import tango.core.Vararg : va_arg;
-private import dbi.ErrorCode;
+public import dbi.ErrorCode;
 
 /**
  * This is the exception class used within all of D DBI.
@@ -69,6 +69,12 @@ class DBIException : Exception {
 		this.sql = sql;
 		
 		this(msg);
+	}
+	
+	this(char[] msg, char[] sql, ErrorCode dbiCode)
+	{
+		this.dbiCode = dbiCode;
+		this(msg,sql);
 	}
 	
 	this(char[] msg, long specificCode, ErrorCode dbiCode)
