@@ -17,22 +17,22 @@ static this() {
 	log = Log.lookup("dbi.model.Database");
 }
 
+///
 enum DbiFeature
 {
+	///
     MultiStatements 
 }
 
 
 /**
- * The database interface that all DBDs must inherit from.
- *
- * Database only provides a core set of functionality.  Many DBDs have functions
- * that are specific to themselves, as they wouldn't make sense in any many other
- * databases.  Please reference the documentation for the DBD you will be using to
- * discover these functions.
+ * The database interface that all databases must inherit from.
  *
  * See_Also:
- *	The database class for the DBD you are using.
+ *	The database class for the specific database you are using.  Many databases have
+ *	functions that are specific to themselves, as they wouldn't make sense in any man
+ *	other databases.  Please reference the documentation for the database you will be
+ *	using to discover these functions.
  */
 abstract class Database : Result, IStatementProvider {
 	
