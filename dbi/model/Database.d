@@ -399,15 +399,32 @@ abstract class Database : Result, IStatementProvider {
 	 * Should only be called once before writing any statements for the given query.
 	 * Note that there should be no danger in calling startWritingMultipleStatements()
 	 * when only one statement is actually written.  Multi-statement must be done in this
-	 * order:
+	 * order -
 	 * 
-	 *  startWritingMultipleStatements()
-	 *  for each statement that is to be written:
-     *		- initQuery() or one of its variants initInsert, initUpdate, initSelect, or initRemove
-     *  	is called for the statement that is being written
-     *  	- setParams, setParam, or setParamNull is called any number of times for the
-     *  	the given query
-     *  doQuery is called to send the query to the server and execute it
+	 * ---
+	 *  // startWritingMultipleStatements
+	 *  
+	 *  // for each statement that is to be written:
+     *		// initQuery() or one of its variants initInsert, initUpdate, initSelect, or initRemove
+     *		// is called for the statement that is being written
+     *
+     * 		// setParams, setParam, or setParamNull are called the correct number of times 
+     * 		// for the given statement
+     * 
+     *  // doQuery is called to send the full query to the server and execute it
+     * ---
+     *  
+     *  Example:
+     *  ---
+		db.startWritingMultipleStatements;
+		
+			db.initInsert("myTable", ["number", "name"]);
+			db.setParams(15,"bob");
+			
+			db.initSelect("myTable",["number", "name"],"WHERE 1",false);
+			
+		db.doQuery;
+		---
      *  
      *  The call to doQuery() ends the writing of multiple statements and executes
      *  all of the statements that were written since the call to
