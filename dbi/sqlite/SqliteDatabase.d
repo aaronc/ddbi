@@ -228,9 +228,20 @@ class SqliteDatabase : Database {
 		return hasItem("index", name);
 	}+/
 	
-	void beginTransact() {}
-	void rollback() {}
-	void commit() {}
+	void startTransaction()
+	{
+		execute("BEGIN");
+	}
+	
+	void rollback()
+	{
+		execute("ROLLBACK");
+	}
+	
+	void commit()
+	{
+		execute("COMMIT");
+	}
 	
 	debug(DBITest) {
 		override void doTests()
@@ -579,6 +590,16 @@ class SqliteDatabase : Database {
 	{
 		//initQuery(sqlGen.makeUpdateSql(where,tablename,fields));
 		assert(false);
+	}
+	
+	bool startWritingMultipleStatements()
+	{
+		return false;
+	}
+	
+	bool isWritingMultipleStatements()
+	{
+		return false;
 	}
 	
 	char[] escapeString(in char[] str, char[] dst = null)

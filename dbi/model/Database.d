@@ -36,9 +36,6 @@ enum DbiFeature
  */
 abstract class Database : Result, IStatementProvider {
 	
-	///
-	alias query execute;
-	
 	/**
 	 *	Sends a query to the database server.  Queries can use ? to represent
 	 *	parameters that will be filled in by the variadic argument parameters
@@ -92,7 +89,10 @@ abstract class Database : Result, IStatementProvider {
 		return doQuery();
 	}
 	
-//	/
+	/// Alias for query
+	alias query execute;
+
+	///
 	void insert(Types...)(char[] tablename, char[][] fields, Types bind)
 	{
 		initInsert(tablename, fields);
@@ -127,6 +127,23 @@ abstract class Database : Result, IStatementProvider {
 	}
 	
 	/**
+	 */
+	abstract ulong lastInsertID();
+		
+	Statement prepare(char[] sql)
+	{
+		auto pSt = sql in cachedStatements;
+		if(pSt) {
+			return *pSt;
+		}
+		auto st = doPrepare(sql);
+		cachedStatements[sql] = st;
+		st.setCacheProvider(this);
+		return st;
+	}
+	protected Statement[char[]] cachedStatements;
+	
+	/**
 	 * A destructor that attempts to force the the release of of all
 	 * database connections and similar things.
 	 *
@@ -159,27 +176,122 @@ abstract class Database : Result, IStatementProvider {
 	 */
 	abstract void close();	
 	
+	
+	
+	///
+	void uncacheStatement(Statement st)
+	{
+		uncacheStatement(st.sql);
+	}
+	
+	///
+	void uncacheStatement(char[] sql)
+	{
+		auto pSt = sql in cachedStatements;
+		if(pSt) {
+			cachedStatements.remove(sql);
+		}
+	}
+	
+	///
+	abstract char[] escapeString(in char[] str, char[] dst = null);
+	
+	///
+	abstract void startTransaction();
+
+	/// Alias for startTransaction
+	alias startTransaction begin;
+	
+	///
+	abstract void rollback();
+	
+	///
+	abstract void commit();
+  
+	/**
+	 * Split a _string into keywords and values.
+	 *
+	 * Params:
+	 *	string = A _string in the form keyword1=value1;keyword2=value2;etc.
+	 *
+	 * Returns:
+	 *	An associative array containing keywords and their values.
+	 *
+	 * Throws:
+	 *	DBIException if string is malformed.
+	 */
+	final protected char[][char[]] getKeywords (char[] string, char[] split = ";") {
+		char[][char[]] keywords;
+		foreach (char[] group; tango.text.Util.delimit(string, split)) {
+			if (group == "") {
+				continue;
+			}
+			char[][] vals = tango.text.Util.delimit(group, "=");
+			keywords[vals[0]] = vals[1];
+		}
+		return keywords;
+	}
+	
+	///
+	abstract bool hasTable(char[] tablename);
+
+	///
+	abstract ColumnInfo[] getTableInfo(char[] tablename);
+	
+	///
+	abstract SqlGenerator getSqlGenerator();
+	
+	/// Alias for getSqlGenerator
+	alias getSqlGenerator sqlGen;
+	
+	alias Statement StatementT;
+	
+	/**
+	 * 
+	 * Returns: The database type for this instance (i.e. Mysql, Sqlite, Postgresql, etc.)
+	 */
+	abstract char[] type();
+	
+	///
 	abstract void initQuery(in char[] sql, bool haveParams);
+	///
 	abstract void doQuery();
 	
+	///
 	abstract void setParam(bool);
+	///
 	abstract void setParam(ubyte);
+	///
 	abstract void setParam(byte);
+	///
 	abstract void setParam(ushort);
+	///
 	abstract void setParam(short);
+	///
 	abstract void setParam(uint);
+	///
 	abstract void setParam(int);
+	///
 	abstract void setParam(ulong);
+	///
 	abstract void setParam(long);
+	///
 	abstract void setParam(float);
+	///
 	abstract void setParam(double);
+	///
 	abstract void setParam(char[]);
+	///
 	abstract void setParam(ubyte[]);
+	///
 	abstract void setParam(Time);
+	///
 	abstract void setParam(DateTime);
+	///
 	abstract void setParamNull();
 	
-	private void setParams(Types...)(Types bind)
+	///
+	final void setParams(Types...)(Types bind)
 	{
 		foreach(Index, Type; Types)
 		{
@@ -268,85 +380,61 @@ abstract class Database : Result, IStatementProvider {
 		}
 	}
 	
+	///
 	abstract void initInsert(char[] tablename, char[][] fields);
+	
+	///
 	abstract void initUpdate(char[] tablename, char[][] fields, char[] where);
+	
+	///
 	abstract void initSelect(char[] tablename, char[][] fields, char[] where, bool haveParams);
+	
+	///
 	abstract void initRemove(char[] tablename, char[] where, bool haveParams);
 	
-	
-	
-	abstract ulong lastInsertID();
-		
-	Statement prepare(char[] sql)
-	{
-		auto pSt = sql in cachedStatements;
-		if(pSt) {
-			return *pSt;
-		}
-		auto st = doPrepare(sql);
-		cachedStatements[sql] = st;
-		st.setCacheProvider(this);
-		return st;
-	}
-	private Statement[char[]] cachedStatements;
-	
-	abstract Statement doPrepare(char[] sql);
-	
-	void uncacheStatement(Statement st)
-	{
-		uncacheStatement(st.sql);
-	}
-	
-	void uncacheStatement(char[] sql)
-	{
-		auto pSt = sql in cachedStatements;
-		if(pSt) {
-			cachedStatements.remove(sql);
-		}
-	}
-	abstract char[] escapeString(in char[] str, char[] dst = null);
-	
-	abstract void beginTransact();
-	alias beginTransact startTransaction;
-	abstract void rollback();
-	abstract void commit();
-  
 	/**
-	 * Split a _string into keywords and values.
-	 *
-	 * Params:
-	 *	string = A _string in the form keyword1=value1;keyword2=value2;etc.
-	 *
-	 * Returns:
-	 *	An associative array containing keywords and their values.
-	 *
-	 * Throws:
-	 *	DBIException if string is malformed.
+	 * Initializes the writing of multiple statements using DBI's Sql generation
+	 * interface.
+	 * 
+	 * Should only be called once before writing any statements for the given query.
+	 * Note that there should be no danger in calling startWritingMultipleStatements()
+	 * when only one statement is actually written.  Multi-statement must be done in this
+	 * order:
+	 * 
+	 *  startWritingMultipleStatements()
+	 *  for each statement that is to be written:
+     *		- initQuery() or one of its variants initInsert, initUpdate, initSelect, or initRemove
+     *  	is called for the statement that is being written
+     *  	- setParams, setParam, or setParamNull is called any number of times for the
+     *  	the given query
+     *  doQuery is called to send the query to the server and execute it
+     *  
+     *  The call to doQuery() ends the writing of multiple statements and executes
+     *  all of the statements that were written since the call to
+     *  startWritingMultipleStatements().
+     *  startWritingMultipleStatements() will have to be called again to enable it
+     *  for the next query.
+     *  If a query is written using (initQuery and setParam(s)) and
+     *  startWritingMultipleStatements() is called afterwards, that query
+     *  will be lost.
+	 *  
+	 * Returns: true if multiple statement writing was successfully initialized,
+	 * 	false if the database doesn't support this feature
+	 * Throws: DBIException if the database does support this feature but the
+	 * 	command was called out of order (i.e. more than once) or if there was
+	 *  some sort of error initializing this feature
 	 */
-	final protected char[][char[]] getKeywords (char[] string, char[] split = ";") {
-		char[][char[]] keywords;
-		foreach (char[] group; tango.text.Util.delimit(string, split)) {
-			if (group == "") {
-				continue;
-			}
-			char[][] vals = tango.text.Util.delimit(group, "=");
-			keywords[vals[0]] = vals[1];
-		}
-		return keywords;
-	}
-	
-	abstract bool hasTable(char[] tablename);
-	abstract ColumnInfo[] getTableInfo(char[] tablename);
-	abstract SqlGenerator getSqlGenerator();
-	alias getSqlGenerator sqlGen;
-	
-	alias Statement StatementT;
+	abstract bool startWritingMultipleStatements();
 	
 	/**
 	 * 
-	 * Returns: The database type for this instance (i.e. Mysql, Sqlite, Postgresql, etc.)
+	 * Returns: true if the database instance in the write multiple statements mode,
+	 * false otherwise
 	 */
-	abstract char[] type();
+	abstract bool isWritingMultipleStatements();
+	
+	///
+	abstract Statement doPrepare(char[] sql);
 	
 	debug(DBITest) {
 		abstract void doTests();
@@ -581,11 +669,22 @@ debug(DBITest) {
 			if(!db.enabled(DbiFeature.MultiStatements))
 				return;
 			
+			
+			
+			/+
 			char[] sql = db.sqlGen.makeInsertSql("dbi_test",
 				["UByte", "Byte","String"]);
 			sql ~= ";";
 			sql ~= "SELECT UByte, Byte FROM dbi_test WHERE 1";
 			db.query(sql,15,-15,"testMultiStatements");
+			+/
+			assert(db.startWritingMultipleStatements);
+			assert(db.isWritingMultipleStatements);
+			db.initInsert("dbi_test",
+				["UByte", "Byte","String"]);
+			db.setParams(15,-15,"testMultiStatements");
+			db.initSelect("dbi_test",["UByte", "Byte"],"WHERE 1",false);
+			db.doQuery;
 			assert(!db.validResult);
 			assert(db.affectedRows == 1);
 			assert(db.moreResults);

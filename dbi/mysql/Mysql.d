@@ -253,7 +253,7 @@ class Mysql : Database {
 	
 	void initSelect(char[] tablename, char[][] fields, char[] where, bool haveParams)
 	{
-		writer_.reset;
+		prepWriterForNewStatement;
 		writer_ ~= "SELECT ";
 		foreach(fieldname; fields)
 		{
@@ -280,7 +280,7 @@ class Mysql : Database {
 	
 	void initRemove(char[] tablename, char[] where, bool haveParams)
 	{
-		writer_.reset;
+		prepWriterForNewStatement;
 		writer_ ~= "DELETE FROM `";
 		writer_ ~= tablename;
 		writer_ ~= "` ";
@@ -299,12 +299,9 @@ class Mysql : Database {
     
 	void doQuery()
 	{
-		if(writeFiber_) {
-			assert(writeFiber_.state == Fiber.State.HOLD, "Param index out of bounds, sql: " ~ sql_);
-			writeFiber_.call;
-			assert(writeFiber_.state == Fiber.State.TERM, "Param index out of bounds, sql: " ~ sql_);
-			writeFiber_ = null;
-		}
+		scope(exit) multiWriteState_ = MultiWriteState.Off;
+		
+		if(writeFiber_) if(writeFiber_) finishWriteFiber;
 		
 		debug log.trace("Querying with sql: {}", sql_);
 				
@@ -327,7 +324,7 @@ class Mysql : Database {
 	private void virtualPrepare()
 	{
 		assert(sql_.length);
-		writer_.reset;
+		prepWriterForNewStatement;
 		auto paramIndices = getParamIndices(sql_);
 		size_t writerIdx = 0;
 		Fiber.yield;
@@ -345,7 +342,7 @@ class Mysql : Database {
 	
 	private void writeInsert()
 	{
-		writer_.reset;
+		prepWriterForNewStatement;
 		assert(tablename_.length && fieldnames_.length);
 		writer_ ~= "INSERT INTO `" ~ tablename_ ~ "` (";
 		foreach(fieldname; fieldnames_)
@@ -369,9 +366,32 @@ class Mysql : Database {
 		fieldnames_ = null;
 	}
 	
+	
+	private void finishWriteFiber() {
+		assert(writeFiber_ !is null);
+		assert(writeFiber_.state == Fiber.State.HOLD, "Param index out of bounds, sql: " ~ sql_);
+		writeFiber_.call;
+		assert(writeFiber_.state == Fiber.State.TERM, "Param index out of bounds, sql: " ~ sql_);
+		writeFiber_ = null;
+	}
+	
+	private void prepWriterForNewStatement()
+	{
+		if(multiWriteState_ == MultiWriteState.Off) writer_.reset;
+		else if(multiWriteState_ == MultiWriteState.On) {
+			if(writeFiber_) finishWriteFiber;
+			writer_ ~= ";";
+		}
+		else {
+			assert(multiWriteState_ == MultiWriteState.First);
+			writer_.reset;
+			multiWriteState_ = MultiWriteState.On;
+		}
+	}
+	
 	private void writeUpdate()
 	{
-		writer_.reset;
+		prepWriterForNewStatement;
 		assert(tablename_.length && fieldnames_.length && where_.length);
 		writer_ ~= "UPDATE  `" ~ tablename_ ~ "` SET ";
 		Fiber.yield;
@@ -482,6 +502,22 @@ class Mysql : Database {
 	
 	void setParamNull() { writer_ ~= "NULL"; }
 	
+	bool startWritingMultipleStatements()
+	{
+		if(multiWriteState_ != MultiWriteState.Off) throw new DBIException("Cannot call "
+			"startWritingMultipleStatements for database Mysql at this time - "
+			"command out of order - looks like you already called this before committing "
+			"the last query. startWritingMultipleStatements is on until the query is executed.",
+			sql_);
+		multiWriteState_ = MultiWriteState.First;
+		return true;
+	}
+	
+	bool isWritingMultipleStatements()
+	{
+		return multiWriteState_ != MultiWriteState.Off ? true : false;
+	}
+	
 	ulong lastInsertID()
 	{
 		return mysql_insert_id(mysql);
@@ -489,7 +525,7 @@ class Mysql : Database {
 	
     alias MysqlStatement StatementT;
 	
-	void beginTransact()
+	void startTransaction()
 	{
 		const char[] sql = "START TRANSACTION";
 		mysql_real_query(mysql, sql.ptr, sql.length);
@@ -689,7 +725,6 @@ class Mysql : Database {
 			Stdout.formatln("Testing Mysql");
 			auto test = new DBTest(this);
 			test.run;
-	
 	    }
 	}
 
@@ -702,6 +737,9 @@ class Mysql : Database {
 		MYSQL_FIELD[] fields_;
 		uint* curLengths_ = null;
 		FieldInfo[] rowMetadata_;
+		
+		enum MultiWriteState { Off, First, On };
+		MultiWriteState multiWriteState_ = MultiWriteState.Off;
 		
     	MysqlSqlGenerator mysqlSqlGen;
 }
