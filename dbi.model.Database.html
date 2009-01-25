@@ -52,19 +52,6 @@ The database class for the DBD you are using.
 <script>explorer.outline.incSymbolLevel();</script>
 <dl>
 <script>explorer.outline.writeEnabled = true;</script>
-<dt><span class="decl">alias 
-<span class="currsymbol">execute</span>
-<script>explorer.outline.addDecl('execute');</script>
-
-;
-</span></dt>
-<script>explorer.outline.writeEnabled = false;</script>
-
-
-<dd><br><br>
-</dd>
-
-<script>explorer.outline.writeEnabled = true;</script>
 <dt><span class="decl">void 
 <span class="currsymbol">query</span>
 <script>explorer.outline.addDecl('query');</script>
@@ -156,6 +143,34 @@ DBIException on a serious error executing the
 </dd>
 
 <script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">alias 
+<span class="currsymbol">execute</span>
+<script>explorer.outline.addDecl('execute');</script>
+
+;
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd>Alias for query
+<br><br>
+
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">void 
+<span class="currsymbol">insert</span>
+<script>explorer.outline.addDecl('insert');</script>
+
+(Types...)(char[] <span class="funcparam">tablename</span>, char[][] <span class="funcparam">fields</span>, Types <span class="funcparam">bind</span>);
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd><br><br>
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
 <dt><span class="decl">void 
 <span class="currsymbol">update</span>
 <script>explorer.outline.addDecl('update');</script>
@@ -187,6 +202,19 @@ DBIException on a serious error executing the
 <script>explorer.outline.addDecl('remove');</script>
 
 (Types...)(char[] <span class="funcparam">tablename</span>, char[] <span class="funcparam">where</span>, Types <span class="funcparam">bind</span>);
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd><br><br>
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">abstract ulong 
+<span class="currsymbol">lastInsertID</span>
+<script>explorer.outline.addDecl('lastInsertID');</script>
+
+();
 </span></dt>
 <script>explorer.outline.writeEnabled = false;</script>
 
@@ -232,6 +260,99 @@ DBIException on a serious error executing the
 </dd>
 
 <script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">void 
+<span class="currsymbol">uncacheStatement</span>
+<script>explorer.outline.addDecl('uncacheStatement');</script>
+
+(Statement <span class="funcparam">st</span>);
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd><br><br>
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">void 
+<span class="currsymbol">uncacheStatement</span>
+<script>explorer.outline.addDecl('uncacheStatement');</script>
+
+(char[] <span class="funcparam">sql</span>);
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd><br><br>
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">abstract char[] 
+<span class="currsymbol">escapeString</span>
+<script>explorer.outline.addDecl('escapeString');</script>
+
+(char[] <span class="funcparam">str</span>, char[] <span class="funcparam">dst</span> = null);
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd><br><br>
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">abstract void 
+<span class="currsymbol">startTransaction</span>
+<script>explorer.outline.addDecl('startTransaction');</script>
+
+();
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd><br><br>
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">alias 
+<span class="currsymbol">begin</span>
+<script>explorer.outline.addDecl('begin');</script>
+
+;
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd>Alias for startTransaction
+<br><br>
+
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">abstract void 
+<span class="currsymbol">rollback</span>
+<script>explorer.outline.addDecl('rollback');</script>
+
+();
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd><br><br>
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">abstract void 
+<span class="currsymbol">commit</span>
+<script>explorer.outline.addDecl('commit');</script>
+
+();
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd><br><br>
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
 <dt><span class="decl">protected final char[][char[]] 
 <span class="currsymbol">getKeywords</span>
 <script>explorer.outline.addDecl('getKeywords');</script>
@@ -262,6 +383,60 @@ DBIException if <span class="funcparam">string</span> is malformed.
 </dd>
 
 <script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">abstract bool 
+<span class="currsymbol">hasTable</span>
+<script>explorer.outline.addDecl('hasTable');</script>
+
+(char[] <span class="funcparam">tablename</span>);
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd><br><br>
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">abstract ColumnInfo[] 
+<span class="currsymbol">getTableInfo</span>
+<script>explorer.outline.addDecl('getTableInfo');</script>
+
+(char[] <span class="funcparam">tablename</span>);
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd><br><br>
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">abstract SqlGenerator 
+<span class="currsymbol">getSqlGenerator</span>
+<script>explorer.outline.addDecl('getSqlGenerator');</script>
+
+();
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd><br><br>
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">alias 
+<span class="currsymbol">sqlGen</span>
+<script>explorer.outline.addDecl('sqlGen');</script>
+
+;
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd>Alias for getSqlGenerator
+<br><br>
+
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
 <dt><span class="decl">abstract char[] 
 <span class="currsymbol">type</span>
 <script>explorer.outline.addDecl('type');</script>
@@ -281,6 +456,418 @@ The database
 <br><br>
 
 </dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">abstract void 
+<span class="currsymbol">initQuery</span>
+<script>explorer.outline.addDecl('initQuery');</script>
+
+(char[] <span class="funcparam">sql</span>, bool <span class="funcparam">haveParams</span>);
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd><br><br>
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">abstract void 
+<span class="currsymbol">doQuery</span>
+<script>explorer.outline.addDecl('doQuery');</script>
+
+();
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd><br><br>
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">abstract void 
+<span class="currsymbol">setParam</span>
+<script>explorer.outline.addDecl('setParam');</script>
+
+(bool);
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd><br><br>
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">abstract void 
+<span class="currsymbol">setParam</span>
+<script>explorer.outline.addDecl('setParam');</script>
+
+(ubyte);
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd><br><br>
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">abstract void 
+<span class="currsymbol">setParam</span>
+<script>explorer.outline.addDecl('setParam');</script>
+
+(byte);
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd><br><br>
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">abstract void 
+<span class="currsymbol">setParam</span>
+<script>explorer.outline.addDecl('setParam');</script>
+
+(ushort);
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd><br><br>
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">abstract void 
+<span class="currsymbol">setParam</span>
+<script>explorer.outline.addDecl('setParam');</script>
+
+(short);
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd><br><br>
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">abstract void 
+<span class="currsymbol">setParam</span>
+<script>explorer.outline.addDecl('setParam');</script>
+
+(uint);
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd><br><br>
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">abstract void 
+<span class="currsymbol">setParam</span>
+<script>explorer.outline.addDecl('setParam');</script>
+
+(int);
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd><br><br>
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">abstract void 
+<span class="currsymbol">setParam</span>
+<script>explorer.outline.addDecl('setParam');</script>
+
+(ulong);
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd><br><br>
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">abstract void 
+<span class="currsymbol">setParam</span>
+<script>explorer.outline.addDecl('setParam');</script>
+
+(long);
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd><br><br>
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">abstract void 
+<span class="currsymbol">setParam</span>
+<script>explorer.outline.addDecl('setParam');</script>
+
+(float);
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd><br><br>
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">abstract void 
+<span class="currsymbol">setParam</span>
+<script>explorer.outline.addDecl('setParam');</script>
+
+(double);
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd><br><br>
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">abstract void 
+<span class="currsymbol">setParam</span>
+<script>explorer.outline.addDecl('setParam');</script>
+
+(char[]);
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd><br><br>
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">abstract void 
+<span class="currsymbol">setParam</span>
+<script>explorer.outline.addDecl('setParam');</script>
+
+(ubyte[]);
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd><br><br>
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">abstract void 
+<span class="currsymbol">setParam</span>
+<script>explorer.outline.addDecl('setParam');</script>
+
+(Time);
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd><br><br>
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">abstract void 
+<span class="currsymbol">setParam</span>
+<script>explorer.outline.addDecl('setParam');</script>
+
+(DateTime);
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd><br><br>
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">abstract void 
+<span class="currsymbol">setParamNull</span>
+<script>explorer.outline.addDecl('setParamNull');</script>
+
+();
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd><br><br>
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">void 
+<span class="currsymbol">setParams</span>
+<script>explorer.outline.addDecl('setParams');</script>
+
+(Types...)(Types <span class="funcparam">bind</span>);
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd><br><br>
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">abstract void 
+<span class="currsymbol">initInsert</span>
+<script>explorer.outline.addDecl('initInsert');</script>
+
+(char[] <span class="funcparam">tablename</span>, char[][] <span class="funcparam">fields</span>);
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd><br><br>
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">abstract void 
+<span class="currsymbol">initUpdate</span>
+<script>explorer.outline.addDecl('initUpdate');</script>
+
+(char[] <span class="funcparam">tablename</span>, char[][] <span class="funcparam">fields</span>, char[] <span class="funcparam">where</span>);
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd><br><br>
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">abstract void 
+<span class="currsymbol">initSelect</span>
+<script>explorer.outline.addDecl('initSelect');</script>
+
+(char[] <span class="funcparam">tablename</span>, char[][] <span class="funcparam">fields</span>, char[] <span class="funcparam">where</span>, bool <span class="funcparam">haveParams</span>);
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd><br><br>
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">abstract void 
+<span class="currsymbol">initRemove</span>
+<script>explorer.outline.addDecl('initRemove');</script>
+
+(char[] <span class="funcparam">tablename</span>, char[] <span class="funcparam">where</span>, bool <span class="funcparam">haveParams</span>);
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd><br><br>
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">abstract bool 
+<span class="currsymbol">startWritingMultipleStatements</span>
+<script>explorer.outline.addDecl('startWritingMultipleStatements');</script>
+
+();
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd>Initializes the writing of multiple statements using DBI's Sql generation
+ interface.
+<br><br>
+Should only be called once before writing any statements for the given query.
+ Note that there should be no danger in calling 
+<span class="currsymbol">startWritingMultipleStatements</span>
+<script>explorer.outline.addDecl('startWritingMultipleStatements');</script>
+
+()
+ when only one statement is actually written.  Multi-statement must be done in this
+ order -
+<br><br>
+
+<pre class="d_code">  <font color=green>// startWritingMultipleStatements
+</font>
+  <font color=green>// for each statement that is to be written:
+</font>		<font color=green>// initQuery() or one of its variants initInsert, initUpdate, initSelect, or initRemove
+</font>		<font color=green>// is called for the statement that is being written
+</font>
+ 		<font color=green>// setParams, setParam, or setParamNull are called the correct number of times
+</font> 		<font color=green>// for the given statement
+</font>
+  <font color=green>// doQuery is called to send the full query to the server and execute it
+</font></pre>
+
+<br><br>
+<b>Example:</b><br>
+<pre class="d_code">		db.<u>startWritingMultipleStatements</u>;
+
+			db.initInsert(<font color=red>"myTable"</font>, [<font color=red>"number"</font>, <font color=red>"name"</font>]);
+			db.setParams(15,<font color=red>"bob"</font>);
+
+			db.initSelect(<font color=red>"myTable"</font>,[<font color=red>"number"</font>, <font color=red>"name"</font>],<font color=red>"WHERE 1"</font>,<font color=blue>false</font>);
+
+		db.doQuery;
+</pre>
+
+  The call to doQuery() ends the writing of multiple statements and executes
+  all of the statements that were written since the call to
+  
+<span class="currsymbol">startWritingMultipleStatements</span>
+<script>explorer.outline.addDecl('startWritingMultipleStatements');</script>
+
+().
+  
+<span class="currsymbol">startWritingMultipleStatements</span>
+<script>explorer.outline.addDecl('startWritingMultipleStatements');</script>
+
+() will have to be called again to enable it
+  for the next query.
+  If a query is written using (initQuery and setParam(s)) and
+  
+<span class="currsymbol">startWritingMultipleStatements</span>
+<script>explorer.outline.addDecl('startWritingMultipleStatements');</script>
+
+() is called afterwards, that query
+  will be lost.
+
+<br><br>
+<b>Returns:</b><br>
+<b>true</b> if multiple statement writing was successfully initialized,
+ 	<b>false</b> if the database doesn't support this feature
+<br><br>
+<b>Throws:</b><br>
+DBIException if the database does support this feature but the
+ 	command was called out of order (i.e. more than once) or if there was
+  some sort of error initializing this feature
+	 
+<br><br>
+
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">abstract bool 
+<span class="currsymbol">isWritingMultipleStatements</span>
+<script>explorer.outline.addDecl('isWritingMultipleStatements');</script>
+
+();
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd><b>Returns:</b><br>
+<b>true</b> if the database instance in the write multiple statements mode,
+ <b>false</b> otherwise
+	 
+<br><br>
+
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">abstract Statement 
+<span class="currsymbol">doPrepare</span>
+<script>explorer.outline.addDecl('doPrepare');</script>
+
+(char[] <span class="funcparam">sql</span>);
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd><br><br>
+</dd>
 </dl>
 <script>explorer.outline.decSymbolLevel();</script>
 
@@ -292,12 +879,13 @@ The database
 
 </td></tr>
 		<tr><td id="docfooter">
-			Documentation last updated Sat Jan 24 21:05:08 2009
+			Documentation last updated Sun Jan 25 16:59:56 2009
 
 		</td></tr>
 	</table>
 </div>
 <script>
+explorer.packageExplorer.addModuleFull("dbi.DBI");
 explorer.packageExplorer.addModuleFull("dbi.ErrorCode");
 explorer.packageExplorer.addModuleFull("dbi.Exception");
 explorer.packageExplorer.addModuleFull("dbi.model.BindType");
@@ -322,6 +910,8 @@ explorer.packageExplorer.addModuleFull("dbi.util.Memory");
 explorer.packageExplorer.addModuleFull("dbi.util.Registry");
 explorer.packageExplorer.addModuleFull("dbi.util.SqlGen");
 explorer.packageExplorer.addModuleFull("dbi.util.StringWriter");
+explorer.packageExplorer.addModuleFull("dbi.util.VirtualPrepare");
+explorer.packageExplorer.addModuleFull("dbi.DBI");
 explorer.packageExplorer.addModuleFull("dbi.ErrorCode");
 explorer.packageExplorer.addModuleFull("dbi.Exception");</script>
 </body></html>
