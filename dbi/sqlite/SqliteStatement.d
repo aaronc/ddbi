@@ -123,7 +123,7 @@ class SqliteStatement : Statement
 	{
 		static if(isIntegerType!(T) || is(T == bool))
 		{
-			static if(is(Int == long) || is(Int == uint) || is(Int == ulong))
+			static if(is(T == long) || is(T == uint) || is(T == ulong))
 			{
 				static if(P) sqlite3_bind_int64(stmt, index + 1, cast(long)*val);
 				else *val = cast(T)sqlite3_column_int64(stmt, index);
