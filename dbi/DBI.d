@@ -89,5 +89,5 @@ version(dbi_mysql) {
 }
 
 version(dbi_sqlite) {
-	import dbi.sqlite.SqliteDatabase;
+	import dbi.sqlite.Sqlite;
 }

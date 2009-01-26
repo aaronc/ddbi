@@ -2,15 +2,16 @@
  * Authors: The D DBI project
  * Copyright: BSD license
  */
-module dbi.sqlite.SqliteDatabase;
+module dbi.sqlite.Sqlite;
 
 private import tango.stdc.stringz : toDString = fromStringz, toCString = toStringz;
 private import tango.util.log.Log;
     
 public import dbi.model.Database;
 import dbi.Exception, dbi.model.Statement, dbi.util.Registry;
-import dbi.sqlite.imp, dbi.sqlite.SqliteError;
+import dbi.util.Excerpt;
 
+import dbi.sqlite.imp, dbi.sqlite.SqliteError;
 import dbi.sqlite.SqliteStatement; 
 
 import tango.core.Thread;
@@ -22,26 +23,28 @@ import Integer = tango.text.convert.Integer;
  * See_Also:
  *	Database is the interface that this provides an implementation of.
  */
-class SqliteDatabase : Database {
+class Sqlite : Database {
 	
 	private Logger logger;
 	public:
 
 	/**
-	 * Create a new instance of SqliteDatabase, but don't open a database.
+	 * Create a new instance of Sqlite, but don't open a database.
 	 */
 	this () {
-		logger = Log.lookup("dbi.sqlite.Database");
+		stepFiber_ = new Fiber(&stepFiberRoutine,short.max);
+		logger = Log.lookup("dbi.sqlite.Sqlite");
+		debug logger.info("Sqlite lib version {}", toDString(sqlite3_libversion));
 	}
 
 	/**
-	 * Create a new instance of SqliteDatabase and open a database.
+	 * Create a new instance of Sqlite and open a database.
 	 *
 	 * See_Also:
 	 *	connect
 	 */
 	this (char[] dbFile) {
-		logger = Log.lookup("dbi.sqlite.Database");
+		this();
 		connect(dbFile);
 	}
 	
@@ -62,7 +65,7 @@ class SqliteDatabase : Database {
 	 *
 	 * Examples:
 	 *	---
-	 *	SqliteDatabase db = new SqliteDatabase();
+	 *	auto db = new Sqlite();
 	 *	db.connect("_test.db");
 	 *	---
 	 */
@@ -101,10 +104,10 @@ class SqliteDatabase : Database {
 	
 	private sqlite3_stmt* doPrepareRaw(char[] sql)
 	{
-		debug logger.trace("Preparing: " ~ sql);
-		char** errorMessage;
+		debug logger.trace("Preparing: {}", excerpt(sql_));
+		char* errorMessage;
 		sqlite3_stmt* stmt;
-		if ((errorCode = sqlite3_prepare_v2(sqlite_, toCString(sql), sql.length, &stmt, errorMessage)) != SQLITE_OK) {
+		if ((errorCode = sqlite3_prepare_v2(sqlite_, toCString(sql), sql.length, &stmt, &errorMessage)) != SQLITE_OK) {
 			throw new DBIException("sqlite3_prepare_v2 error: " ~ toDString(sqlite3_errmsg(sqlite_)), sql, errorCode, specificToGeneral(errorCode));
 		}
 		return stmt;
@@ -114,15 +117,6 @@ class SqliteDatabase : Database {
 	
 	private SqliteStatement lastSt = null;
 			
-	/**
-	 * Execute a SQL statement that returns no results.
-	 *
-	 * Params:
-	 *	sql = The SQL statement to _execute.
-	 *
-	 * Throws:
-	 *	DBIException if the SQL code couldn't be executed.
-	 */
 	/+override void execute (char[] sql) {
 		logger.trace("executing: " ~ sql);
 		char** errorMessage;
@@ -154,11 +148,6 @@ class SqliteDatabase : Database {
 		
 		sqlite3_finalize(stmt);
 	}+/
-
-	/*
-	 * Note: The following are not in the DBI API.
-	 */
-
 
 	/**
 	 * Get the number of rows affected by the last SQL statement.
@@ -322,7 +311,7 @@ class SqliteDatabase : Database {
 	void closeResult()
 	{
 		while(stepFiber_.state != Fiber.State.TERM) {
-			stepFiber_.call;
+			stepFiber_.call(true);
 		}
 	}
 	
@@ -355,8 +344,11 @@ class SqliteDatabase : Database {
 	
 	bool nextRow()
 	{
-		lastRes_ = sqlite3_step(stmt_);
-		return lastRes_ == SQLITE_ROW ? true : false; 
+		/+lastRes_ = sqlite3_step(stmt_);
+		return lastRes_ == SQLITE_ROW ? true : false;+/
+		if(stepFiber_.state == Fiber.State.TERM) return false;
+		stepFiber_.call(true);
+		return lastRes_ == SQLITE_ROW ? true : false;
 	}
 	
 	private const char[] OutOfSyncQueryErrorMsg =
@@ -366,52 +358,77 @@ class SqliteDatabase : Database {
 	
 	void initQuery(in char[] sql, bool haveParams)
 	{
-		if(stepFiber_.state != Fiber.State.TERM)
+		/+if(stepFiber_.state != Fiber.State.HOLD)
+			throw new DBIException(OutOfSyncQueryErrorMsg,
+				sql_,ErrorCode.OutOfSync);+/
+		if(stepFiber_.state == Fiber.State.TERM)
+			stepFiber_.reset;
+		if(stepFiber_.state != Fiber.State.HOLD)
 			throw new DBIException(OutOfSyncQueryErrorMsg,
 				sql_,ErrorCode.OutOfSync);
 		sql_ = sql;
 		debug assert(stmt_ is null);
 		stmt_ = doPrepareRaw(sql);
+		assert(stmt_ !is null);
 		numParams_ = sqlite3_bind_parameter_count(stmt_);
 		curParamIdx_ = 0;
 	}
 	
 	void doQuery()
 	{
-		if(stepFiber_.state != Fiber.State.TERM)
+		if(stepFiber_.state != Fiber.State.HOLD)
 			throw new DBIException(OutOfSyncQueryErrorMsg,
 				sql_,ErrorCode.OutOfSync);
 		curParamIdx_ = -1;
-		stepFiber_.reset;
-		stepFiber_.call;
+		stepFiber_.call(true);
 	}
 	
 	private void stepFiberRoutine()
 	{
 		bool checkRes() {
+			debug logger.trace("Checking res {}", lastRes_);
 			if(lastRes_ == SQLITE_DONE) {
-				assert(stmt_ !is null);
-				sqlite3_reset(stmt_);
-				sqlite3_finalize(stmt_);
-				stmt_ = null;
+				debug logger.trace("No more rows");
 				return false;
 			}
 			else if(lastRes_ != SQLITE_ROW) {
-				
+				assert(false, "Error");
 			}
-			return true;
+			else {
+				debug logger.trace("Have a row");
+				return true;
+			}
 		}
 		
-		assert(stmt_ !is null);
-		lastRes_ = sqlite3_step(stmt_);
-		if(!checkRes) return;
-		Fiber.yield;
-		Fiber.yield;
-		while(lastRes_ == SQLITE_ROW) {
+		try
+		{
 			assert(stmt_ !is null);
+			debug logger.trace("Executing {}",excerpt(sql_));
 			lastRes_ = sqlite3_step(stmt_);
 			if(!checkRes) return;
 			Fiber.yield;
+			Fiber.yield;
+			while(lastRes_ == SQLITE_ROW) {
+				assert(stmt_ !is null);
+				lastRes_ = sqlite3_step(stmt_);
+				if(!checkRes) return;
+				Fiber.yield;
+			}
+		}
+		catch(Exception ex)
+		{
+			debug logger.error("Caught exception in stepFiberRoutine {}", ex.toString);
+			//throw ex;
+			Fiber.yieldAndThrow(ex);
+		}
+		finally
+		{
+			debug logger.trace("Cleaning up after {}",excerpt(sql_));
+			if(stmt_ !is null) {
+				debug logger.trace("Finalizing stmt_");
+				sqlite3_finalize(stmt_);
+				stmt_ = null;
+			}
 		}
 	}
 	
@@ -708,7 +725,7 @@ private class SqliteSqlGenerator : SqlGenerator
 private class SqliteRegister : IRegisterable {
 	
 	static this() {
-		debug(DBITest) Stdout("Attempting to register SqliteDatabase in Registry").newline;
+		debug(DBITest) Stdout("Attempting to register Sqlite in Registry").newline;
 		registerDatabase(new SqliteRegister());
 	}
 	
@@ -724,7 +741,7 @@ private class SqliteRegister : IRegisterable {
 	
 	public Database getInstance(char[] url) {
 		logger.trace("creating Sqlite database: " ~ url);
-		return new SqliteDatabase(url);
+		return new Sqlite(url);
 	}
 }
 
@@ -734,7 +751,7 @@ import tango.io.Stdout;
 
 class SqliteTest : DBTest
 {
-	this(SqliteDatabase db)
+	this(Sqlite db)
 	{ super(db); }
 	
 	void dbTests()
@@ -785,8 +802,8 @@ unittest {
         tango.io.Stdout.Stdout("   ..." ~ s).newline();
     }
 
-	s1("dbi.sqlite.SqliteDatabase:");
-	SqliteDatabase db = new SqliteDatabase();
+	s1("dbi.sqlite.Sqlite:");
+	Sqlite db = new Sqlite();
 	s2("connect");
 	db.connect("test.sqlite");
 

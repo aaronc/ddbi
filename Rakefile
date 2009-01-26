@@ -6,7 +6,7 @@ file "testddbi.exe" => TEST_SRC do
 end
 
 task :test => ["testddbi.exe"] do
-	sh "./testddbi"
+	sh "testddbi"
 end
 
 task :default => ["test"]

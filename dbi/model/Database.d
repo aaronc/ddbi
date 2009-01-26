@@ -8,6 +8,7 @@ private static import tango.text.Util;
 private static import tango.io.Stdout;
 public import dbi.Exception;
 public import dbi.util.SqlGen, dbi.model.Statement, dbi.model.Metadata, dbi.model.Result;
+import dbi.util.Excerpt;
 
 debug(DBITest) public import tango.io.Stdout;
 
@@ -29,6 +30,8 @@ enum DbiFeature
  * The database interface that all databases must inherit from.
  *
  * See_Also:
+ *  The documentation for dbi.model.Result - Database inherits from Result.
+ * 
  *	The database class for the specific database you are using.  Many databases have
  *	functions that are specific to themselves, as they wouldn't make sense in any man
  *	other databases.  Please reference the documentation for the database you will be
@@ -130,6 +133,9 @@ abstract class Database : Result, IStatementProvider {
 	 */
 	abstract ulong lastInsertID();
 		
+	/**
+	 * Prepares a statement with the given sql
+	 */
 	Statement prepare(char[] sql)
 	{
 		auto pSt = sql in cachedStatements;
@@ -505,9 +511,11 @@ debug(DBITest) {
 		this(Database db)
 		{
 			this.db = db;
+			this.log = Log.lookup("dbi.DBTest");
 		}
 		
 		Database db;
+		Logger log;
 		
 		void run()
 		{
@@ -526,13 +534,17 @@ debug(DBITest) {
 		
 		void setup()
 		{
+			log.trace("Dropping dbi_test");
 			char[] drop_test = db.sqlGen.makeDropSql("dbi_test");
-			Stdout.formatln("executing: {}", drop_test);
+			log.trace("Executing: {}", excerpt(drop_test));
 			db.query(drop_test);
 			
+			log.trace("Creating dbi_test");
 			auto create_test = db.sqlGen.makeCreateSql("dbi_test", columns);
-			Stdout.formatln("executing: {}", create_test);
+			log.trace("Executing: {}", excerpt(create_test));
 			db.query(create_test);
+			
+			log.trace("Done setuping up dbi_test");
 		}
 		
 		void teardown()
@@ -562,6 +574,7 @@ debug(DBITest) {
 		
 		void initData()
 		{
+			log.trace("Initializing data");
 			data.ub = 1;
 			data.b = -56;
 			data.us = 15764;
@@ -655,7 +668,7 @@ debug(DBITest) {
 				assert(dataCopy.s == data.s);
 				assert(dataCopy.ui == data.ui);
 				assert(dataCopy.i == data.i);
-				assert(dataCopy.ul == data.ul);
+				assert(dataCopy.ul == data.ul,Integer.toString(dataCopy.ul) ~ " != " ~ Integer.toString(data.ul));
 				assert(dataCopy.l == data.l);
 				assert(abs(dataCopy.f - data.f) < 0.00001);
 				assert(abs(dataCopy.d - data.d) < 0.0000001);
