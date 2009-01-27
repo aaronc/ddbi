@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Authors: The D DBI project
  * Copyright: BSD license
  */
@@ -644,12 +644,44 @@ class Sqlite : Database {
 	
 	char[] escapeString(in char[] str, char[] dst = null)
 	{
-		assert(false);
+		size_t count = 0;
+		size_t len = str.length;
+		// Maximum length needed if every char is to be quoted
+		if(dst.length < len * 2) dst.length = len * 2;
+
+		for (size_t i = 0; i < len; i++) {
+			switch (str[i]) {
+				case '"':
+				case '\'':
+				case '\\':
+					dst[count++] = '\\';
+					break;
+				default:
+					break;
+			}
+			dst[count++] = str[i];
+		}
+
+		return dst[0 .. count];
 	}
 	
 	ColumnInfo[] getTableInfo(char[] tablename)
 	{
-		assert(false);
+		query(`PRAGMA table_info("` ~ tablename ~ `")`);
+		
+		ColumnInfo[] info;
+		while(nextRow) {
+			char[] tmp;
+			ColumnInfo col;
+			getField(col.name,1);
+			getField(tmp,2);
+			col.type = fromSqliteType(tmp);
+			getField(tmp,3); if(tmp != "0") col.notNull = true;
+			getField(tmp,5); if(tmp == "1") col.primaryKey = true;
+			info ~= col;
+		}
+		
+		return info;
 	}
 	
 	override SqlGenerator getSqlGenerator()
@@ -782,37 +814,84 @@ class SqliteTest : DBTest
 	{
 		auto ti = db.getTableInfo("dbi_test"); 
 		assert(ti);
-		assert(ti.length == 6);
+		assert(ti.length == 15);
 		
 		assert(ti[0].name == "id");
 		assert(ti[0].type == BindType.Long);
 		assert(ti[0].notNull == true);
 		assert(ti[0].primaryKey == true);
 		
-		assert(ti[1].name == "name");
-		assert(ti[1].type == BindType.String);
-		assert(ti[1].notNull == true);
+		assert(ti[1].name == "UByte");
+		assert(ti[1].type == BindType.Long);
+		assert(ti[1].notNull == false);
 		assert(ti[1].primaryKey == false);
 		
-		assert(ti[2].name == "binary");
-		assert(ti[2].type == BindType.Binary);
+		assert(ti[2].name == "Byte");
+		assert(ti[2].type == BindType.Long);
 		assert(ti[2].notNull == false);
 		assert(ti[2].primaryKey == false);
 		
-		assert(ti[3].name == "dateofbirth");
-		assert(ti[3].type == BindType.String);
+		assert(ti[3].name == "UShort");
+		assert(ti[3].type == BindType.Long);
 		assert(ti[3].notNull == false);
 		assert(ti[3].primaryKey == false);
 		
-		assert(ti[4].name == "i");
+		assert(ti[4].name == "Short");
 		assert(ti[4].type == BindType.Long);
 		assert(ti[4].notNull == false);
 		assert(ti[4].primaryKey == false);
 		
-		assert(ti[5].name == "f");
-		assert(ti[5].type == BindType.Double);
+		assert(ti[5].name == "UInt");
+		assert(ti[5].type == BindType.Long);
 		assert(ti[5].notNull == false);
 		assert(ti[5].primaryKey == false);
+		
+		assert(ti[6].name == "Int");
+		assert(ti[6].type == BindType.Long);
+		assert(ti[6].notNull == false);
+		assert(ti[6].primaryKey == false);
+		
+		assert(ti[7].name == "ULong");
+		assert(ti[7].type == BindType.Long);
+		assert(ti[7].notNull == false);
+		assert(ti[7].primaryKey == false);
+		
+		assert(ti[8].name == "Long");
+		assert(ti[8].type == BindType.Long);
+		assert(ti[8].notNull == false);
+		assert(ti[8].primaryKey == false);
+		
+		
+		assert(ti[9].name == "Float");
+		assert(ti[9].type == BindType.Double);
+		assert(ti[9].notNull == false);
+		assert(ti[9].primaryKey == false);
+
+
+		assert(ti[10].name == "Double");
+		assert(ti[10].type == BindType.Double);
+		assert(ti[10].notNull == false);
+		assert(ti[10].primaryKey == false);
+		
+		assert(ti[11].name == "String");
+		assert(ti[11].type == BindType.String);
+		assert(ti[11].notNull == true);
+		assert(ti[11].primaryKey == false);
+		
+		assert(ti[12].name == "Binary");
+		assert(ti[12].type == BindType.Binary);
+		assert(ti[12].notNull == false);
+		assert(ti[12].primaryKey == false);
+		
+		assert(ti[13].name == "DateTime");
+		assert(ti[13].type == BindType.String);
+		assert(ti[13].notNull == false);
+		assert(ti[13].primaryKey == false);
+		
+		assert(ti[14].name == "Time");
+		assert(ti[14].type == BindType.String);
+		assert(ti[14].notNull == false);
+		assert(ti[14].primaryKey == false);
 	}
 }
 

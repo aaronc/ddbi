@@ -526,6 +526,7 @@ debug(DBITest) {
 			select;
 			update;
 			remove;
+			testUtil;
 			testMultiStatements;
 			
 			dbTests;
@@ -728,6 +729,11 @@ debug(DBITest) {
 			assert(!db.fetchRow(ub, b));
 			assert(!db.nextResult);
 			assert(!db.moreResults);
+		}
+		
+		void testUtil()
+		{
+			log.info("Escaped string: {}",db.escapeString(`"Hello \'world\'!"`));
 		}
 		
 		/+
