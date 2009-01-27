@@ -42,7 +42,7 @@ abstract class SqlGenerator
 	 * ---
 	 * 	auto writer = new SqlStringWriter;
 	 * 	auto sql = db.sqlGen.start(writer)("SELECT ").list("name","date")
-	 * 	.writer(" FROM ").id("user")("WHERE ").id("id")("=?").get;
+	 * 	(" FROM ").id("user")("WHERE ").id("id")("=?").get;
 	 * ---
 	 */
 	final SqlGenerator start(SqlStringWriter writer = null)
@@ -70,7 +70,7 @@ abstract class SqlGenerator
 	alias write opCall;
 	
 	/**
-	 * 
+	 * Writes a list of quoted identifiers
 	 */
 	final SqlGenerator list(char[][] identifiers...)
 	in { assert(writer_ !is null); }
@@ -84,10 +84,20 @@ abstract class SqlGenerator
 		return this;
 	}
 	
+	/**
+	 * Alias for list - for quoting a single identifier
+	 */
 	alias list id;
 	
 	/**
+	 * Writes a list of quoted, qualified identifiers.
 	 * 
+	 * Should be very useful for doing join queries.
+	 * 
+	 * Example:
+	 * ---
+	 * qlist("user","name","date") // generates "user"."name","user"."date"
+	 * ---
 	 */
 	final SqlGenerator qlist(char[] qualifier, char[][] identifiers...)
 	in { assert(writer_ !is null); }
@@ -102,6 +112,9 @@ abstract class SqlGenerator
 		return this;
 	}
 	
+	/**
+	 * Alias for qlist - for quoting a single qualified identifier
+	 */
 	alias qlist qid;
 	/+
 	final SqlGenerator fieldExpr(char[] fieldname, char[] expr)
@@ -114,7 +127,7 @@ abstract class SqlGenerator
 	}+/
 	
 	/**
-	 * 
+	 * Returns: the sql that has been written
 	 */
 	final char[] get()
 	in { assert(writer_ !is null); }
@@ -129,7 +142,7 @@ abstract class SqlGenerator
 	{
 		start(writer);
 		writer_("INSERT INTO ");
-		list(tablename);
+		id(tablename);
 		writer_(" (");
 		list(fields);
 		writer_(") VALUES(");
@@ -147,7 +160,7 @@ abstract class SqlGenerator
 		char[4] hmm = [c,'=','?',','];
 		start(writer);
 		writer_("UPDATE ");
-		list(tablename);
+		id(tablename);
 		writer_(" SET ");
 		foreach(f;fields) writer_(q,f,hmm);
 		return writer_.correct(' ')(whereClause).get;
