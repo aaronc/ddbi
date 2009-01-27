@@ -11,8 +11,9 @@ interface IDisposableString
 
 class DisposableStringWriter_(bool AllowCustomAlloc = false) : IDisposableString
 {
-	this(size_t growSize = 100)
+	this(size_t initSize = short.max/2, size_t growSize = 8192)
 	{
+		forwardReserve(initSize);
 		this.growSize = growSize;
 	}
 	
@@ -23,7 +24,7 @@ class DisposableStringWriter_(bool AllowCustomAlloc = false) : IDisposableString
 	
 	static if(AllowCustomAlloc)
 	{
-		void* function(size_t x) allocate = function void*(size_t x) {
+		void* function(size_t x) alloc = function void*(size_t x) {
 			return CStdlib.malloc(x);
 		};
 		void function(void* p) free = function void(void* p) {
@@ -64,6 +65,16 @@ class DisposableStringWriter_(bool AllowCustomAlloc = false) : IDisposableString
 		used -= n;
 	}
 	
+	/**
+	 * Replaces the previously written character with the
+	 * provided character c 
+	 */
+	void correct(char c)
+	{
+		debug assert(used);
+		buffer[used-1] = c;
+	}
+
 	char[] getOpenBuffer()
 	{
 		return buffer[used .. $];
@@ -76,6 +87,47 @@ class DisposableStringWriter_(bool AllowCustomAlloc = false) : IDisposableString
 	size_t length()
 	{
 		return used;
+	}
+	
+	void write(char[][] strs...)
+	{
+		size_t totalLen;
+		foreach(str;strs) totalLen += str.length;
+		forwardReserve(totalLen);
+		foreach(str; strs)
+		{
+			size_t len = str.length;
+			buffer[used .. used + len] = str;
+			used += len;
+		}
+	}
+	alias write opCall;
+	
+	/**
+	 * Exposes raw buffer writing.
+	 * 
+	 * Params:
+	 *     writeDg = the delegate which will write to the exposed buffer.  this
+	 *     	delegate must return the number of bytes written.
+	 */
+	void write(size_t delegate(void[] buf) writeDg)
+	{
+		used += writeDg(buffer[used..$]);
+	}
+	
+	/**
+	 * Reserves a certain amount of space in the write buffer
+	 * and exposes that raw buffer to writing	
+	 * 
+	 * Params:
+	 * 	   reserveSize
+	 *     writeDg = the delegate which will write to the exposed buffer.  this
+	 *     	delegate must return the number of bytes written.
+	 */
+	void write(size_t reserveSize, size_t delegate(void[] buf) writeDg)
+	{
+		forwardReserve(reserveSize);
+		used += writeDg(buffer[used..$]);
 	}
 	
 	/**

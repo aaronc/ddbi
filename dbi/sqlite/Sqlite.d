@@ -8,8 +8,8 @@ private import tango.stdc.stringz : toDString = fromStringz, toCString = toStrin
 private import tango.util.log.Log;
     
 public import dbi.model.Database;
-import dbi.Exception, dbi.model.Statement, dbi.util.Registry;
-import dbi.util.Excerpt;
+import	dbi.Exception, dbi.model.Statement, dbi.util.Registry,
+			dbi.util.StringWriter, dbi.util.Excerpt;
 
 import dbi.sqlite.imp, dbi.sqlite.SqliteError;
 import dbi.sqlite.SqliteStatement; 
@@ -313,6 +313,7 @@ class Sqlite : Database {
 		while(stepFiber_.state != Fiber.State.TERM) {
 			stepFiber_.call(true);
 		}
+		stepFiber_.reset;
 	}
 	
 	ulong rowCount()
@@ -361,25 +362,22 @@ class Sqlite : Database {
 		/+if(stepFiber_.state != Fiber.State.HOLD)
 			throw new DBIException(OutOfSyncQueryErrorMsg,
 				sql_,ErrorCode.OutOfSync);+/
-		if(stepFiber_.state == Fiber.State.TERM)
+		if(stepFiber_.state == Fiber.State.HOLD && sql_.length) {
+			closeResult;
 			stepFiber_.reset;
-		if(stepFiber_.state != Fiber.State.HOLD)
-			throw new DBIException(OutOfSyncQueryErrorMsg,
+		}
+		else if(stepFiber_.state == Fiber.State.TERM)  stepFiber_.reset;
+		debug if(stepFiber_.state != Fiber.State.HOLD) throw new DBIException(OutOfSyncQueryErrorMsg,
 				sql_,ErrorCode.OutOfSync);
 		sql_ = sql;
-		debug assert(stmt_ is null);
-		stmt_ = doPrepareRaw(sql);
-		assert(stmt_ !is null);
-		numParams_ = sqlite3_bind_parameter_count(stmt_);
-		curParamIdx_ = 0;
+		stepFiber_.call(true);
 	}
 	
 	void doQuery()
 	{
 		if(stepFiber_.state != Fiber.State.HOLD)
 			throw new DBIException(OutOfSyncQueryErrorMsg,
-				sql_,ErrorCode.OutOfSync);
-		curParamIdx_ = -1;
+				sql_,ErrorCode.OutOfSync);		
 		stepFiber_.call(true);
 	}
 	
@@ -402,7 +400,14 @@ class Sqlite : Database {
 		
 		try
 		{
+			debug assert(stmt_ is null);
+			debug assert(sql_ !is null);
+			stmt_ = doPrepareRaw(sql_);
 			assert(stmt_ !is null);
+			numParams_ = sqlite3_bind_parameter_count(stmt_);
+			curParamIdx_ = 0;
+			Fiber.yield;
+			curParamIdx_ = -1;
 			debug logger.trace("Executing {}",excerpt(sql_));
 			lastRes_ = sqlite3_step(stmt_);
 			if(!checkRes) return;
@@ -541,12 +546,12 @@ class Sqlite : Database {
 		if(stmt_ is null || numParams_ <= curParamIdx_)
 			throw new DBIException(
 				"Param index " ~ Integer.toString(curParamIdx_) ~ " of type "
-				~ Type.stringof ~ "out of bounds "
+				~ Type.stringof ~ " out of bounds "
 				"when binding sqlite param",sql_);
 		if(curParamIdx_ < 0) {
 			throw new DBIException(
 				"Trying to bind parameter of type"
-				~ Type.stringof ~ "to sqlite statement "
+				~ Type.stringof ~ " to sqlite statement "
 				"but this operation is out of sync - you can't do this right now. "
 				"Please check the order of your statements.",sql_);
 		}
@@ -603,13 +608,28 @@ class Sqlite : Database {
 	void initSelect(char[] tablename, char[][] fields, char[] where, bool haveParams)
 	{
 		//initQuery(SqlGenHelper.makeUpdateSql(tablename,fields));
-		assert(false);
+		if(writer_ is null) writer_ = new DisposableStringWriter;
+		else writer_.reset;
+		writer_("SELECT ");
+		foreach(field; fields)
+		{
+			writer_(`"`,field,`",`);
+		}
+		writer_.correct(' ');
+		writer_(`FROM "`,tablename,`" `);
+		writer_(where);
+		debug logger.trace("Wrote select sql {}", writer_.get);
+		initQuery(writer_.get,haveParams);
 	}
 	
 	void initRemove(char[] tablename, char[] where, bool haveParams)
 	{
 		//initQuery(sqlGen.makeUpdateSql(where,tablename,fields));
-		assert(false);
+		if(writer_ is null) writer_ = new DisposableStringWriter;
+		else writer_.reset;
+		writer_(`DELETE FROM "`, tablename, `" `, where);
+		debug logger.trace("Wrote delete sql {}", writer_.get);
+		initQuery(writer_.get,haveParams);
 	}
 	
 	bool startWritingMultipleStatements()
@@ -650,6 +670,7 @@ class Sqlite : Database {
 		int numFields_;
 		int numParams_;
 		int curParamIdx_;
+		DisposableStringWriter writer_;
 
 /+	/**
 	 *
