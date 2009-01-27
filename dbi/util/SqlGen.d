@@ -12,18 +12,39 @@ import dbi.util.StringWriter;
  */
 abstract class SqlGenerator
 {
+	/**
+	 * 
+	 */
 	char identifierQuoteChar()
 	{
 		return '"'; 
 	}
 	
+	/**
+	 * 
+	 */
 	char stringQuoteChar()
 	{
 		return '\'';
 	}
 	
+	/**
+	 * 
+	 */
 	abstract char[] toNativeType(ColumnInfo info);
 	
+	/**
+	 * Starts chained writing - used together with
+	 * the write, list, and qlist method as a convenient way
+	 * of dynamically generating sql.
+	 * 
+	 * Example:
+	 * ---
+	 * 	auto writer = new SqlStringWriter;
+	 * 	auto sql = db.sqlGen.start(writer)("SELECT ").list("name","date")
+	 * 	.writer(" FROM ").id("user")("WHERE ").id("id")("=?").get;
+	 * ---
+	 */
 	final SqlGenerator start(SqlStringWriter writer = null)
 	{
 		if(writer !is null) writer_ = writer;
@@ -33,6 +54,9 @@ abstract class SqlGenerator
 	}
 	private SqlStringWriter writer_;
 	
+	/**
+	 * 
+	 */
 	final SqlGenerator write(char[][] strs...)
 	in { assert(writer_ !is null); }
 	body {
@@ -40,6 +64,14 @@ abstract class SqlGenerator
 		return this;
 	}
 	
+	/**
+	 * Alias for write
+	 */
+	alias write opCall;
+	
+	/**
+	 * 
+	 */
 	final SqlGenerator list(char[][] identifiers...)
 	in { assert(writer_ !is null); }
 	body {
@@ -52,6 +84,11 @@ abstract class SqlGenerator
 		return this;
 	}
 	
+	alias list id;
+	
+	/**
+	 * 
+	 */
 	final SqlGenerator qlist(char[] qualifier, char[][] identifiers...)
 	in { assert(writer_ !is null); }
 	body {
@@ -65,12 +102,29 @@ abstract class SqlGenerator
 		return this;
 	}
 	
+	alias qlist qid;
+	/+
+	final SqlGenerator fieldExpr(char[] fieldname, char[] expr)
+	in { assert(writer_ !is null); }
+	body {
+		char c = identifierQuoteChar;
+		char[1] q = [c];
+		writer_(q,fieldname,q,expr);
+		return this;
+	}+/
+	
+	/**
+	 * 
+	 */
 	final char[] get()
 	in { assert(writer_ !is null); }
 	body {
 		return writer_.get;
 	}
 	
+	/**
+	 * 
+	 */
 	char[] makeInsertSql(SqlStringWriter writer, char[] tablename, char[][] fields...)
 	{
 		start(writer);
@@ -83,6 +137,9 @@ abstract class SqlGenerator
 		return writer_.correct(')').get;
 	}
 	
+	/**
+	 * 
+	 */
 	char[] makeUpdateSql(SqlStringWriter writer, char[] tablename, char[] whereClause, char[][] fields...)
 	{
 		char c = identifierQuoteChar;
@@ -93,9 +150,12 @@ abstract class SqlGenerator
 		list(tablename);
 		writer_(" SET ");
 		foreach(f;fields) writer_(q,f,hmm);
-		return writer_.correct(' ').write(whereClause).get;
+		return writer_.correct(' ')(whereClause).get;
 	}
 	
+	/**
+	 * 
+	 */
 	char[] makeCreateSql(char[] tablename, ColumnInfo[] columnInfo, char[] options = null)
 	{
 		char[] res = "CREATE TABLE ";
@@ -113,12 +173,18 @@ abstract class SqlGenerator
 		return res;
 	}
 	
+	/**
+	 * 
+	 */
 	char[] makeAddColumnSql(char[] tablename, ColumnInfo column)
 	{
 		return "ALTER TABLE " ~ quoteTableName(tablename) ~ " ADD COLUMN " 
 		~ quoteColumnName(column.name) ~ " " ~ makeColumnDef(column, null);
 	}
 	
+	/**
+	 * 
+	 */
 	char[] makeDropSql(char[] tablename, bool checkExists = true)
 	{
 		char[] res = "DROP TABLE ";

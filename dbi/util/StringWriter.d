@@ -3,6 +3,9 @@ module dbi.util.StringWriter;
 import CStdlib = tango.stdc.stdlib;
 import tango.core.Memory;
 
+/**
+ * Utility class for writing sql statement to a string buffer
+ */
 class SqlStringWriter_(bool AllowCustomAlloc = false)
 {
 	alias SqlStringWriter_!(AllowCustomAlloc) TypeOfThis;
