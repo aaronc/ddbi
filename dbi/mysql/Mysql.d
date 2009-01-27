@@ -717,6 +717,9 @@ class Mysql : Database {
 		return true;
 	}
 	
+	SqlStringWriter buffer() { return writer_; }
+	void buffer(SqlStringWriter) { return writer_; }
+	
     debug(DBITest) {
 		override void doTests()
 		{

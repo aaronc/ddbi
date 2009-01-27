@@ -534,6 +534,9 @@ class Sqlite : Database {
 	
 	sqlite3* handle() { return sqlite_; }
 	
+	SqlStringWriter buffer() { return writer_; }
+	void buffer(SqlStringWriter) { return writer_; }
+	
 	private:
 		sqlite3* sqlite_;
 		sqlite3_stmt* stmt_;

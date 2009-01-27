@@ -6,9 +6,11 @@ module dbi.model.Database;
 
 private static import tango.text.Util;
 private static import tango.io.Stdout;
+
 public import dbi.Exception;
 public import dbi.util.SqlGen, dbi.model.Statement, dbi.model.Metadata, dbi.model.Result;
 import dbi.util.Excerpt;
+import dbi.util.StringWriter;
 
 debug(DBITest) public import tango.io.Stdout;
 
@@ -450,14 +452,28 @@ abstract class Database : Result, IStatementProvider {
 	abstract bool startWritingMultipleStatements();
 	
 	/**
+	 * Alias for startWritingMultipleStatements()
+	 */
+	alias startWritingMultipleStatements startMultiWrite;
+	
+	/**
 	 * 
 	 * Returns: true if the database instance in the write multiple statements mode,
 	 * false otherwise
 	 */
 	abstract bool isWritingMultipleStatements();
 	
+	/**
+	 * Alias for isWritingMultipleStatements()
+	 */
+	alias isWritingMultipleStatements isMultiWrite;
+	
 	///
 	abstract Statement doPrepare(char[] sql);
+	
+	abstract SqlStringWriter buffer();
+	
+	abstract void buffer(SqlStringWriter);
 	
 	debug(DBITest) {
 		abstract void doTests();
