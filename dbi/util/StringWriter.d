@@ -37,7 +37,7 @@ class SqlStringWriter_(bool AllowCustomAlloc = false)
 	}
 	
 	protected char[] buffer;
-	protected size_t used = 0;
+	protected size_t extent = 0;
 	
 	/**
 	 * Ensures that the buffer has space to write sz elements and
@@ -48,7 +48,7 @@ class SqlStringWriter_(bool AllowCustomAlloc = false)
 	 */
 	char[] reserve(size_t sz)
 	{
-		auto targetSize = used + sz;
+		auto targetSize = extent + sz;
 		if(targetSize >= buffer.length) {
 			uint newSize = buffer.length + growSize;
 			if(newSize < targetSize) newSize = targetSize;
@@ -57,7 +57,7 @@ class SqlStringWriter_(bool AllowCustomAlloc = false)
 			release(buffer.ptr);
 			buffer = temp;
 		}
-		return buffer[used .. $];
+		return buffer[extent .. $];
 	}
 	
 	/**
@@ -68,8 +68,8 @@ class SqlStringWriter_(bool AllowCustomAlloc = false)
 	 */
 	final TypeOfThis backup(size_t n = 1)
 	{
-		assert(n <= used);
-		used -= n;
+		assert(n <= extent);
+		extent -= n;
 		return this;
 	}
 	
@@ -79,8 +79,8 @@ class SqlStringWriter_(bool AllowCustomAlloc = false)
 	 */
 	final TypeOfThis correct(char c)
 	{
-		debug assert(used);
-		buffer[used-1] = c;
+		debug assert(extent);
+		buffer[extent-1] = c;
 		return this;
 	}
 
@@ -90,7 +90,7 @@ class SqlStringWriter_(bool AllowCustomAlloc = false)
 	 */
 	size_t length()
 	{
-		return used;
+		return extent;
 	}
 	
 	/**
@@ -109,8 +109,8 @@ class SqlStringWriter_(bool AllowCustomAlloc = false)
 		foreach(str; strs)
 		{
 			size_t len = str.length;
-			buffer[used .. used + len] = str;
-			used += len;
+			buffer[extent .. extent + len] = str;
+			extent += len;
 		}
 		return this;
 	}
@@ -124,7 +124,7 @@ class SqlStringWriter_(bool AllowCustomAlloc = false)
 	 */
 	final TypeOfThis write(size_t delegate(void[] buf) writeDg)
 	{
-		used += writeDg(buffer[used..$]);
+		extent += writeDg(buffer[extent..$]);
 		return this;
 	}
 	
@@ -140,7 +140,7 @@ class SqlStringWriter_(bool AllowCustomAlloc = false)
 	final TypeOfThis write(size_t reserveSize, size_t delegate(void[] buf) writeDg)
 	{
 		reserve(reserveSize);
-		used += writeDg(buffer[used..$]);
+		extent += writeDg(buffer[extent..$]);
 		return this;
 	}
 	
@@ -150,8 +150,8 @@ class SqlStringWriter_(bool AllowCustomAlloc = false)
 	void opCatAssign(char ch)
 	{
 		reserve(1);	
-		buffer[used] = ch;
-		++used;
+		buffer[extent] = ch;
+		++extent;
 	}
 	
 	/**
@@ -161,15 +161,15 @@ class SqlStringWriter_(bool AllowCustomAlloc = false)
 	{
 		auto len = str.length;
 		reserve(len);	
-		buffer[used .. used + len] = str;
-		used += len;
+		buffer[extent .. extent + len] = str;
+		extent += len;
 	}
 	
 	char[] getWriteBuffer(size_t x)
 	{
 		reserve(x);
-		auto buf = buffer[used .. used + x];
-		used += x;
+		auto buf = buffer[extent .. extent + x];
+		extent += x;
 		return buf;
 	}
 	
@@ -180,7 +180,7 @@ class SqlStringWriter_(bool AllowCustomAlloc = false)
 	 */
 	char[] get()
 	{
-		return buffer[0..used];
+		return buffer[0..extent];
 	}
 	
 	/**
@@ -188,7 +188,7 @@ class SqlStringWriter_(bool AllowCustomAlloc = false)
 	 */
 	void reset()
 	{
-		used = 0;
+		extent = 0;
 	}
 
 	/**
