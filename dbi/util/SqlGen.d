@@ -186,17 +186,6 @@ abstract class SqlGenerator
 		~ quoteColumnName(column.name) ~ " " ~ makeColumnDef(column, null);
 	}
 	
-	/**
-	 * 
-	 */
-	char[] makeDropSql(char[] tablename, bool checkExists = true)
-	{
-		char[] res = "DROP TABLE ";
-		if(checkExists) res ~= "IF EXISTS ";
-		res ~= quoteTableName(tablename);
-		return res;
-	}
-	
 	char[] makeColumnDef(ColumnInfo info, ColumnInfo[] columnInfo)
 	{
 		char[] res = toNativeType(info);
