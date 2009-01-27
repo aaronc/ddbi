@@ -87,6 +87,19 @@ abstract class SqlGenerator
 		return writer_.correct(')').get;
 	}
 	
+	char[] makeUpdateSql(SqlStringWriter writer, char[] tablename, char[] whereClause, char[][] fields...)
+	{
+		char c = identifierQuoteChar;
+		char[1] q = [c];
+		char[4] hmm = [c,'=','?',','];
+		start(writer);
+		writer_("UPDATE ");
+		list(tablename);
+		writer_(" SET ");
+		foreach(f;fields) writer_(q,f,hmm);
+		return writer_.correct(' ').write(whereClause).get;
+	}
+	
 	char[] quoteColumnName(char[] colname)
 	{
 		auto quote = identifierQuoteChar;
@@ -400,17 +413,20 @@ unittest
 	
 	auto sqlgen = new TestSqlGen;
 	auto writer = new SqlStringWriter;
+	
+	assert(sqlgen.identifierQuoteChar == '"');
+	
 	char[] res;
-	res = sqlgen.makeInsertSql(writer,"user", ["name", "date"]);
+	res = sqlgen.makeInsertSql(writer,"user",["name","date"]);
 	assert(res == `INSERT INTO "user" ("name","date") VALUES(?,?)`, res);
+	
+	res = sqlgen.makeUpdateSql(writer,"user","WHERE 1",["name", "date"]);
+	assert(res == "UPDATE \"user\" SET \"name\"=?,\"date\"=? WHERE 1", res);
 	
 	assert(sqlgen.makeFieldList(["name", "date"]) == "\"name\",\"date\"");
 	assert(sqlgen.makeQualifiedFieldList("user", ["name", "date"]) == "\"user\".\"name\",\"user\".\"date\"");
-	//auto res = sqlgen.makeInsertSql("user", ["name", "date"]);
 	
-	res = sqlgen.makeUpdateSql("WHERE 1", "user", ["name", "date"]);
-	assert(res == "UPDATE \"user\" SET \"name\"=?,\"date\"=? WHERE 1", res);
-	assert(sqlgen.identifierQuoteChar == '"');
+	
 	
 	assert(SqlGenHelper.concatLists(
 			sqlgen.makeQualifiedFieldList("user", ["name", "date"]),
