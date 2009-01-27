@@ -116,15 +116,6 @@ abstract class SqlGenerator
 	 * Alias for qlist - for quoting a single qualified identifier
 	 */
 	alias qlist qid;
-	/+
-	final SqlGenerator fieldExpr(char[] fieldname, char[] expr)
-	in { assert(writer_ !is null); }
-	body {
-		char c = identifierQuoteChar;
-		char[1] q = [c];
-		writer_(q,fieldname,q,expr);
-		return this;
-	}+/
 	
 	/**
 	 * Returns: the sql that has been written
@@ -299,8 +290,5 @@ unittest
 	assert(sqlgen.makeQualifiedFieldList("user", ["name", "date"]) ~ "," ~
 			sqlgen.makeQualifiedFieldList("person", ["name", "date"])
 			 == "\"user\".\"name\",\"user\".\"date\",\"person\".\"name\",\"person\".\"date\"");
-	
-	
-	//DateTime
 }
 }
