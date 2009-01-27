@@ -116,28 +116,38 @@ class SqliteStatement : Statement
 	static void bindTPtr(T, bool P)(sqlite3_stmt* stmt, void* ptr, int index, void* delegate(size_t) allocator = null)
 	{
 		T* pVal = cast(T*)ptr;
-		bindT!(T,P)(stmt,pVal,index,allocator);
+		bindT!(T,P)(stmt,*pVal,index,allocator);
 	}
 	
-	static void bindT(T, bool P)(sqlite3_stmt* stmt, T* val, int index, void* delegate(size_t) allocator = null)
+	static void bindT(T, bool P)(sqlite3_stmt* stmt, ref T val, int index, void* delegate(size_t) allocator = null)
 	{
 		static if(isIntegerType!(T) || is(T == bool))
 		{
 			static if(is(T == long) || is(T == uint) || is(T == ulong))
 			{
-				static if(P) sqlite3_bind_int64(stmt, index + 1, cast(long)*val);
-				else *val = cast(T)sqlite3_column_int64(stmt, index);
+				static if(P) sqlite3_bind_int64(stmt, index + 1, cast(long)val);
+				else val = cast(T)sqlite3_column_int64(stmt, index);
 			}
 			else
 			{
-				static if(P) sqlite3_bind_int(stmt, index + 1, cast(int)*val);
-				else *val = cast(T)sqlite3_column_int(stmt, index);
+				static if(P) sqlite3_bind_int(stmt, index + 1, cast(int)val);
+				else val = cast(T)sqlite3_column_int(stmt, index);
 			}
 		}
 		else static if(isRealType!(T))
 		{
-			static if(P) sqlite3_bind_double(stmt, index + 1, cast(double)*val);
-			else *val = cast(T)sqlite3_column_double(stmt, index);
+			static if(P) sqlite3_bind_double(stmt, index + 1, cast(double)val);
+			else val = cast(T)sqlite3_column_double(stmt, index);
+		}
+		else static if(is(T == void[]) || is(T == ubyte[]))
+		{
+			static if(P) sqlite3_bind_blob(stmt, index + 1, val.ptr, val.length, null);
+			else {
+				auto res = sqlite3_column_blob(stmt, index);
+				auto len = sqlite3_column_bytes(stmt, index);
+				val = cast(T)res[0 .. len].dup;
+				debug log.trace("Got void[] {}",cast(char[])val);
+			}
 		}
 		else static if(is(T == char[]))
 		{
@@ -146,20 +156,12 @@ class SqliteStatement : Statement
 				auto res = sqlite3_column_text(stmt, index);
 				auto len = sqlite3_column_bytes(stmt, index);
 				/+if(allocator !is null) {
-					*val = (cast(char*)allocator(len)[0 .. len]);
+					val = (cast(char*)allocator(len)[0 .. len]);
 					strncpy(val.ptr, res, len);
 				}
-				else *val = res[0 .. len].dup;+/
-				*val = res[0 .. len].dup;
-			}
-		}
-		else static if(is(T == void[]) || is(T == ubyte[]))
-		{
-			static if(P) sqlite3_bind_blob(stmt, index + 1, val.ptr, val.length, null);
-			else {
-				auto res = sqlite3_column_blob(stmt, index);
-				auto len = sqlite3_column_bytes(stmt, index);
-				*val = cast(T)res[0 .. len].dup;
+				else val = res[0 .. len].dup;+/
+				debug log.trace("Got char[] {}",val);
+				val = res[0 .. len].dup;
 			}
 		}
 		else static if(is(T == DT.DateTime) || is(T == DT.Time))
@@ -168,14 +170,13 @@ class SqliteStatement : Statement
 				auto txt = new char[19];
 				
 				static if(is(T == DT.DateTime)) {
-					txt = printDateTime(*val, txt);
+					txt = printDateTime(val, txt);
 				}
 				else static if(is(T == DT.Time)) {
 					DT.DateTime dt;
-					//auto dt = Clock.toDate(*val);
-					Gregorian.generic.split(*val, dt.date.year, dt.date.month, 
+					Gregorian.generic.split(val, dt.date.year, dt.date.month, 
 						dt.date.day, dt.date.doy, dt.date.dow, dt.date.era);
-					dt.time = (*val).time;
+					dt.time = val.time;
 					txt = printDateTime(dt, txt);
 				}
 				else static assert(false);
@@ -188,13 +189,12 @@ class SqliteStatement : Statement
 				auto src = res[0 .. len];
 				
 				static if(is(T == DT.DateTime)) {
-					 parseDateTime(res[0 .. len], *val);
+					 parseDateTime(res[0 .. len], val);
 				}
 				else static if(is(T == DT.Time)) {
 					DT.DateTime dt;
 					parseDateTime(res[0 .. len], dt);
-					//*(cast(Time*)ptr) = Clock.fromDate(dt);
-					*val = Gregorian.generic.toTime(dt);
+					val = Gregorian.generic.toTime(dt);
 				}
 				else static assert(false);
 			}

@@ -407,6 +407,7 @@ class Sqlite : Database {
 			lastRes_ = sqlite3_step(stmt_);
 			if(!checkRes) return;
 			Fiber.yield;
+			numFields_ = sqlite3_column_count(stmt_);
 			Fiber.yield;
 			while(lastRes_ == SQLITE_ROW) {
 				assert(stmt_ !is null);
@@ -424,6 +425,7 @@ class Sqlite : Database {
 		finally
 		{
 			debug logger.trace("Cleaning up after {}",excerpt(sql_));
+			numFields_ = 0;
 			if(stmt_ !is null) {
 				debug logger.trace("Finalizing stmt_");
 				sqlite3_finalize(stmt_);
@@ -512,8 +514,9 @@ class Sqlite : Database {
 	
 	bool bindField(Type)(inout Type val, size_t idx)
 	{
+		debug logger.trace("Binding field of type {}, idx {}", Type.stringof, idx);
 		if(stmt_ is null || lastRes_ != SQLITE_ROW || numFields_ <= idx) return false;
-		SqliteStatement.bindT!(Type,false)(stmt_,&val,idx);
+		SqliteStatement.bindT!(Type,false)(stmt_,val,idx);
 		return true;
 	}
 	
@@ -548,7 +551,7 @@ class Sqlite : Database {
 				"Please check the order of your statements.",sql_);
 		}
 		static if(Null) SqliteStatement.bindNull!(true)(stmt_,curParamIdx_);
-		else SqliteStatement.bindT!(Type,true)(stmt_,&val,curParamIdx_);
+		else SqliteStatement.bindT!(Type,true)(stmt_,val,curParamIdx_);
 		++curParamIdx_;
 	}
 	

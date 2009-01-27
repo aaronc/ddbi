@@ -673,7 +673,8 @@ debug(DBITest) {
 				assert(abs(dataCopy.f - data.f) < 0.00001);
 				assert(abs(dataCopy.d - data.d) < 0.0000001);
 				assert(dataCopy.str == data.str);
-				assert(dataCopy.binary == data.binary);
+				assert(dataCopy.binary == data.binary,
+					cast(char[])dataCopy.binary ~ " != " ~ cast(char[])data.binary);
 				assert(dataCopy.dt.date.year == data.dt.date.year);
 				assert(dataCopy.dt.date.month == data.dt.date.month);
 				assert(dataCopy.dt.date.day == data.dt.date.day);

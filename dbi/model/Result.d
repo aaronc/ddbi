@@ -9,6 +9,13 @@ public import dbi.util.Memory;
 
 public import tango.time.Time;
 
+debug {
+	import tango.util.log.Log;
+	Logger log;
+	static this() {
+		log = Log.lookup("dbi.model.Result");
+	}
+}
 
 /**
 *
@@ -144,12 +151,15 @@ abstract class Result
 	    	}
 	    	else static if(is(Type == void[])) {
 	    		ubyte[] temp;
-	    		getField(temp, idx);
-	    		bind[Index] = temp;
+	    		debug assert(getField(temp, idx));
+	    		else getField(temp, idx);
+	    		debug log.trace("Got void[] {}", cast(char[])temp);
+	    		bind[Index] = cast(void[])temp;
 	    		++idx;
 	    	}
 	    	else {
-	    		getField(bind[Index], idx);
+	    		debug assert(getField(bind[Index], idx));
+	    		else getField(bind[Index], idx);
 	    		++idx;
 	    	}
 		}
