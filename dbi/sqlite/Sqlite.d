@@ -76,9 +76,6 @@ class Sqlite : Database {
 		}
 	}
 
-	/**
-	 * Close the current connection to the database.
-	 */
 	override void close () {
 		logger.trace("closing database now");
 		if (sqlite_ !is null) {
@@ -116,45 +113,7 @@ class Sqlite : Database {
 	alias SqliteStatement StatementT;
 	
 	private SqliteStatement lastSt = null;
-			
-	/+override void execute (char[] sql) {
-		logger.trace("executing: " ~ sql);
-		char** errorMessage;
-		if ((errorCode = sqlite3_exec(database, sql.dup.ptr, null, null, errorMessage)) != SQLITE_OK) {
-			throw new DBIException(toDString(sqlite3_errmsg(database)), sql, errorCode, specificToGeneral(errorCode));
-		}
-	}
-	
-	void execute(char[] sql, BindType[] bindTypes, void*[] ptrs)
-	{
-		logger.trace("querying: " ~ sql);
-		char** errorMessage;
-		sqlite3_stmt* stmt;
-		if ((errorCode = sqlite3_prepare_v2(database, toCString(sql), sql.length, &stmt, errorMessage)) != SQLITE_OK) {
-			throw new DBIException(toDString(sqlite3_errmsg(database)), sql, errorCode, specificToGeneral(errorCode));
-		}
-		
-		auto len = bindTypes.length;
-		if(ptrs.length != len) throw new DBIException;
-		
-		for(size_t i = 0; i < len; ++i)
-		{
-			SqliteStatement.bind!(true)(stmt, bindTypes[i], ptrs[i], i);
-		}
-		
-		auto res = sqlite3_step(stmt);
-		if(res != SQLITE_ROW || res != SQLITE_DONE)
-			throw new DBIException;
-		
-		sqlite3_finalize(stmt);
-	}+/
 
-	/**
-	 * Get the number of rows affected by the last SQL statement.
-	 *
-	 * Returns:
-	 *	The number of rows affected by the last SQL statement.
-	 */
 	ulong affectedRows () {
 		return sqlite3_changes(sqlite_);
 	}
@@ -244,15 +203,6 @@ class Sqlite : Database {
 		}
 	}
 
-	/**
-	 * Check if a table exists.
-	 *
-	 * Param:
-	 *	name = Name of the table to check for the existance of.
-	 *
-	 * Returns:
-	 *	true if it exists or false otherwise.
-	 */
 	bool hasTable (char[] name) {
 		return hasItem("table", name);
 	}
@@ -267,31 +217,6 @@ class Sqlite : Database {
 		closeResult;
 		return has;
 	}
-	
-	/+ColumnInfo[] getTableInfo(char[] tablename)
-	{	
-		auto res = query("PRAGMA table_info('" ~ tablename ~ "')");
-		
-		ColumnInfo[] info;
-		auto row = res.fetch;
-		while(row) {
-			if(row.values.length < 6) break;
-			
-			ColumnInfo col;
-			col.name = row.values[1];
-			col.type = fromSqliteType(row.values[2]);
-			if(row.values[3] != "0") col.notNull = true;
-			if(row.values[5] == "1") col.primaryKey = true;
-				
-			info ~= col;
-			
-			row = res.fetch;
-		}
-		
-		res.finalize;
-		
-		return info;
-	}+/
 	
 	bool moreResults()
 	{
@@ -345,8 +270,6 @@ class Sqlite : Database {
 	
 	bool nextRow()
 	{
-		/+lastRes_ = sqlite3_step(stmt_);
-		return lastRes_ == SQLITE_ROW ? true : false;+/
 		if(stepFiber_.state == Fiber.State.TERM) return false;
 		stepFiber_.call(true);
 		return lastRes_ == SQLITE_ROW ? true : false;
@@ -359,9 +282,6 @@ class Sqlite : Database {
 	
 	void initQuery(in char[] sql, bool haveParams)
 	{
-		/+if(stepFiber_.state != Fiber.State.HOLD)
-			throw new DBIException(OutOfSyncQueryErrorMsg,
-				sql_,ErrorCode.OutOfSync);+/
 		if(stepFiber_.state == Fiber.State.HOLD && sql_.length) {
 			closeResult;
 			stepFiber_.reset;
@@ -441,9 +361,6 @@ class Sqlite : Database {
 	
 	ulong lastInsertID() in { assert(sqlite_ !is null); }
 	body {
-		/+auto id = sqlite3_last_insert_rowid(sqlite_);
-		if(id == 0)	return 0;
-		else return cast(ulong)id;+/
 		return sqlite3_last_insert_rowid(sqlite_);
 	}
 	
@@ -460,62 +377,6 @@ class Sqlite : Database {
 			return BindType.Null;
 		}
 	}
-/+	
-	bool bindField(Type)(inout Type val, size_t idx)
-	{
-		if(stmt_ is null || lastRes_ != SQLITE_ROW || numFields_ <= idx) return false;
-		static if(is(Type == bool))
-			{ val = sqlite3_column_int(stmt_,idx) == 0 ? false : true; }
-		else static if(is(Type == ubyte) || is(Type == byte) || is(Type == ushort)
-			|| is(Type == short) || is(Type == int)) 
-			{ val = sqlite3_column_int(stmt_,idx); }
-		else static if(is(Type == uint) || is(Type == long) || is(Type == ulong))
-			{ val = sqlite3_column_int64(stmt_,idx)l }
-		else static if(is(Type == float) || is(Type == double))
-			{ val = sqlite3_column_double(stmt_,idx); }
-		else static if(is(Type == void[]) || is (Type == ubyte[]))
-		{
-			auto res = sqlite3_column_blob(stmt, index);
-			auto len = sqlite3_column_bytes(stmt, index);
-			*val = res[0 .. len].dup;
-		}
-		return true;
-	}+/
-	
-/+	
-	bool getField(inout bool val, size_t idx)
-	{
-		if(stmt_ is null || lastRes_ != SQLITE_ROW || numFields_ <= idx) return false;
-		val = sqlite3_column_int(stmt_,idx) == 0 ? false : true;
-		return true;
-	}
-	
-	bool getField(inout ubyte val, size_t idx)
-	{
-		if(stmt_ is null || lastRes_ != SQLITE_ROW || numFields_ <= idx) return false;
-		val = sqlite3_column_int(stmt_,idx);
-		return true;
-	}
-	
-	bool getField(inout byte, size_t idx)
-	{
-		if(stmt_ is null || lastRes_ != SQLITE_ROW || numFields_ <= idx) return false;
-		val = sqlite3_column_int(stmt_,idx);
-		return true;
-	}
-	
-	abstract bool getField(inout ushort, size_t idx);
-	abstract bool getField(inout short, size_t idx);
-	abstract bool getField(inout uint, size_t idx);
-	abstract bool getField(inout int, size_t idx);
-	abstract bool getField(inout ulong, size_t idx);
-	abstract bool getField(inout long, size_t idx);
-	abstract bool getField(inout float, size_t idx);
-	abstract bool getField(inout double, size_t idx);
-	abstract bool getField(inout char[], size_t idx);
-	abstract bool getField(inout ubyte[], size_t idx);
-	abstract bool getField(inout Time, size_t idx);
-	abstract bool getField(inout DateTime, size_t idx);+/
 	
 	bool bindField(Type)(inout Type val, size_t idx)
 	{
@@ -577,12 +438,10 @@ class Sqlite : Database {
 	void setParam(DateTime val) { setParamT(val); }
 	void setParamNull() { setParamT!(void*,true)(null); }
 	
-	
 	bool enabled(DbiFeature feature) { return false; }
 	
 	void initInsert(char[] tablename, char[][] fields)
 	{
-		//assert(false);
 		/+char[] writer_;
 		writer_ ~= "INSERT INTO \"";
 		writer_ ~= tablename;
@@ -601,14 +460,12 @@ class Sqlite : Database {
 	
 	void initUpdate(char[] tablename, char[][] fields, char[] where)
 	{
-		//assert(false);
 		initQuery(SqlGenHelper.makeUpdateSql(where,tablename,fields),true);
 	}
 	
 	void initSelect(char[] tablename, char[][] fields, char[] where, bool haveParams)
 	{
-		//initQuery(SqlGenHelper.makeUpdateSql(tablename,fields));
-		if(writer_ is null) writer_ = new DisposableStringWriter;
+		if(writer_ is null) writer_ = new SqlStringWriter;
 		else writer_.reset;
 		writer_("SELECT ");
 		foreach(field; fields)
@@ -624,8 +481,7 @@ class Sqlite : Database {
 	
 	void initRemove(char[] tablename, char[] where, bool haveParams)
 	{
-		//initQuery(sqlGen.makeUpdateSql(where,tablename,fields));
-		if(writer_ is null) writer_ = new DisposableStringWriter;
+		if(writer_ is null) writer_ = new SqlStringWriter;
 		else writer_.reset;
 		writer_(`DELETE FROM "`, tablename, `" `, where);
 		debug logger.trace("Wrote delete sql {}", writer_.get);
@@ -695,28 +551,13 @@ class Sqlite : Database {
 		sqlite3* sqlite_;
 		sqlite3_stmt* stmt_;
 		char[] sql_;
-	//	bool isOpen = false;
 		int errorCode;
 		int lastRes_;
 		Fiber stepFiber_;
 		int numFields_;
 		int numParams_;
 		int curParamIdx_;
-		DisposableStringWriter writer_;
-
-/+	/**
-	 *
-	 */
-	char[][] getItemNames(char[] type) {
-		char[][] items;
-		Row[] rows = queryFetchAll("SELECT name FROM sqlite_master WHERE type='" ~ type ~ "'");
-		for (size_t i = 0; i < rows.length; i++) {
-			items ~= rows[i].get(0);
-		}
-		return items;
-	}
-
-	+/
+		SqlStringWriter writer_;
 }
 
 private class SqliteSqlGenerator : SqlGenerator

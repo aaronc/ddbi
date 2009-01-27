@@ -3,13 +3,7 @@ module dbi.util.StringWriter;
 import CStdlib = tango.stdc.stdlib;
 import tango.core.Memory;
 
-interface IDisposableString
-{
-	char[] get();
-	void free();
-}
-
-class DisposableStringWriter_(bool AllowCustomAlloc = false) : IDisposableString
+class SqlStringWriter_(bool AllowCustomAlloc = false)
 {
 	this(size_t initSize = short.max/2, size_t growSize = 8192)
 	{
@@ -190,11 +184,11 @@ class DisposableStringWriter_(bool AllowCustomAlloc = false) : IDisposableString
 	}
 }
 
-alias DisposableStringWriter_!() DisposableStringWriter;
+alias SqlStringWriter_!() SqlStringWriter;
 
 unittest
 {
-	auto w = new DisposableStringWriter(5);
+	auto w = new SqlStringWriter(5);
 	w ~= "hello ";
 	w ~= "world";
 	w ~= " i";

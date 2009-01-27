@@ -1,39 +1,105 @@
 module dbi.util.SqlGen;
 
-import DT = dbi.util.DateTime;
-import Integer = tango.text.convert.Integer;
-import tango.time.Time;
-import tango.core.Traits;
+deprecated import tango.time.Time;
+deprecated import tango.core.Traits;
 
 public import dbi.model.Metadata;
+
+deprecated import DT = dbi.util.DateTime;
+deprecated import Integer = tango.text.convert.Integer;
+import dbi.util.StringWriter;
+
+
+interface SqlWriter
+{
+	SqlWriter start();
+	SqlWriter start(SqlStringWriter);
+	SqlWriter write(char[][] strs...);
+	SqlWriter list(char[][] fields...);
+	SqlWriter qlist(char[] qualifier, char[][] fields...);
+	char[] get();
+}
 
 /**
  * Helper methods for generating database-specific SQL (without necessarily
  * knowing the specifics of that database's ways of quoting and escaping).
  * 
  */
-abstract class SqlGenerator
+abstract class SqlGenerator : SqlWriter
 {
-	char getIdentifierQuoteCharacter()
+	SqlWriter start()
+	{
+		assert(writer_ !is null);
+		writer_.reset;
+		return this;
+	}
+	
+	SqlWriter start(SqlStringWriter writer)
+	{
+		writer_ = writer;
+		writer_.reset;
+		return this;
+	}
+	private SqlStringWriter writer_;
+	
+	SqlWriter write(char[][] strs...)
+	in { assert(writer_ !is null); }
+	body {
+		writer_(strs);
+		return this;
+	}
+	
+	SqlWriter list(char[][] identifiers...)
+	in { assert(writer_ !is null); }
+	body {
+		char c = identifierQuoteChar;
+		char[1] q = [c];
+		char[2] qc = [c,','];
+		foreach(id; identifiers)
+			writer_(q,id,qc);
+		writer_.backup;
+		return this;
+	}
+	
+	SqlWriter qlist(char[] qualifier, char[][] identifiers...)
+	in { assert(writer_ !is null); }
+	body {
+		char c = identifierQuoteChar;
+		char[1] q = [c];
+		char[2] qc = [c,','];
+		char[3] qdq = [c,'.',c];
+		foreach(id; identifiers)
+			writer_(q,qualifier,qdq,id,qc);
+		writer_.backup;
+		return this;
+	}
+	
+	char[] get()
+	in { assert(writer_ !is null); }
+	body {
+		return writer_.get;
+	}
+	
+	char identifierQuoteChar()
 	{
 		return '"'; 
 	}
 	
+	char stringQuoteChar()
+	{
+		return '\'';
+	}
+	
 	char[] quoteColumnName(char[] colname)
 	{
-		auto quote = getIdentifierQuoteCharacter;
+		auto quote = identifierQuoteChar;
 		return quote ~ colname ~ quote;
 	}
 	
 	char[] quoteTableName(char[] tablename)
 	{
-		auto quote = getIdentifierQuoteCharacter;
+		auto quote = identifierQuoteChar;
 		return quote ~ tablename ~ quote;
-	}
-	
-	char getStringQuoteCharacter()
-	{
-		return '\'';
 	}
 	
 	char[] getHexPrefix()
@@ -46,7 +112,7 @@ abstract class SqlGenerator
 		return "'";
 	}
 	
-	char[] createBinaryString(ubyte[] binary)
+	/+char[] createBinaryString(ubyte[] binary)
 	{
 		const char[] hexDigits = "0123456789abcdef";
 		
@@ -74,26 +140,26 @@ abstract class SqlGenerator
 		res[$ - sLen .. $] = suffix;
 		
 		return res;
-	}
+	}+/
 	
 	char[] makeFieldList(char[][] fields)
 	{
-		return SqlGenHelper.makeFieldList(fields, getIdentifierQuoteCharacter);
+		return SqlGenHelper.makeFieldList(fields, identifierQuoteChar);
 	}
 	
 	char[] makeQualifiedFieldList(char[] qualifier, char[][] fields)
 	{
-		return SqlGenHelper.makeQualifiedFieldList(qualifier, fields, getIdentifierQuoteCharacter);
+		return SqlGenHelper.makeQualifiedFieldList(qualifier, fields, identifierQuoteChar);
 	}
 	
 	char[] makeInsertSql(char[] tablename, char[][] fields)
 	{
-		return SqlGenHelper.makeInsertSql(tablename, fields, getIdentifierQuoteCharacter);
+		return SqlGenHelper.makeInsertSql(tablename, fields, identifierQuoteChar);
 	}
 	
 	char[] makeUpdateSql(char[] whereClause, char[] tablename, char[][] fields)
 	{
-		return SqlGenHelper.makeUpdateSql(whereClause, tablename, fields, getIdentifierQuoteCharacter);
+		return SqlGenHelper.makeUpdateSql(whereClause, tablename, fields, identifierQuoteChar);
 	}
 	
 	char[] makeDeleteSql(char[] tablename, char[][] keyFields)
@@ -371,22 +437,13 @@ unittest
 	assert(res == "INSERT INTO \"user\" (\"name\",\"date\") VALUES(?,?)", res);
 	res = sqlgen.makeUpdateSql("WHERE 1", "user", ["name", "date"]);
 	assert(res == "UPDATE \"user\" SET \"name\"=?,\"date\"=? WHERE 1", res);
-	assert(sqlgen.getIdentifierQuoteCharacter == '"');
+	assert(sqlgen.identifierQuoteChar == '"');
 	
 	assert(SqlGenHelper.concatLists(
 			sqlgen.makeQualifiedFieldList("user", ["name", "date"]),
 			sqlgen.makeQualifiedFieldList("person", ["name", "date"])
 			) == "\"user\".\"name\",\"user\".\"date\",\"person\".\"name\",\"person\".\"date\"");
 	
-	ulong x = 0x57a60e9fe4321b0;
-	auto ptr = cast(ubyte*)&x;
-	auto binStr = sqlgen.createBinaryString(ptr[0 .. 8]);
-	version(LittleEndian) {
-		assert(binStr == "x'0b1234ef9e06a750'", binStr);
-	}
-	else {
-		assert(binStr == "x'057a60e9fe4321b0'", binStr);
-	}
 	
 	//DateTime
 	

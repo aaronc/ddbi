@@ -58,7 +58,7 @@ class Mysql : Database {
 	 */
 	this () {
 		mysql = mysql_init(null);
-		writer_ = new DisposableStringWriter(5000);
+		writer_ = new SqlStringWriter(short.max);
 	}
 
 	/**
@@ -319,7 +319,7 @@ class Mysql : Database {
 	private char[] tablename_;
 	private char[] where_;
 	private char[][] fieldnames_;
-	private DisposableStringWriter writer_;
+	private SqlStringWriter writer_;
 	
 	private void virtualPrepare()
 	{
