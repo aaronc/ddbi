@@ -597,7 +597,7 @@ debug(DBITest) {
 		
 		void insert()
 		{
-			auto sql = db.sqlGen.makeInsertSql("dbi_test",
+ 			auto sql = db.sqlGen.makeInsertSql("dbi_test",
 				["UByte", "Byte", "UShort", "Short", "UInt", "Int",
 				 "ULong", "Long", "Float", "Double",
 				 "String", "Binary", "DateTime", "Time"]);

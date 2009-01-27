@@ -5,6 +5,8 @@ import tango.core.Memory;
 
 class SqlStringWriter_(bool AllowCustomAlloc = false)
 {
+	alias SqlStringWriter_!(AllowCustomAlloc) TypeOfThis;
+	
 	this(size_t initSize = short.max/2, size_t growSize = 8192)
 	{
 		forwardReserve(initSize);
@@ -53,20 +55,22 @@ class SqlStringWriter_(bool AllowCustomAlloc = false)
 		used += x;
 	}
 	
-	void backup(size_t n = 1)
+	final TypeOfThis backup(size_t n = 1)
 	{
 		assert(n <= used);
 		used -= n;
+		return this;
 	}
 	
 	/**
 	 * Replaces the previously written character with the
 	 * provided character c 
 	 */
-	void correct(char c)
+	final TypeOfThis correct(char c)
 	{
 		debug assert(used);
 		buffer[used-1] = c;
+		return this;
 	}
 
 	char[] getOpenBuffer()
@@ -83,7 +87,9 @@ class SqlStringWriter_(bool AllowCustomAlloc = false)
 		return used;
 	}
 	
-	void write(char[][] strs...)
+	alias write opCall;
+	
+	final TypeOfThis write(char[][] strs...)
 	{
 		size_t totalLen;
 		foreach(str;strs) totalLen += str.length;
@@ -94,8 +100,8 @@ class SqlStringWriter_(bool AllowCustomAlloc = false)
 			buffer[used .. used + len] = str;
 			used += len;
 		}
+		return this;
 	}
-	alias write opCall;
 	
 	/**
 	 * Exposes raw buffer writing.
@@ -104,9 +110,10 @@ class SqlStringWriter_(bool AllowCustomAlloc = false)
 	 *     writeDg = the delegate which will write to the exposed buffer.  this
 	 *     	delegate must return the number of bytes written.
 	 */
-	void write(size_t delegate(void[] buf) writeDg)
+	final TypeOfThis write(size_t delegate(void[] buf) writeDg)
 	{
 		used += writeDg(buffer[used..$]);
+		return this;
 	}
 	
 	/**
@@ -118,10 +125,11 @@ class SqlStringWriter_(bool AllowCustomAlloc = false)
 	 *     writeDg = the delegate which will write to the exposed buffer.  this
 	 *     	delegate must return the number of bytes written.
 	 */
-	void write(size_t reserveSize, size_t delegate(void[] buf) writeDg)
+	final TypeOfThis write(size_t reserveSize, size_t delegate(void[] buf) writeDg)
 	{
 		forwardReserve(reserveSize);
 		used += writeDg(buffer[used..$]);
+		return this;
 	}
 	
 	/**

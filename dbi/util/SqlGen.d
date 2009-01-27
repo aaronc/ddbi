@@ -9,47 +9,42 @@ deprecated import DT = dbi.util.DateTime;
 deprecated import Integer = tango.text.convert.Integer;
 import dbi.util.StringWriter;
 
-
-interface SqlWriter
-{
-	SqlWriter start();
-	SqlWriter start(SqlStringWriter);
-	SqlWriter write(char[][] strs...);
-	SqlWriter list(char[][] fields...);
-	SqlWriter qlist(char[] qualifier, char[][] fields...);
-	char[] get();
-}
-
 /**
  * Helper methods for generating database-specific SQL (without necessarily
  * knowing the specifics of that database's ways of quoting and escaping).
  * 
  */
-abstract class SqlGenerator : SqlWriter
+abstract class SqlGenerator
 {
-	SqlWriter start()
+	char identifierQuoteChar()
 	{
-		assert(writer_ !is null);
-		writer_.reset;
-		return this;
+		return '"'; 
 	}
 	
-	SqlWriter start(SqlStringWriter writer)
+	char stringQuoteChar()
 	{
-		writer_ = writer;
+		return '\'';
+	}
+	
+	abstract char[] toNativeType(ColumnInfo info);
+	
+	final SqlGenerator start(SqlStringWriter writer = null)
+	{
+		if(writer !is null) writer_ = writer;
+		else assert(writer_ !is null);
 		writer_.reset;
 		return this;
 	}
 	private SqlStringWriter writer_;
 	
-	SqlWriter write(char[][] strs...)
+	final SqlGenerator write(char[][] strs...)
 	in { assert(writer_ !is null); }
 	body {
 		writer_(strs);
 		return this;
 	}
 	
-	SqlWriter list(char[][] identifiers...)
+	final SqlGenerator list(char[][] identifiers...)
 	in { assert(writer_ !is null); }
 	body {
 		char c = identifierQuoteChar;
@@ -61,7 +56,7 @@ abstract class SqlGenerator : SqlWriter
 		return this;
 	}
 	
-	SqlWriter qlist(char[] qualifier, char[][] identifiers...)
+	final SqlGenerator qlist(char[] qualifier, char[][] identifiers...)
 	in { assert(writer_ !is null); }
 	body {
 		char c = identifierQuoteChar;
@@ -74,20 +69,22 @@ abstract class SqlGenerator : SqlWriter
 		return this;
 	}
 	
-	char[] get()
+	final char[] get()
 	in { assert(writer_ !is null); }
 	body {
 		return writer_.get;
 	}
 	
-	char identifierQuoteChar()
+	char[] makeInsertSql(SqlStringWriter writer, char[] tablename, char[][] fields...)
 	{
-		return '"'; 
-	}
-	
-	char stringQuoteChar()
-	{
-		return '\'';
+		start(writer);
+		writer_("INSERT INTO ");
+		list(tablename);
+		writer_(" (");
+		list(fields);
+		writer_(") VALUES(");
+		foreach(f;fields) writer_("?,");
+		return writer_.correct(')').get;
 	}
 	
 	char[] quoteColumnName(char[] colname)
@@ -111,36 +108,6 @@ abstract class SqlGenerator : SqlWriter
 	{
 		return "'";
 	}
-	
-	/+char[] createBinaryString(ubyte[] binary)
-	{
-		const char[] hexDigits = "0123456789abcdef";
-		
-		char[] res;
-		
-		auto len = binary.length;
-		auto prefix = getHexPrefix; auto pLen = prefix.length;
-		auto suffix = getHexSuffix; auto sLen = suffix.length;
-		
-		res.length = len * 2 + pLen + sLen;
-		res[0 .. pLen] = prefix;
-		
-		auto ptr = res.ptr + pLen;
-		for(size_t i = 0; i < len; ++i)
-		{
-			ubyte x = binary[i];
-			//*ptr = hexDigits[x >>> 4];
-			*ptr = hexDigits[x & 0xF];
-			++ptr;
-			//*ptr = hexDigits[x & 0xF];
-			*ptr = hexDigits[x >>> 4];
-			++ptr;
-		}
-		
-		res[$ - sLen .. $] = suffix;
-		
-		return res;
-	}+/
 	
 	char[] makeFieldList(char[][] fields)
 	{
@@ -176,7 +143,7 @@ abstract class SqlGenerator : SqlWriter
 		return res;
 	}
 	
-	abstract char[] toNativeType(ColumnInfo info);
+	
 	
 	char[] makeCreateSql(char[] tablename, ColumnInfo[] columnInfo, char[] options = null)
 	{
@@ -254,7 +221,7 @@ abstract class SqlGenerator : SqlWriter
 	
 	
 	+/
-	
+/+	
 	char[] printDateTime(DateTime dt, char[] res)
 	{
 		return DT.printDateTime(dt, res);
@@ -268,7 +235,7 @@ abstract class SqlGenerator : SqlWriter
 	char[] printTime(DateTime dt, char[] res)
 	{
 		return DT.printTime(dt, res);
-	}
+	}+/
 	
 	/**
 	 * Escape a _string using the database's native method, if possible.
@@ -430,11 +397,17 @@ class TestSqlGen : SqlGenerator
 	
 unittest
 {
+	
 	auto sqlgen = new TestSqlGen;
+	auto writer = new SqlStringWriter;
+	char[] res;
+	res = sqlgen.makeInsertSql(writer,"user", ["name", "date"]);
+	assert(res == `INSERT INTO "user" ("name","date") VALUES(?,?)`, res);
+	
 	assert(sqlgen.makeFieldList(["name", "date"]) == "\"name\",\"date\"");
 	assert(sqlgen.makeQualifiedFieldList("user", ["name", "date"]) == "\"user\".\"name\",\"user\".\"date\"");
-	auto res = sqlgen.makeInsertSql("user", ["name", "date"]);
-	assert(res == "INSERT INTO \"user\" (\"name\",\"date\") VALUES(?,?)", res);
+	//auto res = sqlgen.makeInsertSql("user", ["name", "date"]);
+	
 	res = sqlgen.makeUpdateSql("WHERE 1", "user", ["name", "date"]);
 	assert(res == "UPDATE \"user\" SET \"name\"=?,\"date\"=? WHERE 1", res);
 	assert(sqlgen.identifierQuoteChar == '"');
@@ -446,22 +419,5 @@ unittest
 	
 	
 	//DateTime
-	
-	DT.DateTime dt;
-	dt.date.year = 2008;
-	dt.date.month = 1;
-	dt.date.day = 15;
-
-	res = new char[19];
-	
-	res = sqlgen.printDateTime(dt, res);
-	assert(res == "2008-01-15 00:00:00", res);
-	
-	dt.time.hours = 3;
-	dt.time.minutes = 15;
-	dt.time.seconds = 47;
-	
-	res = sqlgen.printDateTime(dt, res);
-	assert(res == "2008-01-15 03:15:47", res);
 }
 }
