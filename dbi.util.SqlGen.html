@@ -36,39 +36,252 @@
 <script>explorer.outline.incSymbolLevel();</script>
 <dl>
 <script>explorer.outline.writeEnabled = true;</script>
-<dt><span class="decl">char[] 
-<span class="currsymbol">escape</span>
-<script>explorer.outline.addDecl('escape');</script>
+<dt><span class="decl">char 
+<span class="currsymbol">identifierQuoteChar</span>
+<script>explorer.outline.addDecl('identifierQuoteChar');</script>
 
-(char[] <span class="funcparam">src</span>, char[] <span class="funcparam">dest</span> = null);
+();
 </span></dt>
 <script>explorer.outline.writeEnabled = false;</script>
 
 
-<dd>Escape a string using the database's native method, if possible.
+<dd><br><br>
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">char 
+<span class="currsymbol">stringQuoteChar</span>
+<script>explorer.outline.addDecl('stringQuoteChar');</script>
+
+();
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd><br><br>
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">abstract char[] 
+<span class="currsymbol">toNativeType</span>
+<script>explorer.outline.addDecl('toNativeType');</script>
+
+(ColumnInfo <span class="funcparam">info</span>);
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd><br><br>
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">final SqlGenerator 
+<span class="currsymbol">start</span>
+<script>explorer.outline.addDecl('start');</script>
+
+(SqlStringWriter_ <span class="funcparam">writer</span> = cast(SqlStringWriter_)null);
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd>Starts chained writing - used together with
+ the write, list, and qlist method as a convenient way
+ of dynamically generating sql.
 <br><br>
-<b>Params:</b><br>
-<table><tr>
-<td nowrap valign="top" style="padding-right: 8px">char[] <span class="funcparam">src</span></td>
-
-               
-<td>The string to 
-<span class="currsymbol">escape</span>
-<script>explorer.outline.addDecl('escape');</script>
-
-,</td></tr>
-<tr>
-<td nowrap valign="top" style="padding-right: 8px">char[] <span class="funcparam">dest</span></td>
-
-               
-<td>A destination buffer - length should be <span class="funcparam">src</span>.length * 2 + 1
-  (allows for the possibility that every character must be quoted + a <b>null</b> terminator).</td></tr>
-</table><br>
-<b>Returns:</b><br>
-The escaped string.
+<b>Example:</b><br>
+<pre class="d_code"> 	<font color=blue>auto</font> <i>writer</i> = <font color=blue>new</font> SqlStringWriter;
+ 	<font color=blue>auto</font> sql = db.sqlGen.<u>start</u>(<i>writer</i>)(<font color=red>"SELECT "</font>).list(<font color=red>"name"</font>,<font color=red>"date"</font>)
+ 	(<font color=red>" FROM "</font>).id(<font color=red>"user"</font>)(<font color=red>"WHERE "</font>).id(<font color=red>"id"</font>)(<font color=red>"=?"</font>).get;
+</pre>
 	 
 <br><br>
 
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">final SqlGenerator 
+<span class="currsymbol">write</span>
+<script>explorer.outline.addDecl('write');</script>
+
+(char[][] <span class="funcparam">strs</span>...);
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd><br><br>
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">alias 
+<span class="currsymbol">opCall</span>
+<script>explorer.outline.addDecl('opCall');</script>
+
+;
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd>Alias for write
+	 
+<br><br>
+
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">final SqlGenerator 
+<span class="currsymbol">list</span>
+<script>explorer.outline.addDecl('list');</script>
+
+(char[][] <span class="funcparam">identifiers</span>...);
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd>Writes a 
+<span class="currsymbol">list</span>
+<script>explorer.outline.addDecl('list');</script>
+
+ of quoted <span class="funcparam">identifiers</span>
+	 
+<br><br>
+
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">alias 
+<span class="currsymbol">id</span>
+<script>explorer.outline.addDecl('id');</script>
+
+;
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd>Alias for list - for quoting a single identifier
+	 
+<br><br>
+
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">final SqlGenerator 
+<span class="currsymbol">qlist</span>
+<script>explorer.outline.addDecl('qlist');</script>
+
+(char[] <span class="funcparam">qualifier</span>, char[][] <span class="funcparam">identifiers</span>...);
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd>Writes a list of quoted, qualified <span class="funcparam">identifiers</span>.
+<br><br>
+Should be very useful for doing join queries.
+
+<br><br>
+<b>Example:</b><br>
+<pre class="d_code"> <u>qlist</u>(<font color=red>"user"</font>,<font color=red>"name"</font>,<font color=red>"date"</font>) <font color=green>// generates "user"."name","user"."date"
+</font></pre>
+	 
+<br><br>
+
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">alias 
+<span class="currsymbol">qid</span>
+<script>explorer.outline.addDecl('qid');</script>
+
+;
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd>Alias for qlist - for quoting a single qualified identifier
+	 
+<br><br>
+
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">final char[] 
+<span class="currsymbol">get</span>
+<script>explorer.outline.addDecl('get');</script>
+
+();
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd><b>Returns:</b><br>
+the sql that has been written
+	 
+<br><br>
+
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">char[] 
+<span class="currsymbol">makeInsertSql</span>
+<script>explorer.outline.addDecl('makeInsertSql');</script>
+
+(SqlStringWriter_ <span class="funcparam">writer</span>, char[] <span class="funcparam">tablename</span>, char[][] <span class="funcparam">fields</span>...);
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd><br><br>
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">char[] 
+<span class="currsymbol">makeUpdateSql</span>
+<script>explorer.outline.addDecl('makeUpdateSql');</script>
+
+(SqlStringWriter_ <span class="funcparam">writer</span>, char[] <span class="funcparam">tablename</span>, char[] <span class="funcparam">whereClause</span>, char[][] <span class="funcparam">fields</span>...);
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd><br><br>
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">char[] 
+<span class="currsymbol">makeCreateSql</span>
+<script>explorer.outline.addDecl('makeCreateSql');</script>
+
+(char[] <span class="funcparam">tablename</span>, ColumnInfo[] <span class="funcparam">columnInfo</span>, char[] <span class="funcparam">options</span> = null);
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd><br><br>
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">char[] 
+<span class="currsymbol">makeAddColumnSql</span>
+<script>explorer.outline.addDecl('makeAddColumnSql');</script>
+
+(char[] <span class="funcparam">tablename</span>, ColumnInfo <span class="funcparam">column</span>);
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd><br><br>
+</dd>
+
+<script>explorer.outline.writeEnabled = true;</script>
+<dt><span class="decl">char[] 
+<span class="currsymbol">makeDropSql</span>
+<script>explorer.outline.addDecl('makeDropSql');</script>
+
+(char[] <span class="funcparam">tablename</span>, bool <span class="funcparam">checkExists</span> = true);
+</span></dt>
+<script>explorer.outline.writeEnabled = false;</script>
+
+
+<dd><br><br>
 </dd>
 </dl>
 <script>explorer.outline.decSymbolLevel();</script>
@@ -81,12 +294,13 @@ The escaped string.
 
 </td></tr>
 		<tr><td id="docfooter">
-			Documentation last updated Sat Jan 24 21:05:12 2009
+			Documentation last updated Tue Jan 27 00:09:30 2009
 
 		</td></tr>
 	</table>
 </div>
 <script>
+explorer.packageExplorer.addModuleFull("dbi.DBI");
 explorer.packageExplorer.addModuleFull("dbi.ErrorCode");
 explorer.packageExplorer.addModuleFull("dbi.Exception");
 explorer.packageExplorer.addModuleFull("dbi.model.BindType");
@@ -103,14 +317,17 @@ explorer.packageExplorer.addModuleFull("dbi.mysql.MysqlStatement");
 explorer.packageExplorer.addModuleFull("dbi.pg.imp");
 explorer.packageExplorer.addModuleFull("dbi.sqlite.all");
 explorer.packageExplorer.addModuleFull("dbi.sqlite.imp");
-explorer.packageExplorer.addModuleFull("dbi.sqlite.SqliteDatabase");
+explorer.packageExplorer.addModuleFull("dbi.sqlite.Sqlite");
 explorer.packageExplorer.addModuleFull("dbi.sqlite.SqliteError");
 explorer.packageExplorer.addModuleFull("dbi.sqlite.SqliteStatement");
 explorer.packageExplorer.addModuleFull("dbi.util.DateTime");
+explorer.packageExplorer.addModuleFull("dbi.util.Excerpt");
 explorer.packageExplorer.addModuleFull("dbi.util.Memory");
 explorer.packageExplorer.addModuleFull("dbi.util.Registry");
 explorer.packageExplorer.addModuleFull("dbi.util.SqlGen");
 explorer.packageExplorer.addModuleFull("dbi.util.StringWriter");
+explorer.packageExplorer.addModuleFull("dbi.util.VirtualPrepare");
+explorer.packageExplorer.addModuleFull("dbi.DBI");
 explorer.packageExplorer.addModuleFull("dbi.ErrorCode");
 explorer.packageExplorer.addModuleFull("dbi.Exception");</script>
 </body></html>
