@@ -539,7 +539,7 @@ debug(DBITest) {
 		void setup()
 		{
 			log.trace("Dropping dbi_test");
-			char[] drop_test = db.sqlGen.makeDropSql("dbi_test");
+			char[] drop_test = `DROP TABLE dbi_test`;
 			log.trace("Executing: {}", excerpt(drop_test));
 			db.query(drop_test);
 			
