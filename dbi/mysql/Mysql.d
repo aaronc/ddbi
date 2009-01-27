@@ -474,7 +474,7 @@ class Mysql : Database {
 	{
 		stepWrite_;
 		writer_ ~= "\'";
-		auto buf = writer_.forwardReserve(val.length * 2 + 1); 
+		auto buf = writer_.reserve(val.length * 2 + 1); 
 		auto resLen = mysql_real_escape_string(mysql, buf.ptr, val.ptr, val.length);
 		writer_.forwardAdvance(resLen);
 		writer_ ~= "\'";

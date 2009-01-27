@@ -442,25 +442,12 @@ class Sqlite : Database {
 	
 	void initInsert(char[] tablename, char[][] fields)
 	{
-		/+char[] writer_;
-		writer_ ~= "INSERT INTO \"";
-		writer_ ~= tablename;
-		writer_ ~= "\" ";
-		bool first = true;
-		foreach(field; fields)
-		{
-			if(!first) writer ~= ",\"";
-			else writer_ ~= "\"";
-			writer_ ~= field;
-			writer_ ~= "\"";
-			first = false;
-		}+/
-		initQuery(SqlGenHelper.makeInsertSql(tablename,fields),true);
+		initQuery(sqlGen.makeInsertSql(writer_,tablename,fields),true);
 	}
 	
 	void initUpdate(char[] tablename, char[][] fields, char[] where)
 	{
-		initQuery(SqlGenHelper.makeUpdateSql(where,tablename,fields),true);
+		initQuery(sqlGen.makeUpdateSql(writer_,tablename,where,fields),true);
 	}
 	
 	void initSelect(char[] tablename, char[][] fields, char[] where, bool haveParams)

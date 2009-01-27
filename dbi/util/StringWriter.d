@@ -9,7 +9,7 @@ class SqlStringWriter_(bool AllowCustomAlloc = false)
 	
 	this(size_t initSize = short.max/2, size_t growSize = 8192)
 	{
-		forwardReserve(initSize);
+		reserve(initSize);
 		this.growSize = growSize;
 	}
 	
@@ -23,7 +23,7 @@ class SqlStringWriter_(bool AllowCustomAlloc = false)
 		void* function(size_t x) alloc = function void*(size_t x) {
 			return CStdlib.malloc(x);
 		};
-		void function(void* p) free = function void(void* p) {
+		void function(void* p) release = function void(void* p) {
 			CStdlib.free(p);
 		};
 	}
@@ -35,9 +35,17 @@ class SqlStringWriter_(bool AllowCustomAlloc = false)
 	
 	protected char[] buffer;
 	protected size_t used = 0;
-	char[] forwardReserve(size_t x)
+	
+	/**
+	 * Ensures that the buffer has space to write sz elements and
+	 * does appropriate allocation as necessary.
+	 * Params:
+	 *     sz = the buffer length to reserve
+	 * Returns:
+	 */
+	char[] reserve(size_t sz)
 	{
-		auto targetSize = used + x;
+		auto targetSize = used + sz;
 		if(targetSize >= buffer.length) {
 			uint newSize = buffer.length + growSize;
 			if(newSize < targetSize) newSize = targetSize;
@@ -49,12 +57,12 @@ class SqlStringWriter_(bool AllowCustomAlloc = false)
 		return buffer[used .. $];
 	}
 	
-	void forwardAdvance(size_t x)
-	{
-		if(buffer.length < used + x) forwardReserve(x);
-		used += x;
-	}
-	
+	/**
+	 * Decrements the buffer index essentially erasing data that was written 
+	 * Params:
+	 *     n = the number of characters to backup
+	 * Returns:
+	 */
 	final TypeOfThis backup(size_t n = 1)
 	{
 		assert(n <= used);
@@ -73,11 +81,6 @@ class SqlStringWriter_(bool AllowCustomAlloc = false)
 		return this;
 	}
 
-	char[] getOpenBuffer()
-	{
-		return buffer[used .. $];
-	}
-	
 	/** 
 	 * Returns: The current length of the array that has been written to (not the size of
 	 * the buffer).
@@ -87,13 +90,19 @@ class SqlStringWriter_(bool AllowCustomAlloc = false)
 		return used;
 	}
 	
+	/**
+	 * Alias for write
+	 */
 	alias write opCall;
 	
+	/**
+	 * 
+	 */
 	final TypeOfThis write(char[][] strs...)
 	{
 		size_t totalLen;
 		foreach(str;strs) totalLen += str.length;
-		forwardReserve(totalLen);
+		reserve(totalLen);
 		foreach(str; strs)
 		{
 			size_t len = str.length;
@@ -104,7 +113,7 @@ class SqlStringWriter_(bool AllowCustomAlloc = false)
 	}
 	
 	/**
-	 * Exposes raw buffer writing.
+	 * Exposes raw buffer for writing
 	 * 
 	 * Params:
 	 *     writeDg = the delegate which will write to the exposed buffer.  this
@@ -127,7 +136,7 @@ class SqlStringWriter_(bool AllowCustomAlloc = false)
 	 */
 	final TypeOfThis write(size_t reserveSize, size_t delegate(void[] buf) writeDg)
 	{
-		forwardReserve(reserveSize);
+		reserve(reserveSize);
 		used += writeDg(buffer[used..$]);
 		return this;
 	}
@@ -137,7 +146,7 @@ class SqlStringWriter_(bool AllowCustomAlloc = false)
 	 */
 	void opCatAssign(char ch)
 	{
-		forwardReserve(1);	
+		reserve(1);	
 		buffer[used] = ch;
 		++used;
 	}
@@ -148,14 +157,14 @@ class SqlStringWriter_(bool AllowCustomAlloc = false)
 	void opCatAssign(char[] str)
 	{
 		auto len = str.length;
-		forwardReserve(len);	
+		reserve(len);	
 		buffer[used .. used + len] = str;
 		used += len;
 	}
 	
 	char[] getWriteBuffer(size_t x)
 	{
-		forwardReserve(x);
+		reserve(x);
 		auto buf = buffer[used .. used + x];
 		used += x;
 		return buf;
@@ -171,13 +180,17 @@ class SqlStringWriter_(bool AllowCustomAlloc = false)
 		return buffer[0..used];
 	}
 	
+	/**
+	 * Resets buffer for reuse
+	 */
 	void reset()
 	{
-		/+if(buffer.length) free;
-		buffer = (cast(char*)alloc(growSize))[0 .. growSize];+/
 		used = 0;
 	}
-	
+
+	/**
+	 * Frees memory that has been allocated
+	 */
 	void free()
 	{
 		if(buffer.length) {

@@ -485,6 +485,7 @@ private class TestDatabase : Database {
 debug(DBITest) {
 
 	import DBIErrorCode = dbi.ErrorCode;
+	import dbi.util.StringWriter;
 	import tango.math.Math;
 	import tango.time.Clock;
 	
@@ -511,10 +512,12 @@ debug(DBITest) {
 		this(Database db)
 		{
 			this.db = db;
+			this.writer = new SqlStringWriter;
 			this.log = Log.lookup("dbi.DBTest");
 		}
 		
 		Database db;
+		SqlStringWriter writer;
 		Logger log;
 		
 		void run()
@@ -597,7 +600,7 @@ debug(DBITest) {
 		
 		void insert()
 		{
- 			auto sql = db.sqlGen.makeInsertSql("dbi_test",
+ 			auto sql = db.sqlGen.makeInsertSql(writer, "dbi_test",
 				["UByte", "Byte", "UShort", "Short", "UInt", "Int",
 				 "ULong", "Long", "Float", "Double",
 				 "String", "Binary", "DateTime", "Time"]);
