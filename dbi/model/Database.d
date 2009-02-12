@@ -598,10 +598,12 @@ debug(DBITest) {
 		
 		void setup()
 		{
-			log.trace("Dropping dbi_test");
-			char[] drop_test = `DROP TABLE dbi_test`;
-			log.trace("Executing: {}", excerpt(drop_test));
-			db.query(drop_test);
+			if(db.hasTable("dbi_test")) {
+				log.trace("Dropping dbi_test");
+				char[] drop_test = `DROP TABLE dbi_test`;
+				log.trace("Executing: {}", excerpt(drop_test));
+				db.query(drop_test);
+			}
 			
 			log.trace("Creating dbi_test");
 			auto create_test = db.sqlGen.makeCreateSql("dbi_test", columns);
