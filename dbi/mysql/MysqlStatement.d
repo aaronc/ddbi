@@ -14,7 +14,6 @@ version(dbi_mysql) {
 	}
 	debug {
 		import tango.util.log.Log;
-		import tango.util.log.ConsoleAppender;
 	}
 	
 import dbi.Exception, dbi.mysql.MysqlError;

@@ -739,7 +739,7 @@ debug(DBITest) {
 			assert(!db.validResult);
 			assert(db.affectedRows == 1);
 			assert(db.moreResults);
-			assert(db.nextResult);
+			/+assert(db.nextResult);
 			assert(db.rowCount == 1);
 			ubyte ub; byte b;
 			assert(db.fetchRow(ub, b));
@@ -747,7 +747,7 @@ debug(DBITest) {
 			assert(b == -15);
 			assert(!db.fetchRow(ub, b));
 			assert(!db.nextResult);
-			assert(!db.moreResults);
+			assert(!db.moreResults);+/
 		}
 		
 		void testUtil()

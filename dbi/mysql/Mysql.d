@@ -196,7 +196,7 @@ class Mysql : Database {
 		debug log.trace("Closing: checking for null handle");
 		if (mysql !is null) {
 			debug log.trace("Closing database: handle isn't null");
-			closeResult;
+		//	closeResult;
 			mysql_close(mysql);
 			if (uint error = mysql_errno(mysql)) {
    		        debug log.error("close(): {}", toDString(mysql_error(mysql)));
@@ -474,9 +474,11 @@ class Mysql : Database {
 	{
 		stepWrite_;
 		writer_ ~= "\'";
-		auto buf = writer_.reserve(val.length * 2 + 1); 
-		auto resLen = mysql_real_escape_string(mysql, buf.ptr, val.ptr, val.length);
-		writer_.forwardAdvance(resLen);
+		writer_.write(val.length * 2 + 1, (void[] buf) {
+			debug assert(buf.length >= val.length * 2 + 1);
+			return mysql_real_escape_string(mysql, cast(char*)buf.ptr, val.ptr, val.length);
+		});
+		//writer_.forwardAdvance(resLen);
 		writer_ ~= "\'";
 	}
 	
@@ -621,7 +623,7 @@ class Mysql : Database {
     bool nextResult()
     {
         if (result_ !is null) {
-        	mysql_free_result(result_);
+			mysql_free_result(result_);
         }
         
         rowMetadata_ = null;
@@ -648,8 +650,6 @@ class Mysql : Database {
 	        	result_ = null;
 	        }
 	        res = mysql_next_result(mysql);
-	        //if(res == 0) result_ = mysql_store_result(mysql);
-	        //else result_ = null;
 	    }
     }
     
@@ -756,7 +756,7 @@ class MysqlSqlGenerator : SqlGenerator
 	
 	private MYSQL* mysql;
 	
-	override char getIdentifierQuoteCharacter()
+	override char identifierQuoteChar()
 	{
 		return '`'; 
 	}
