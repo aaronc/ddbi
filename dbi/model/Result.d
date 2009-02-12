@@ -8,6 +8,7 @@ public import dbi.model.Metadata;
 public import dbi.util.Memory;
 
 public import tango.time.Time;
+import tango.core.Vararg;
 
 debug {
 	import tango.util.log.Log;
@@ -67,101 +68,143 @@ abstract class Result
 	*	Returns: true if a row was successfully loaded and bound to the passed
 	*	arguments, false if there are no more rows 
 	*/
-	bool fetchRow(BindTypes...)(ref BindTypes bind)
+	bool fetchRow(...)
     {
 		if(!nextRow) return false;
-		
+
 		uint idx = 0;
-		foreach(Index, Type; BindTypes)
+		
+		void bindBindInfo(ref BindInfo bindInfo)
 		{
-			static if(is(Type : BindInfo))
-	    	{
-				auto bindInfo = cast(BindInfo)bind[Index];
+			auto ptrs = bindInfo.ptrs;
+			bool res;
+    		foreach(i, type; bindInfo.types)
+    		{
+    			switch(type)
+    			{
+    			case BindType.Bool:
+    				bool* ptr = cast(bool*)ptrs[i];
+    				res = getField(*ptr, idx);
+    				break;
+    			case BindType.Byte:
+    				byte* ptr = cast(byte*)ptrs[i];
+    				res = getField(*ptr, idx);
+    				break;
+    			case BindType.Short:
+    				short* ptr = cast(short*)ptrs[i];
+    				res = getField(*ptr, idx);
+    				break;
+    			case BindType.Int:
+    				int* ptr = cast(int*)ptrs[i];
+    				res = getField(*ptr, idx);
+    				break;
+    			case BindType.Long:
+    				long* ptr = cast(long*)ptrs[i];
+    				res = getField(*ptr, idx);
+    				break;
+    			case BindType.UByte:
+    				ubyte* ptr = cast(ubyte*)ptrs[i];
+    				res = getField(*ptr, idx);
+    				break;
+    			case BindType.UShort:
+    				ushort* ptr = cast(ushort*)ptrs[i];
+    				res = getField(*ptr, idx);
+    				break;
+    			case BindType.UInt:
+    				uint* ptr = cast(uint*)ptrs[i];
+    				res = getField(*ptr, idx);
+    				break;
+    			case BindType.ULong:
+    				ulong* ptr = cast(ulong*)ptrs[i];
+    				res = getField(*ptr, idx);
+    				break;
+    			case BindType.Float:
+    				float* ptr = cast(float*)ptrs[i];
+    				res = getField(*ptr, idx);
+    				break;
+    			case BindType.Double:
+    				double* ptr = cast(double*)ptrs[i];
+    				res = getField(*ptr, idx);
+    				break;
+    			case BindType.String:
+    				char[]* ptr = cast(char[]*)ptrs[i];
+    				res = getField(*ptr, idx);
+    				break;
+    			case BindType.Binary:
+    				ubyte[]* ptr = cast(ubyte[]*)ptrs[i];
+    				res = getField(*ptr, idx);
+    				break;
+    			case BindType.Time:
+    				Time* ptr = cast(Time*)ptrs[i];
+    				res = getField(*ptr, idx);
+    				break;
+    			case BindType.DateTime:
+    				DateTime* ptr = cast(DateTime*)ptrs[i];
+    				res = getField(*ptr, idx);
+    				break;
+    			case BindType.Null:
+    			}
+    			++idx;
+    		}
+		}
+		
+		for(int i = 0; i < _arguments.length; ++i)
+		{
+			if(_arguments[i] == typeid(bool*))
+				getField(*va_arg!(bool*)(_argptr),idx);
+			
+			else if(_arguments[i] == typeid(ubyte*))
+				getField(*va_arg!(ubyte*)(_argptr),idx);
+			
+			else if(_arguments[i] == typeid(byte*))
+				getField(*va_arg!(byte*)(_argptr),idx);
+			
+			else if(_arguments[i] == typeid(ushort*))
+				getField(*va_arg!(ushort*)(_argptr),idx);
+			
+			else if(_arguments[i] == typeid(short*))
+				getField(*va_arg!(short*)(_argptr),idx);
+			
+			else if(_arguments[i] == typeid(uint*))
+				getField(*va_arg!(uint*)(_argptr),idx);
+			
+			else if(_arguments[i] == typeid(int*))
+				getField(*va_arg!(int*)(_argptr),idx);
+			
+			else if(_arguments[i] == typeid(ulong*))
+				getField(*va_arg!(ulong*)(_argptr),idx);
 				
-				auto ptrs = bindInfo.ptrs;
-				bool res;
-	    		foreach(i, type; bindInfo.types)
-	    		{
-	    			switch(type)
-	    			{
-	    			case BindType.Bool:
-	    				bool* ptr = cast(bool*)ptrs[i];
-	    				res = getField(*ptr, idx);
-	    				break;
-	    			case BindType.Byte:
-	    				byte* ptr = cast(byte*)ptrs[i];
-	    				res = getField(*ptr, idx);
-	    				break;
-	    			case BindType.Short:
-	    				short* ptr = cast(short*)ptrs[i];
-	    				res = getField(*ptr, idx);
-	    				break;
-	    			case BindType.Int:
-	    				int* ptr = cast(int*)ptrs[i];
-	    				res = getField(*ptr, idx);
-	    				break;
-	    			case BindType.Long:
-	    				long* ptr = cast(long*)ptrs[i];
-	    				res = getField(*ptr, idx);
-	    				break;
-	    			case BindType.UByte:
-	    				ubyte* ptr = cast(ubyte*)ptrs[i];
-	    				res = getField(*ptr, idx);
-	    				break;
-	    			case BindType.UShort:
-	    				ushort* ptr = cast(ushort*)ptrs[i];
-	    				res = getField(*ptr, idx);
-	    				break;
-	    			case BindType.UInt:
-	    				uint* ptr = cast(uint*)ptrs[i];
-	    				res = getField(*ptr, idx);
-	    				break;
-	    			case BindType.ULong:
-	    				ulong* ptr = cast(ulong*)ptrs[i];
-	    				res = getField(*ptr, idx);
-	    				break;
-	    			case BindType.Float:
-	    				float* ptr = cast(float*)ptrs[i];
-	    				res = getField(*ptr, idx);
-	    				break;
-	    			case BindType.Double:
-	    				double* ptr = cast(double*)ptrs[i];
-	    				res = getField(*ptr, idx);
-	    				break;
-	    			case BindType.String:
-	    				char[]* ptr = cast(char[]*)ptrs[i];
-	    				res = getField(*ptr, idx);
-	    				break;
-	    			case BindType.Binary:
-	    				ubyte[]* ptr = cast(ubyte[]*)ptrs[i];
-	    				res = getField(*ptr, idx);
-	    				break;
-	    			case BindType.Time:
-	    				Time* ptr = cast(T.Time*)ptrs[i];
-	    				res = getField(*ptr, idx);
-	    				break;
-	    			case BindType.DateTime:
-	    				DateTime* ptr = cast(T.DateTime*)ptrs[i];
-	    				res = getField(*ptr, idx);
-	    				break;
-	    			case BindType.Null:
-	    			}
-	    			++idx;
-	    		}
-	    	}
-	    	else static if(is(Type == void[])) {
-	    		ubyte[] temp;
-	    		debug assert(getField(temp, idx));
-	    		else getField(temp, idx);
-	    		debug log.trace("Got void[] {}", cast(char[])temp);
-	    		bind[Index] = cast(void[])temp;
-	    		++idx;
-	    	}
-	    	else {
-	    		debug assert(getField(bind[Index], idx));
-	    		else getField(bind[Index], idx);
-	    		++idx;
-	    	}
+			else if(_arguments[i] == typeid(long*))
+				getField(*va_arg!(long*)(_argptr),idx);
+			
+			else if(_arguments[i] == typeid(float*))
+				getField(*va_arg!(float*)(_argptr),idx);
+			
+			else if(_arguments[i] == typeid(double*))
+				getField(*va_arg!(double*)(_argptr),idx);
+			
+			else if(_arguments[i] == typeid(ubyte[]*))
+				getField(*va_arg!(ubyte[]*)(_argptr),idx);
+			
+			else if(_arguments[i] == typeid(void[]*))
+				getField(*va_arg!(ubyte[]*)(_argptr),idx);
+			
+			else if(_arguments[i] == typeid(char[]*))
+				getField(*va_arg!(char[]*)(_argptr),idx);
+			
+			else if(_arguments[i] == typeid(Time*))
+				getField(*va_arg!(Time*)(_argptr),idx);
+			
+			else if(_arguments[i] == typeid(DateTime*))
+				getField(*va_arg!(DateTime*)(_argptr),idx);
+			
+			else if(_arguments[i] == typeid(BindInfo))
+			{
+				auto bindInfo = va_arg!(BindInfo)(_argptr);
+	    		bindBindInfo(bindInfo);
+			}
+			else assert(false, "Unknown bind type " ~ _arguments[i].toString);
+			++idx;
 		}
     	
 		return true;

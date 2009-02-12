@@ -692,7 +692,7 @@ debug(DBITest) {
 			void doFetch()
 			{
 				ubyte ub; byte b;
-				assert(db.fetchRow(ub, b));
+				assert(db.fetchRow(&ub, &b));
 				assert(ub == 5);
 				assert(b == -7);
 			}
@@ -753,8 +753,8 @@ debug(DBITest) {
 			
 			db.execute(sql);
 			
-			while(db.fetchRow(id, dataCopy.ub,dataCopy.b,dataCopy.us,dataCopy.s,dataCopy.ui,dataCopy.i,
-				dataCopy.ul,dataCopy.l,dataCopy.f,dataCopy.d,dataCopy.str,dataCopy.binary,dataCopy.dt,dataCopy.t)) {
+			while(db.fetchRow(&id, &dataCopy.ub,&dataCopy.b,&dataCopy.us,&dataCopy.s,&dataCopy.ui,&dataCopy.i,
+				&dataCopy.ul,&dataCopy.l,&dataCopy.f,&dataCopy.d,&dataCopy.str,&dataCopy.binary,&dataCopy.dt,&dataCopy.t)) {
 				assertData;
 			}
 		}
@@ -783,15 +783,15 @@ debug(DBITest) {
 			assert(!db.validResult);
 			assert(db.affectedRows == 1);
 			assert(db.moreResults);
-			/+assert(db.nextResult);
+			assert(db.nextResult);
 			assert(db.rowCount == 1);
 			ubyte ub; byte b;
-			assert(db.fetchRow(ub, b));
+			assert(db.fetchRow(&ub, &b));
 			assert(ub == 15);
 			assert(b == -15);
-			assert(!db.fetchRow(ub, b));
+			assert(!db.fetchRow(&ub, &b));
 			assert(!db.nextResult);
-			assert(!db.moreResults);+/
+			assert(!db.moreResults);
 		}
 		
 		void testUtil()
