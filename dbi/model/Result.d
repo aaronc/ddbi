@@ -37,22 +37,22 @@ abstract class Result
 	* 	values to the variadic arguments provided in the call to fetchRow().
 	*
 	*	Arguments of the following types can be used as bind arguments:
-			bool
-			byte
-			ubyte
-			short
-			ushort
-			int
-			uint
-			long
-			ulong
-			float
-			double
-			char[]
-			void[]
-			ubyte[]
-			tango.time.Time
-			tango.time.DateTime
+			bool*
+			byte*
+			ubyte*
+			short*
+			ushort*
+			int*
+			uint*
+			long*
+			ulong*
+			float*
+			double*
+			char[]*
+			void[]*
+			ubyte[]*
+			tango.time.Time*
+			tango.time.DateTime*
 			dbi.model.BindType.BindInfo
 	*
 	*	Examples:
@@ -60,7 +60,7 @@ abstract class Result
 	*	uint id;
 	*	char name;
 	*	
-	*	while(res.fetchRow(id,name)) { 
+	*	while(res.fetchRow(&id,&name)) { 
 	*		Stdout.formatln("id: {}, name: {}", id, name);
 	*	}
 	*	------------------ 
