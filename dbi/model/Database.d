@@ -6,6 +6,7 @@ module dbi.model.Database;
 
 private static import tango.text.Util;
 private static import tango.io.Stdout;
+import tango.core.Vararg;
 
 public import dbi.Exception;
 public import dbi.util.SqlGen, dbi.model.Statement, dbi.model.Metadata, dbi.model.Result;
@@ -299,77 +300,125 @@ abstract class Database : Result, IStatementProvider {
 	abstract void setParamNull();
 	
 	///
-	final void setParams(Types...)(Types bind)
+	void setParams(...)
 	{
-		foreach(Index, Type; Types)
+		for(int i = 0; i < _arguments.length; ++i)
 		{
-			static if(is(Type : BindInfo))
-	    	{
-				auto bindInfo = cast(BindInfo)bind[Index];
+			if(_arguments[i] == typeid(bool))
+				setParam(va_arg!(bool)(_argptr));
+			
+			else if(_arguments[i] == typeid(ubyte))
+				setParam(va_arg!(ubyte)(_argptr));
+			
+			else if(_arguments[i] == typeid(byte))
+				setParam(va_arg!(byte)(_argptr));
+			
+			else if(_arguments[i] == typeid(ushort))
+				setParam(va_arg!(ushort)(_argptr));
+			
+			else if(_arguments[i] == typeid(short))
+				setParam(va_arg!(short)(_argptr));
+			
+			else if(_arguments[i] == typeid(uint))
+				setParam(va_arg!(uint)(_argptr));
+			
+			else if(_arguments[i] == typeid(int))
+				setParam(va_arg!(int)(_argptr));
+			
+			else if(_arguments[i] == typeid(ulong))
+				setParam(va_arg!(ulong)(_argptr));
+				
+			else if(_arguments[i] == typeid(long))
+				setParam(va_arg!(long)(_argptr));
+			
+			else if(_arguments[i] == typeid(float))
+				setParam(va_arg!(float)(_argptr));
+			
+			else if(_arguments[i] == typeid(double))
+				setParam(va_arg!(double)(_argptr));
+			
+			else if(_arguments[i] == typeid(ubyte[]))
+				setParam(va_arg!(ubyte[])(_argptr));
+			
+			else if(_arguments[i] == typeid(void[]))
+				setParam(va_arg!(ubyte[])(_argptr));
+			
+			else if(_arguments[i] == typeid(char[]))
+				setParam(va_arg!(char[])(_argptr));
+			
+			else if(_arguments[i] == typeid(Time))
+				setParam(va_arg!(Time)(_argptr));
+			
+			else if(_arguments[i] == typeid(DateTime))
+				setParam(va_arg!(DateTime)(_argptr));
+			
+			else if(_arguments[i] == typeid(BindInfo))
+			{
+				auto bindInfo = va_arg!(BindInfo)(_argptr);
 				
 				auto ptrs = bindInfo.ptrs;
-	    		foreach(i, type; bindInfo.types)
+	    		foreach(j, type; bindInfo.types)
 	    		{
 	    			switch(type)
 	    			{
 	    			case BindType.Bool:
-	    				bool* ptr = cast(bool*)ptrs[i];
+	    				bool* ptr = cast(bool*)ptrs[j];
 	    				setParam(*ptr);
 	    				break;
 	    			case BindType.Byte:
-	    				byte* ptr = cast(byte*)ptrs[i];
+	    				byte* ptr = cast(byte*)ptrs[j];
 	    				setParam(*ptr);
 	    				break;
 	    			case BindType.Short:
-	    				short* ptr = cast(short*)ptrs[i];
+	    				short* ptr = cast(short*)ptrs[j];
 	    				setParam(*ptr);
 	    				break;
 	    			case BindType.Int:
-	    				int* ptr = cast(int*)ptrs[i];
+	    				int* ptr = cast(int*)ptrs[j];
 	    				setParam(*ptr);
 	    				break;
 	    			case BindType.Long:
-	    				long* ptr = cast(long*)ptrs[i];
+	    				long* ptr = cast(long*)ptrs[j];
 	    				setParam(*ptr);
 	    				break;
 	    			case BindType.UByte:
-	    				ubyte* ptr = cast(ubyte*)ptrs[i];
+	    				ubyte* ptr = cast(ubyte*)ptrs[j];
 	    				setParam(*ptr);
 	    				break;
 	    			case BindType.UShort:
-	    				ushort* ptr = cast(ushort*)ptrs[i];
+	    				ushort* ptr = cast(ushort*)ptrs[j];
 	    				setParam(*ptr);
 	    				break;
 	    			case BindType.UInt:
-	    				uint* ptr = cast(uint*)ptrs[i];
+	    				uint* ptr = cast(uint*)ptrs[j];
 	    				setParam(*ptr);
 	    				break;
 	    			case BindType.ULong:
-	    				ulong* ptr = cast(ulong*)ptrs[i];
+	    				ulong* ptr = cast(ulong*)ptrs[j];
 	    				setParam(*ptr);
 	    				break;
 	    			case BindType.Float:
-	    				float* ptr = cast(float*)ptrs[i];
+	    				float* ptr = cast(float*)ptrs[j];
 	    				setParam(*ptr);
 	    				break;
 	    			case BindType.Double:
-	    				double* ptr = cast(double*)ptrs[i];
+	    				double* ptr = cast(double*)ptrs[j];
 	    				setParam(*ptr);
 	    				break;
 	    			case BindType.String:
-	    				char[]* ptr = cast(char[]*)ptrs[i];
+	    				char[]* ptr = cast(char[]*)ptrs[j];
 	    				setParam(*ptr);
 	    				break;
 	    			case BindType.Binary:
-	    				ubyte[]* ptr = cast(ubyte[]*)ptrs[i];
+	    				ubyte[]* ptr = cast(ubyte[]*)ptrs[j];
 	    				setParam(*ptr);
 	    				break;
 	    			case BindType.Time:
-	    				Time* ptr = cast(Time*)ptrs[i];
+	    				Time* ptr = cast(Time*)ptrs[j];
 	    				setParam(*ptr);
 	    				break;
 	    			case BindType.DateTime:
-	    				DateTime* ptr = cast(DateTime*)ptrs[i];
+	    				DateTime* ptr = cast(DateTime*)ptrs[j];
 	    				setParam(*ptr);
 	    				break;
 	    			case BindType.Null:
@@ -378,13 +427,8 @@ abstract class Database : Result, IStatementProvider {
 	    				break;
 	    			}
 	    		}
-	    	}
-			else static if(is(Type : void[])) {
-				setParam(cast(ubyte[])bind[Index]);
 			}
-	    	else {
-	    		setParam(bind[Index]);
-	    	}
+			else debug assert(false, "Unknown bind type " ~ _arguments[i].toString);
 		}
 	}
 	
