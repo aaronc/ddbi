@@ -442,11 +442,13 @@ class Sqlite : Database {
 	
 	void initInsert(char[] tablename, char[][] fields)
 	{
+		if(writer_ is null) writer_ = new SqlStringWriter;
 		initQuery(sqlGen.makeInsertSql(writer_,tablename,fields),true);
 	}
 	
 	void initUpdate(char[] tablename, char[][] fields, char[] where)
 	{
+		if(writer_ is null) writer_ = new SqlStringWriter;
 		initQuery(sqlGen.makeUpdateSql(writer_,tablename,where,fields),true);
 	}
 	
